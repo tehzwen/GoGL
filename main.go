@@ -6,6 +6,7 @@ import (
 	"math"
 	"runtime"
 	"strings"
+	"unsafe"
 
 	"github.com/go-gl/gl/v4.1-core/gl" // OR: github.com/go-gl/gl/v2.1/gl
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -26,6 +27,7 @@ const (
 
 		void main() {
 			gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
+			//gl_Position = vec4(aPosition, 1.0);
 		}
 	` + "\x00"
 
@@ -38,7 +40,8 @@ const (
 		out vec4 frag_colour;
 
 		void main() {
-			frag_colour = vec4(diffuseVal * ambientVal * specularVal, 1.0);
+			//frag_colour = vec4(diffuseVal * ambientVal * specularVal, 1.0);
+			frag_colour = vec4(diffuseVal, 1.0);
 		}
 	` + "\x00"
 )
@@ -101,14 +104,14 @@ func main() {
 
 	window := initGlfw()
 	defer glfw.Terminate()
-	//program := initOpenGL(state.vertShader, state.fragShader)
+	program := initOpenGL(state.vertShader, state.fragShader)
 
 	var testObject = Object{
 		name:       "zach",
 		fragShader: "1234",
 		vertShader: "123456",
 		programInfo: ProgramInfo{
-			program: initOpenGL(state.vertShader, state.fragShader),
+			program: program,
 			attributes: Attributes{
 				position: 0,
 			},
@@ -122,18 +125,24 @@ func main() {
 			ambient:  []float32{0.1, 0.1, 0.1},
 			specular: []float32{0.8, 0.8, 0.8},
 		},
+		model: Model{
+			position: mgl32.Vec3{1.0, 0.0, 0.0},
+		},
 	}
 
 	SetupAttributes(&testObject.programInfo)
 
 	var objectList = []Object{}
 
-	vao, vbo := initPositionBuffer(&testObject.programInfo, testObject.vertices)
-	indexBuffer := InitIndexBuffer(triangleFaces)
+	//vao, vbo := initPositionBuffer(&testObject.programInfo, testObject.vertices)
+	//indexBuffer := InitIndexBuffer(triangleFaces)
 
-	testObject.programInfo.indexBuffer = indexBuffer
+	//testObject.programInfo.indexBuffer = indexBuffer
+	//testObject.buffers.vao = vao
+	//testObject.buffers.vbo = vbo
+	vao := CreateTriangleVAO(triangle, triangleFaces)
+
 	testObject.buffers.vao = vao
-	testObject.buffers.vbo = vbo
 
 	testObject.programInfo.uniformLocations.diffuseVal = gl.GetUniformLocation(testObject.programInfo.program, gl.Str("diffuseVal\x00"))
 
@@ -145,14 +154,17 @@ func main() {
 		//projection := glm.Mat4{}
 		//fmt.Printf("%+v\n", projection)
 		draw(window, state)
+		//state.camera.center[0] -= 0.2
 	}
 }
 
 func draw(window *glfw.Window, state State) {
+	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	glfw.PollEvents()
 
 	for i := 0; i < len(state.objects); i++ {
-		gl.ClearColor(1.0, 1.0, 1.0, 1.0)
-		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
 		gl.UseProgram(state.objects[i].programInfo.program)
 
 		var fovy = float32(60 * math.Pi / 180)
@@ -170,6 +182,8 @@ func draw(window *glfw.Window, state State) {
 
 		modelMatrix := mgl32.Ident4()
 
+		modelMatrix = mgl32.HomogRotate3D(float32(0), state.objects[i].model.position)
+
 		gl.UniformMatrix4fv(state.objects[i].programInfo.uniformLocations.model, 1, false, &modelMatrix[0])
 
 		gl.Uniform3fv(state.objects[i].programInfo.uniformLocations.diffuseVal, 1, &state.objects[i].material.diffuse[0])
@@ -178,9 +192,9 @@ func draw(window *glfw.Window, state State) {
 
 		gl.BindVertexArray(state.objects[i].buffers.vao)
 		//gl.DrawArrays(gl.TRIANGLES, 0, int32(len(triangle)/3))
-		gl.DrawElements(gl.TRIANGLES, 72, gl.UNSIGNED_SHORT, gl.PtrOffset(0))
+		gl.DrawElements(gl.TRIANGLES, int32(len(triangleFaces)), gl.UNSIGNED_INT, unsafe.Pointer(nil))
+		gl.BindVertexArray(0)
 
-		glfw.PollEvents()
 		window.SwapBuffers()
 	}
 
@@ -233,6 +247,7 @@ func initOpenGL(vertexShaderSource string, fragmentShaderSource string) uint32 {
 
 func initPositionBuffer(programInfo *ProgramInfo, positionArray []float32) (uint32, uint32) {
 	var vbo uint32
+	var vao uint32
 	gl.GenBuffers(1, &vbo)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
 	gl.BufferData(gl.ARRAY_BUFFER, 4*len(positionArray), gl.Ptr(positionArray), gl.STATIC_DRAW)
@@ -242,12 +257,11 @@ func initPositionBuffer(programInfo *ProgramInfo, positionArray []float32) (uint
 	const normalize = false
 	const stride = 0
 
-	var vao uint32
 	gl.GenVertexArrays(1, &vao)
 	gl.BindVertexArray(vao)
-	gl.EnableVertexAttribArray(programInfo.attributes.position)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
 	gl.VertexAttribPointer(programInfo.attributes.position, numComponents, dataType, normalize, stride, nil)
+	gl.EnableVertexAttribArray(programInfo.attributes.position)
 
 	return vao, vbo
 }

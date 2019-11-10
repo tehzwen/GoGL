@@ -99,3 +99,35 @@ func SetupAttributes(p *ProgramInfo) {
 		fmt.Printf("ERROR: One or more of the uniforms or attributes cannot be found in the shader\n")
 	}
 }
+
+func CreateTriangleVAO(vertices []float32, indices []uint32) uint32 {
+
+	var VAO uint32
+	gl.GenVertexArrays(1, &VAO)
+
+	var VBO uint32
+	gl.GenBuffers(1, &VBO)
+
+	var EBO uint32
+	gl.GenBuffers(1, &EBO)
+
+	// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointers()
+	gl.BindVertexArray(VAO)
+
+	// copy vertices data into VBO (it needs to be bound first)
+	gl.BindBuffer(gl.ARRAY_BUFFER, VBO)
+	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
+
+	// copy indices into element buffer
+	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, EBO)
+	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(indices)*4, gl.Ptr(indices), gl.STATIC_DRAW)
+
+	// position
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
+	gl.EnableVertexAttribArray(0)
+
+	// unbind the VAO (safe practice so we don't accidentally (mis)configure it later)
+	gl.BindVertexArray(0)
+
+	return VAO
+}
