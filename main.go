@@ -46,6 +46,8 @@ const (
 	` + "\x00"
 )
 
+var angle = 0.0
+
 var (
 	triangle = []float32{
 		0.0, 0.0, 0.0,
@@ -127,20 +129,23 @@ func main() {
 		},
 		model: Model{
 			position: mgl32.Vec3{1.0, 0.0, 0.0},
+			rotation: mgl32.Mat4{
+				0, 0, 0, 0,
+				0, 0, 0, 0,
+				0, 0, 0, 0,
+				0, 0, 0, 0},
 		},
 	}
 
 	SetupAttributes(&testObject.programInfo)
 
 	var objectList = []Object{}
-
-	//vao, vbo := initPositionBuffer(&testObject.programInfo, testObject.vertices)
-	//indexBuffer := InitIndexBuffer(triangleFaces)
-
-	//testObject.programInfo.indexBuffer = indexBuffer
-	//testObject.buffers.vao = vao
-	//testObject.buffers.vbo = vbo
 	vao := CreateTriangleVAO(triangle, triangleFaces)
+
+	centroid := CalculateCentroid(testObject.vertices)
+	testObject.centroid = centroid
+
+	fmt.Printf("%+v\n", centroid)
 
 	testObject.buffers.vao = vao
 
@@ -182,7 +187,17 @@ func draw(window *glfw.Window, state State) {
 
 		modelMatrix := mgl32.Ident4()
 
-		modelMatrix = mgl32.HomogRotate3D(float32(0), state.objects[i].model.position)
+		angle += 0.05
+
+		state.objects[i].model.rotation = mgl32.HomogRotate3D(float32(angle), state.objects[i].model.position)
+
+		positionMat := mgl32.Translate3D(state.objects[i].model.position[0], state.objects[i].model.position[1], state.objects[i].model.position[2])
+		modelMatrix = modelMatrix.Mul4(positionMat)
+		centroidMat := mgl32.Translate3D(state.objects[i].centroid[0], state.objects[i].centroid[1], state.objects[i].centroid[2])
+		modelMatrix = modelMatrix.Mul4(centroidMat)
+		modelMatrix = modelMatrix.Mul4(state.objects[i].model.rotation)
+		negCent := mgl32.Translate3D(-state.objects[i].centroid[0], -state.objects[i].centroid[1], -state.objects[i].centroid[2])
+		modelMatrix = modelMatrix.Mul4(negCent)
 
 		gl.UniformMatrix4fv(state.objects[i].programInfo.uniformLocations.model, 1, false, &modelMatrix[0])
 

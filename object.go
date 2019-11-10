@@ -17,6 +17,7 @@ type Object struct {
 	faces       []float32
 	material    Material
 	model       Model
+	centroid    mgl32.Vec3
 }
 
 type Attributes struct {
@@ -98,6 +99,25 @@ func SetupAttributes(p *ProgramInfo) {
 		(*p).uniformLocations.specularVal == -1 {
 		fmt.Printf("ERROR: One or more of the uniforms or attributes cannot be found in the shader\n")
 	}
+}
+
+func CalculateCentroid(vertices []float32) mgl32.Vec3 {
+	var xTotal = float32(0.0)
+	var yTotal = float32(0.0)
+	var zTotal = float32(0.0)
+
+	for i := 0; i < len(vertices); i += 3 {
+		xTotal += vertices[i]
+		yTotal += vertices[i+1]
+		zTotal += vertices[i+2]
+	}
+
+	xTotal /= float32(len(vertices) / 3)
+	yTotal /= float32(len(vertices) / 3)
+	zTotal /= float32(len(vertices) / 3)
+
+	return mgl32.Vec3{xTotal, yTotal, zTotal}
+
 }
 
 func CreateTriangleVAO(vertices []float32, indices []uint32) uint32 {
