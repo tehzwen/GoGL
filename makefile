@@ -4,7 +4,7 @@ all: gogl
 gogl:
 	go build
 
-run:
+run: clean gogl
 	./gogl
 
 clean:
