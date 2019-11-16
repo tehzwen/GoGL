@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+	//"github.com/go-gl/gl/v2.1/gl"
 	"log"
 	"math"
 	"runtime"
 	"strings"
-	"unsafe"
-
+	//"unsafe"
 	"github.com/go-gl/gl/v4.1-core/gl" // OR: github.com/go-gl/gl/v2.1/gl
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
@@ -18,7 +18,7 @@ const (
 	height = 500
 
 	vertexShaderSource = `
-		#version 410
+		#version 330
 		in vec3 aPosition;
 		in vec3 aNormal;
 
@@ -40,7 +40,8 @@ const (
 	` + "\x00"
 
 	fragmentShaderSource = `
-		#version 410
+		#version 330
+		precision highp float;
 		#define MAX_LIGHTS 128
 
 		in vec3 oFragPosition;
@@ -60,9 +61,9 @@ const (
 		out vec4 frag_colour;
 
 		void main() {
-			vec3 diffuse;
-			vec3 ambient;
-			vec3 specular;
+			vec3 diffuse = vec3(0, 0, 0);
+			vec3 ambient = vec3(0, 0, 0);
+			vec3 specular = vec3(0, 0, 0);
 			vec3 normal = normalize(normalInterp);
 
 			for (int i = 0; i < numLights; i++) {
@@ -87,7 +88,6 @@ const (
                     specular += ((specularVal * lightColours[i]) * NHPow);
 				}
 			}
-			//frag_colour = vec4(testNormal, 1.0);
 			frag_colour = vec4(diffuse + ambient + specular, 1.0);
 		}
 	` + "\x00"
@@ -177,7 +177,7 @@ func main() {
 		vertShader: vertexShaderSource,
 		fragShader: fragmentShaderSource,
 		camera: Camera{
-			position: mgl32.Vec3{1.5, 0.5, -2.5},
+			position: mgl32.Vec3{0.0, 0.5, -2.5},
 			center:   mgl32.Vec3{0.5, 0.0, 0.0},
 			up:       mgl32.Vec3{0.0, 1.0, 0.0},
 		},
@@ -186,6 +186,11 @@ func main() {
 				colour:   []float32{1.0, 1.0, 1.0},
 				strength: 0.50,
 				position: []float32{1.0, 0.0, -2.0},
+			},
+			Light{
+				colour:   []float32{1.0, 1.0, 1.0},
+				strength: 0.50,
+				position: []float32{2.0, 0.0, -0.5},
 			},
 		},
 	}
@@ -210,15 +215,15 @@ func main() {
 			diffuse:  []float32{0.6, 0.2, 0.6},
 			ambient:  []float32{0.1, 0.1, 0.1},
 			specular: []float32{0.8, 0.8, 0.8},
-			n:        10,
+			n:        100,
 		},
 		model: Model{
-			position: mgl32.Vec3{1.0, 0.0, 0.0},
+			position: mgl32.Vec3{0.0, 0.0, 0.0},
 			rotation: mgl32.Mat4{
-				0, 0, 0, 0,
-				0, 0, 0, 0,
-				0, 0, 0, 0,
-				0, 0, 0, 0},
+				1, 0, 0, 0,
+				0, 1, 0, 0,
+				0, 0, 1, 0,
+				0, 0, 0, 1},
 		},
 	}
 
@@ -243,13 +248,13 @@ func main() {
 		then = now
 		angle += 0.5 * deltaTime
 
-		state.objects[0].model.rotation = mgl32.HomogRotate3D(float32(angle), state.objects[0].model.position)
+		state.objects[0].model.rotation = mgl32.HomogRotate3D(float32(angle), mgl32.Vec3{0, 1, 0})
 		draw(window, state)
 	}
 }
 
 func draw(window *glfw.Window, state State) {
-	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
+	gl.ClearColor(0.0, 0.0, 0.0, 1.0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.Disable(gl.CULL_FACE)
 	gl.Enable(gl.DEPTH_TEST)
@@ -317,7 +322,7 @@ func draw(window *glfw.Window, state State) {
 		}
 
 		gl.BindVertexArray(state.objects[i].buffers.vao)
-		gl.DrawElements(gl.TRIANGLES, int32(len(triangleFaces)), gl.UNSIGNED_INT, unsafe.Pointer(nil))
+		gl.DrawElements(gl.TRIANGLES, int32(len(triangleFaces)), gl.UNSIGNED_INT, gl.Ptr(nil))
 		gl.BindVertexArray(0)
 
 		window.SwapBuffers()

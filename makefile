@@ -5,7 +5,7 @@ gogl:
 	go build
 
 run: clean gogl
-	./gogl
+	./GoGL
 
 clean:
-	$(RM) gogl
+	$(RM) GoGL
