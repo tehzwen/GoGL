@@ -1,12 +1,25 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
 	//"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/mathgl/mgl32"
 )
+
+type Geometry interface {
+	Setup(Material, Model, string) error
+	SetShader(string, string) error
+	GetProgramInfo() (ProgramInfo, error)
+	GetModel() (Model, error)
+	GetCentroid() mgl32.Vec3
+	GetMaterial() Material
+	GetBuffers() ObjectBuffers
+	GetVertices() VertexValues
+	SetRotation(mgl32.Mat4)
+}
 
 type Object struct {
 	name        string
@@ -21,6 +34,48 @@ type Object struct {
 	centroid    mgl32.Vec3
 }
 
+func (o *Object) SetShader(vertShader string, fragShader string) error {
+
+	if vertShader != "" && fragShader != "" {
+		o.fragShader = fragShader
+		o.vertShader = vertShader
+		return nil
+	} else {
+		return errors.New("Error setting the shader, shader code must not be blank")
+	}
+}
+
+//WIP
+func (o Object) Setup(mat Material, name string) error {
+	return nil
+}
+
+func (o Object) GetBuffers() ObjectBuffers {
+	return o.buffers
+}
+
+func (o Object) GetProgramInfo() (ProgramInfo, error) {
+	if (o.programInfo != ProgramInfo{}) {
+		return o.programInfo, nil
+	}
+	return ProgramInfo{}, errors.New("No program info!")
+}
+
+func (o Object) GetMaterial() Material {
+	return o.material
+}
+
+func (o Object) GetModel() (Model, error) {
+	if (o.model != Model{}) {
+		return o.model, nil
+	}
+	return Model{}, errors.New("No model info!")
+}
+
+func (o Object) GetCentroid() mgl32.Vec3 {
+	return o.centroid
+}
+
 type Attributes struct {
 	position       uint32
 	normal         uint32
@@ -33,6 +88,12 @@ type ObjectBuffers struct {
 	vao        uint32
 	vbo        uint32
 	attributes Attributes
+}
+
+type VertexValues struct {
+	vertices []float32
+	normals  []float32
+	faces    []uint32
 }
 
 type Uniforms struct {

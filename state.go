@@ -5,7 +5,7 @@ import (
 )
 
 type State struct {
-	objects    []Object
+	objects    []Geometry
 	fragShader string
 	vertShader string
 	camera     Camera

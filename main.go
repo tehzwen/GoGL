@@ -2,14 +2,11 @@ package main
 
 import (
 	"fmt"
-	//"github.com/go-gl/gl/v2.1/gl"
-	"log"
 	"math"
 	"runtime"
-	"strings"
-	//"unsafe"
-	"github.com/go-gl/gl/v4.1-core/gl" // OR: github.com/go-gl/gl/v2.1/gl
-	"github.com/go-gl/glfw/v3.2/glfw"
+
+	"github.com/go-gl/gl/v4.1-core/gl"
+	"github.com/go-gl/glfw/v3.1/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 )
 
@@ -67,26 +64,25 @@ const (
 			vec3 normal = normalize(normalInterp);
 
 			for (int i = 0; i < numLights; i++) {
-				vec3 lightDirection = normalize(lightPositions[i] - oFragPosition);
-
-				//ambient
-				ambient += (ambientVal * lightColours[i]) * lightStrengths[i];
-
-				//diffuse
-				float NdotL = max(dot(lightDirection, normal), 0.0);
-				diffuse += ((diffuseVal * lightColours[i]) * NdotL * lightStrengths[i]);
-
-				//specular
 				vec3 nCameraPosition = normalize(cameraPosition); // Normalize the camera position
-                vec3 V = normalize(nCameraPosition - oFragPosition);
-				vec3 H = normalize(V + lightDirection); // H = V + L normalized
-				
-				if (NdotL > 0.0f)
-				{
-					float NDotH = max(dot(normal, H), 0.0);
-                    float NHPow = pow(NDotH, nVal); // (N dot H)^n
-                    specular += ((specularVal * lightColours[i]) * NHPow);
-				}
+				vec3 V = normalize(nCameraPosition - oFragPosition);
+
+				vec3 lightDirection = normalize(lightPositions[i] - oFragPosition);
+				float diff = max(dot(normal, lightDirection), 0.0);
+				vec3 reflectDir = reflect(-lightDirection, normal);
+				float spec = pow(max(dot(V, reflectDir), 0.0), nVal);
+				float distance = length(lightPositions[i] - oFragPosition);
+				float attenuation = 1.0 / (distance * distance);
+				attenuation *= lightStrengths[i];
+
+				ambient += ambientVal * lightColours[i];
+				diffuse += diffuseVal * lightColours[i] * diff;
+				specular += specularVal * lightColours[i] * spec;
+
+				ambient *= attenuation;
+				diffuse *= attenuation;
+				specular *= attenuation;
+
 			}
 			frag_colour = vec4(diffuse + ambient + specular, 1.0);
 		}
@@ -94,81 +90,6 @@ const (
 )
 
 var angle = 0.0
-
-var (
-	triangle = []float32{
-		0.0, 0.0, 0.0,
-		0.0, 0.5, 0.0,
-		0.5, 0.5, 0.0,
-		0.5, 0.0, 0.0,
-
-		0.0, 0.0, 0.5,
-		0.0, 0.5, 0.5,
-		0.5, 0.5, 0.5,
-		0.5, 0.0, 0.5,
-
-		0.0, 0.5, 0.5,
-		0.0, 0.5, 0.0,
-		0.5, 0.5, 0.0,
-		0.5, 0.5, 0.5,
-
-		0.0, 0.0, 0.5,
-		0.5, 0.0, 0.5,
-		0.5, 0.0, 0.0,
-		0.0, 0.0, 0.0,
-
-		0.5, 0.0, 0.5,
-		0.5, 0.0, 0.0,
-		0.5, 0.5, 0.5,
-		0.5, 0.5, 0.0,
-
-		0.0, 0.0, 0.5,
-		0.0, 0.0, 0.0,
-		0.0, 0.5, 0.5,
-		0.0, 0.5, 0.0,
-	}
-)
-
-var triangleNormals = []float32{
-	0.0, 0.0, -1.0,
-	0.0, 0.0, -1.0,
-	0.0, 0.0, -1.0,
-	0.0, 0.0, -1.0,
-
-	0.0, 0.0, 1.0,
-	0.0, 0.0, 1.0,
-	0.0, 0.0, 1.0,
-	0.0, 0.0, 1.0,
-
-	0.0, 1.0, 0.0,
-	0.0, 1.0, 0.0,
-	0.0, 1.0, 0.0,
-	0.0, 1.0, 0.0,
-
-	0.0, -1.0, 0.0,
-	0.0, -1.0, 0.0,
-	0.0, -1.0, 0.0,
-	0.0, -1.0, 0.0,
-
-	1.0, 0.0, 0.0,
-	1.0, 0.0, 0.0,
-	1.0, 0.0, 0.0,
-	1.0, 0.0, 0.0,
-
-	-1.0, 0.0, 0.0,
-	-1.0, 0.0, 0.0,
-	-1.0, 0.0, 0.0,
-	-1.0, 0.0, 0.0,
-}
-
-var triangleFaces = []uint32{
-	0, 1, 2, 0, 2, 3,
-	4, 5, 6, 4, 6, 7,
-	8, 9, 10, 8, 10, 11,
-	12, 13, 14, 12, 14, 15,
-	16, 17, 18, 17, 18, 19,
-	20, 21, 22, 21, 22, 23,
-}
 
 func main() {
 	runtime.LockOSThread()
@@ -184,12 +105,12 @@ func main() {
 		lights: []Light{
 			Light{
 				colour:   []float32{1.0, 1.0, 1.0},
-				strength: 0.50,
+				strength: 10,
 				position: []float32{1.0, 0.0, -2.0},
 			},
 			Light{
 				colour:   []float32{1.0, 1.0, 1.0},
-				strength: 0.50,
+				strength: 0.1,
 				position: []float32{2.0, 0.0, -0.5},
 			},
 		},
@@ -197,46 +118,45 @@ func main() {
 
 	window := initGlfw()
 	defer glfw.Terminate()
-	program := initOpenGL(state.vertShader, state.fragShader)
+	var objectList = []Geometry{}
 
-	var testObject = Object{
-		name:       "zach",
-		fragShader: "1234",
-		vertShader: "123456",
-		programInfo: ProgramInfo{
-			program: program,
-			attributes: Attributes{
-				position: 0,
-				normal:   1,
+	testCube := Cube{}
+	testCube2 := Cube{}
+
+	err := testCube.SetShader(vertexShaderSource, fragmentShaderSource)
+	err = testCube2.SetShader(vertexShaderSource, fragmentShaderSource)
+
+	if err != nil {
+		panic(err)
+	} else {
+		testCube.Setup(
+			Material{
+				diffuse:  []float32{0.6, 0.8, 0.6},
+				ambient:  []float32{0.1, 0.1, 0.1},
+				specular: []float32{0.8, 0.8, 0.8},
+				n:        100,
 			},
-		},
-		vertices: triangle,
-		material: Material{
-			diffuse:  []float32{0.6, 0.2, 0.6},
-			ambient:  []float32{0.1, 0.1, 0.1},
-			specular: []float32{0.8, 0.8, 0.8},
-			n:        100,
-		},
-		model: Model{
-			position: mgl32.Vec3{0.0, 0.0, 0.0},
-			rotation: mgl32.Mat4{
-				1, 0, 0, 0,
-				0, 1, 0, 0,
-				0, 0, 1, 0,
-				0, 0, 0, 1},
-		},
+			Model{
+				position: mgl32.Vec3{1, 0, 0},
+				scale:    mgl32.Vec3{1, 1, 1},
+				rotation: mgl32.Ident4(),
+			}, "testcube1")
+
+		testCube2.Setup(
+			Material{
+				diffuse:  []float32{0.6, 0.2, 0.6},
+				ambient:  []float32{0.1, 0.1, 0.1},
+				specular: []float32{0.8, 0.8, 0.8},
+				n:        100,
+			}, Model{
+				position: mgl32.Vec3{0, 0, 0},
+				scale:    mgl32.Vec3{1, 1, 1},
+				rotation: mgl32.Ident4(),
+			}, "testcube2")
+
+		objectList = append(objectList, &testCube)
+		objectList = append(objectList, &testCube2)
 	}
-
-	SetupAttributes(&testObject.programInfo)
-
-	var objectList = []Object{}
-	vao := CreateTriangleVAO(&testObject.programInfo, triangle, triangleNormals, triangleFaces)
-	//normalBuffer := InitNormalAttribute(&testObject.programInfo, triangleNormals)
-	centroid := CalculateCentroid(testObject.vertices)
-
-	testObject.centroid = centroid
-	testObject.buffers.vao = vao
-	objectList = append(objectList, testObject)
 
 	state.objects = objectList
 
@@ -248,7 +168,10 @@ func main() {
 		then = now
 		angle += 0.5 * deltaTime
 
-		state.objects[0].model.rotation = mgl32.HomogRotate3D(float32(angle), mgl32.Vec3{0, 1, 0})
+		if err == nil {
+			newRot := mgl32.HomogRotate3D(float32(angle), mgl32.Vec3{0, 1, 0})
+			state.objects[0].SetRotation(newRot)
+		}
 		draw(window, state)
 	}
 }
@@ -276,7 +199,24 @@ func draw(window *glfw.Window, state State) {
 
 	for i := 0; i < len(state.objects); i++ {
 
-		gl.UseProgram(state.objects[i].programInfo.program)
+		currentProgramInfo, err := state.objects[i].GetProgramInfo()
+
+		if err != nil {
+			//else lets throw an error here
+			fmt.Printf("ERROR getting program info!")
+		}
+		gl.UseProgram(currentProgramInfo.program)
+		//now get the model
+		currentModel, err := state.objects[i].GetModel()
+		if err != nil {
+			//throw an error
+			fmt.Printf("ERROR getting model!")
+		}
+
+		currentCentroid := state.objects[i].GetCentroid()
+		currentMaterial := state.objects[i].GetMaterial()
+		currentBuffers := state.objects[i].GetBuffers()
+		currentVertices := state.objects[i].GetVertices()
 
 		var fovy = float32(60 * math.Pi / 180)
 		var aspect = float32(width / height)
@@ -285,48 +225,49 @@ func draw(window *glfw.Window, state State) {
 
 		//projection matrix
 		projection := mgl32.Perspective(fovy, aspect, near, far)
-		gl.UniformMatrix4fv(state.objects[i].programInfo.uniformLocations.projection, 1, false, &projection[0])
+		gl.UniformMatrix4fv(currentProgramInfo.uniformLocations.projection, 1, false, &projection[0])
 
 		//view matrix
 		viewMatrix := mgl32.LookAtV(state.camera.position, state.camera.center, state.camera.up)
-		gl.UniformMatrix4fv(state.objects[i].programInfo.uniformLocations.view, 1, false, &viewMatrix[0])
+		gl.UniformMatrix4fv(currentProgramInfo.uniformLocations.view, 1, false, &viewMatrix[0])
 
 		//model matrix
 		modelMatrix := mgl32.Ident4()
-		positionMat := mgl32.Translate3D(state.objects[i].model.position[0], state.objects[i].model.position[1], state.objects[i].model.position[2])
+		positionMat := mgl32.Translate3D(currentModel.position[0], currentModel.position[1], currentModel.position[2])
 		modelMatrix = modelMatrix.Mul4(positionMat)
-		centroidMat := mgl32.Translate3D(state.objects[i].centroid[0], state.objects[i].centroid[1], state.objects[i].centroid[2])
+		centroidMat := mgl32.Translate3D(currentCentroid[0], currentCentroid[1], currentCentroid[2])
 		modelMatrix = modelMatrix.Mul4(centroidMat)
-		modelMatrix = modelMatrix.Mul4(state.objects[i].model.rotation)
-		negCent := mgl32.Translate3D(-state.objects[i].centroid[0], -state.objects[i].centroid[1], -state.objects[i].centroid[2])
+		modelMatrix = modelMatrix.Mul4(currentModel.rotation)
+		negCent := mgl32.Translate3D(-currentCentroid[0], -currentCentroid[1], -currentCentroid[2])
 		modelMatrix = modelMatrix.Mul4(negCent)
 
-		gl.UniformMatrix4fv(state.objects[i].programInfo.uniformLocations.model, 1, false, &modelMatrix[0])
+		gl.UniformMatrix4fv(currentProgramInfo.uniformLocations.model, 1, false, &modelMatrix[0])
 
-		gl.Uniform3fv(state.objects[i].programInfo.uniformLocations.diffuseVal, 1, &state.objects[i].material.diffuse[0])
-		gl.Uniform3fv(state.objects[i].programInfo.uniformLocations.ambientVal, 1, &state.objects[i].material.ambient[0])
-		gl.Uniform3fv(state.objects[i].programInfo.uniformLocations.specularVal, 1, &state.objects[i].material.specular[0])
-		gl.Uniform1f(state.objects[i].programInfo.uniformLocations.nVal, state.objects[i].material.n)
+		gl.Uniform3fv(currentProgramInfo.uniformLocations.diffuseVal, 1, &currentMaterial.diffuse[0])
+		gl.Uniform3fv(currentProgramInfo.uniformLocations.ambientVal, 1, &currentMaterial.ambient[0])
+		gl.Uniform3fv(currentProgramInfo.uniformLocations.specularVal, 1, &currentMaterial.specular[0])
+		gl.Uniform1f(currentProgramInfo.uniformLocations.nVal, currentMaterial.n)
 
-		gl.Uniform1i(state.objects[i].programInfo.uniformLocations.numLights, int32(len(state.lights)))
+		gl.Uniform1i(currentProgramInfo.uniformLocations.numLights, int32(len(state.lights)))
 
 		//update camera
 		camPosition := []float32{state.camera.position[0], state.camera.position[1], state.camera.position[2]}
-		gl.Uniform3fv(state.objects[i].programInfo.uniformLocations.cameraPosition, 1, &camPosition[0])
+		gl.Uniform3fv(currentProgramInfo.uniformLocations.cameraPosition, 1, &camPosition[0])
 
 		//update lights
 		if len(lightPositionArray) > 0 && len(lightColorArray) > 0 && len(lightStrengthArray) > 0 {
-			gl.Uniform3fv(state.objects[i].programInfo.uniformLocations.lightPositions, int32(len(lightPositionArray)/3), &lightPositionArray[0])
-			gl.Uniform3fv(state.objects[i].programInfo.uniformLocations.lightColours, int32(len(lightColorArray)/3), &lightColorArray[0])
-			gl.Uniform1fv(state.objects[i].programInfo.uniformLocations.lightStrengths, int32(len(lightStrengthArray)), &lightStrengthArray[0])
+			gl.Uniform3fv(currentProgramInfo.uniformLocations.lightPositions, int32(len(lightPositionArray)/3), &lightPositionArray[0])
+			gl.Uniform3fv(currentProgramInfo.uniformLocations.lightColours, int32(len(lightColorArray)/3), &lightColorArray[0])
+			gl.Uniform1fv(currentProgramInfo.uniformLocations.lightStrengths, int32(len(lightStrengthArray)), &lightStrengthArray[0])
 		}
 
-		gl.BindVertexArray(state.objects[i].buffers.vao)
-		gl.DrawElements(gl.TRIANGLES, int32(len(triangleFaces)), gl.UNSIGNED_INT, gl.Ptr(nil))
+		gl.BindVertexArray(currentBuffers.vao)
+		gl.DrawElements(gl.TRIANGLES, int32(len(currentVertices.vertices)), gl.UNSIGNED_INT, gl.Ptr(nil))
 		gl.BindVertexArray(0)
 
-		window.SwapBuffers()
+		//window.SwapBuffers()
 	}
+	window.SwapBuffers()
 
 }
 
@@ -348,52 +289,4 @@ func initGlfw() *glfw.Window {
 	window.MakeContextCurrent()
 
 	return window
-}
-
-// initOpenGL initializes OpenGL and returns an intiialized program.
-func initOpenGL(vertexShaderSource string, fragmentShaderSource string) uint32 {
-	if err := gl.Init(); err != nil {
-		panic(err)
-	}
-	version := gl.GoStr(gl.GetString(gl.VERSION))
-	log.Println("OpenGL version", version)
-
-	vertexShader, err := compileShader(vertexShaderSource, gl.VERTEX_SHADER)
-	if err != nil {
-		panic(err)
-	}
-
-	fragmentShader, err := compileShader(fragmentShaderSource, gl.FRAGMENT_SHADER)
-	if err != nil {
-		panic(err)
-	}
-
-	prog := gl.CreateProgram()
-	gl.AttachShader(prog, vertexShader)
-	gl.AttachShader(prog, fragmentShader)
-	gl.LinkProgram(prog)
-	return prog
-}
-
-func compileShader(source string, shaderType uint32) (uint32, error) {
-	shader := gl.CreateShader(shaderType)
-
-	csources, free := gl.Strs(source)
-	gl.ShaderSource(shader, 1, csources, nil)
-	free()
-	gl.CompileShader(shader)
-
-	var status int32
-	gl.GetShaderiv(shader, gl.COMPILE_STATUS, &status)
-	if status == gl.FALSE {
-		var logLength int32
-		gl.GetShaderiv(shader, gl.INFO_LOG_LENGTH, &logLength)
-
-		log := strings.Repeat("\x00", int(logLength+1))
-		gl.GetShaderInfoLog(shader, logLength, nil, gl.Str(log))
-
-		return 0, fmt.Errorf("failed to compile %v: %v", source, log)
-	}
-
-	return shader, nil
 }
