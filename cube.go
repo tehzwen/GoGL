@@ -6,6 +6,7 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
+// Cube : Primitive cube geometry struct
 type Cube struct {
 	name         string
 	fragShader   string
@@ -18,6 +19,7 @@ type Cube struct {
 	vertexValues VertexValues
 }
 
+// SetShader : helper function for applying frag/vert shader
 func (c *Cube) SetShader(vertShader string, fragShader string) error {
 
 	if vertShader != "" && fragShader != "" {
@@ -29,40 +31,48 @@ func (c *Cube) SetShader(vertShader string, fragShader string) error {
 	}
 }
 
+// GetProgramInfo : getter for programinfo
 func (c Cube) GetProgramInfo() (ProgramInfo, error) {
 	if (c.programInfo != ProgramInfo{}) {
 		return c.programInfo, nil
 	}
-	return ProgramInfo{}, errors.New("No program info!")
+	return ProgramInfo{}, errors.New("No program info")
 }
 
+// GetMaterial : getter for material
 func (c Cube) GetMaterial() Material {
 	return c.material
 }
 
+// GetVertices : getter for vertexValues
 func (c Cube) GetVertices() VertexValues {
 	return c.vertexValues
 }
 
+// GetCentroid : getter for centroid
 func (c Cube) GetCentroid() mgl32.Vec3 {
 	return c.centroid
 }
 
+// GetBuffers : getter for buffers
 func (c Cube) GetBuffers() ObjectBuffers {
 	return c.buffers
 }
 
+// SetRotation : helper function for setting rotation of cube to a mat4
 func (c *Cube) SetRotation(rot mgl32.Mat4) {
 	c.model.rotation = rot
 }
 
+// GetModel : getter for model values
 func (c Cube) GetModel() (Model, error) {
 	if (c.model != Model{}) {
 		return c.model, nil
 	}
-	return Model{}, errors.New("No model info!")
+	return Model{}, errors.New("no model info")
 }
 
+// Setup : function for initializing cube
 func (c *Cube) Setup(mat Material, mod Model, name string) error {
 
 	c.name = name

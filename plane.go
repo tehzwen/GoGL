@@ -6,6 +6,7 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
+// Plane : Primitive plane geometry struct
 type Plane struct {
 	name         string
 	fragShader   string
@@ -18,6 +19,7 @@ type Plane struct {
 	vertexValues VertexValues
 }
 
+// SetShader : helper function for applying frag/vert shader
 func (p *Plane) SetShader(vertShader string, fragShader string) error {
 
 	if vertShader != "" && fragShader != "" {
@@ -29,40 +31,48 @@ func (p *Plane) SetShader(vertShader string, fragShader string) error {
 	}
 }
 
+// GetProgramInfo : getter for programinfo
 func (p Plane) GetProgramInfo() (ProgramInfo, error) {
 	if (p.programInfo != ProgramInfo{}) {
 		return p.programInfo, nil
 	}
-	return ProgramInfo{}, errors.New("No program info!")
+	return ProgramInfo{}, errors.New("No program info")
 }
 
+// GetMaterial : getter for material
 func (p Plane) GetMaterial() Material {
 	return p.material
 }
 
+// GetVertices : getter for vertexValues
 func (p Plane) GetVertices() VertexValues {
 	return p.vertexValues
 }
 
+// GetCentroid : getter for centroid
 func (p Plane) GetCentroid() mgl32.Vec3 {
 	return p.centroid
 }
 
+// GetBuffers : getter for buffers
 func (p Plane) GetBuffers() ObjectBuffers {
 	return p.buffers
 }
 
+// SetRotation : helper function for setting rotation of cube to a mat4
 func (p *Plane) SetRotation(rot mgl32.Mat4) {
 	p.model.rotation = rot
 }
 
+// GetModel : getter for model values
 func (p Plane) GetModel() (Model, error) {
 	if (p.model != Model{}) {
 		return p.model, nil
 	}
-	return Model{}, errors.New("No model info!")
+	return Model{}, errors.New("no model info")
 }
 
+// Setup : function for initializing plane
 func (p *Plane) Setup(mat Material, mod Model, name string) error {
 
 	p.name = name
