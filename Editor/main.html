@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>WebGL Engine</title>
+    <link rel="shortcut icon" href="favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="./style/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="./style/style.css">
+</head>
+
+<body>
+    <!-- This is the navigation bar at the top of the page -->
+    <!-- This is populated by loading the common functions script -->
+    <div id="myNavBar"></div>
+
+    <!-- This is for displaying errors caused by our JavaScript -->
+    <!-- This will only be populated when an error on the JavaScript side occurs -->
+    <div id="webglError"></div>
+
+    <div id="fps"></div>
+
+    <!-- This is a container for our content -->
+    <div class="row">
+        <div class="col">
+            <div class="mx-auto text-center my-5">
+                <!-- Title -->
+            </div>
+            <div class="mx-auto text-center">
+                <!-- This is our canvas for the example -->
+                <!-- Our script will find this tag and populate it with our drawing -->
+                <canvas id="glCanvas" width="1400" height="800"></canvas>
+            </div>
+        </div>
+        <div class="col">
+            <div class="mx-auto text-center my-5">
+                <h3>Scene Objects</h3>
+            </div>
+            <div class="mx-auto text-center" id="objectsNav">
+            </div>
+            <div class="mx-auto text-center my-5">
+                <h3>Selected Object</h3>
+            </div>
+            <div class="mx-auto text-center" id="selectedObject">
+            </div>
+        </div>
+        <!-- 
+        <div class="col">
+            <div class="mx-auto text-center my-5">
+                <h3>Add Objects</h3>
+            </div>
+            <div class="mx-auto text-center" id="addObjectsNav">
+            </div>
+        </div> -->
+    </div>
+
+
+    <!-- This is a third party library for matrix math needed for WebGL calculations -->
+    <!-- See http://glmatrix.net/ for documentation -->
+    <script src="./lib/gl-matrix.js" type="text/javascript"></script>
+    <script src="./lib/three-object-loader.js" type="text/javascript"></script>
+    <script src="./lib/stats.js" type="text/javascript"></script>
+    <script src="./src/mousePicker.js" type="text/javascript"></script>
+    <script src="./src/commonFunctions.js" type="text/javascript"></script>
+
+    <script src="./src/objects/Cube.js" type="text/javascript"></script>
+    <script src="./src/objects/Model.js" type="text/javascript"></script>
+    <script src="./src/objects/Light.js" type="text/javascript"></script>
+    <script src="./src/objects/Plane.js" type="text/javascript"></script>
+
+    <script src="./src/sceneFunctions.js" type="text/javascript"></script>
+    <script src="./src/myGame.js" type="text/javascript"></script>
+
+    <!-- This is our example 
+    <script src="./main.js" type="text/javascript"></script>-->
+    <script src="./src/main.js" type="text/javascript"></script>
+    <script src="./src/uiSetup.js" type="text/javascript"></script>
+
+</body>
+
+</html>

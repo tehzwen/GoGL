@@ -1,0 +1,72 @@
+
+{
+    "objects" : [
+        {
+            "name" : "apple",
+            "material" : {"diffuse" : [0.8, 0.2, 0.2], "ambient": [0.001, 0.001, 0.001], "specular": [0.8, 0.8, 0.8], "n":50, "alpha":1.0},
+            "type": "mesh",
+            "model" : "./models/apple.obj",
+            "parent" : null,
+            "position": [0.0, 0.0, 1.0],
+            "scale": [2.0, 2.0, 2.0]
+        },
+        {
+            "name" : "alien",
+            "material" : {"diffuse" : [0.2, 0.2, 0.2], "ambient": [0.001, 0.001, 0.001], "specular": [0.8, 0.8, 0.8], "n":12, "alpha":1.0},
+            "type": "mesh",
+            "model" : "./models/alien.obj",
+            "parent" : null,
+            "position": [1.0, 0.0, 1.0],
+            "scale": [1.0, 1.0, 1.0]
+        },
+        {
+            "name" : "wall0",
+            "material" : {"diffuse" : [0.2, 0.2, 0.2], "ambient": [0.1, 0.1, 0.1], "specular": [0.8, 0.8, 0.8], "n":10, "alpha":1.0},
+            "type": "cube",
+            "texture": "./materials/plywood.jpg",
+            "textureNorm": "./materials/checkerNorm.jpg",
+            "parent" : null,
+            "position": [2.0, -1.0, -2],
+            "scale": [1.0, 4.0, 10.0]
+        },
+        {
+            "name" : "wall1",
+            "material" : {"diffuse" : [0.2, 0.2, 0.2], "ambient": [0.1, 0.1, 0.1], "specular": [0.8, 0.8, 0.8], "n":10, "alpha":1.0},
+            "type": "cube",
+            "texture": "./materials/plywood.jpg",
+            "parent" : null,
+            "position": [-2.0, -1.0, -2],
+            "scale": [1.0, 4.0, 10.0]
+        },
+        {
+            "name" : "floorPlane",
+            "material" : {"diffuse" : [0.2, 0.2, 0.2], "ambient": [0.1, 0.1, 0.1], "specular": [0.8, 0.8, 0.8], "n":10, "alpha":1.0},
+            "type": "plane",
+            "texture": "./materials/default.png",
+            "textureNorm": "./materials/concreteBricks.jpg",
+            "parent" : null,
+            "position": [-5.0, -1.5, -6.0],
+            "scale": [50, 1, 50]
+        },
+        {
+            "name": "light0",
+            "type": "light",
+            "model" : "./models/lightbulb.obj",
+            "position" : [-1.45, 0.8, -1.5],
+            "material" : {"diffuse" : [1.0, 1.0, 1.0], "ambient": [0.1, 0.1, 0.1], "specular": [0.3, 0.3, 0.3], "n":1000, "alpha":1.0},
+            "colour" : [1.0, 1.0, 1.0],
+            "parent" : null,
+            "strength" : 0.75
+        },
+        {
+            "name": "light1",
+            "type": "light",
+            "model" : "./models/lightbulb.obj",
+            "position" : [1.9, 0.8, 2.5],
+            "material" : {"diffuse" : [1.0, 1.0, 1.0], "ambient": [0.1, 0.1, 0.1], "specular": [0.3, 0.3, 0.3], "n":1000, "alpha":1.0},
+            "colour" : [1.0, 1.0, 1.0],
+            "parent" : null,
+            "strength" : 0.75
+        }
+    ]
+}
