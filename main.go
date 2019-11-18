@@ -110,7 +110,7 @@ func main() {
 			},
 			Light{
 				colour:   []float32{1.0, 1.0, 1.0},
-				strength: 0.1,
+				strength: 0.4,
 				position: []float32{2.0, 0.0, -0.5},
 			},
 		},

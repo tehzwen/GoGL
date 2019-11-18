@@ -4,6 +4,9 @@ var stats = new Stats();
 
 window.onload = () => {
     parseSceneFile("./statefiles/alienScene.json", state, main);
+    document.getElementById('saveButton').addEventListener('click', () => {
+        createSceneFile(state, "./statefiles/testsave.json");
+    })
 }
 
 /**
@@ -14,7 +17,7 @@ window.onload = () => {
  */
 function createMesh(mesh, object) {
     if (object.type === "mesh") {
-        let testModel = new Model(state.gl, object.name, mesh, object.parent, object.material.ambient, object.material.diffuse, object.material.specular, object.material.n, object.material.alpha, object.texture);
+        let testModel = new Model(state.gl, object, mesh);
         testModel.vertShader = state.vertShaderSample;
         testModel.fragShader = state.fragShaderSample;
         testModel.setup();
@@ -24,7 +27,7 @@ function createMesh(mesh, object) {
         }
         addObjectToScene(state, testModel);
     } else {
-        let testLight = new Light(state.gl, object.name, mesh, object.parent, object.material.ambient, object.material.diffuse, object.material.specular, object.material.n, object.material.alpha, object.colour, object.strength);
+        let testLight = new Light(state.gl, object, mesh);
         testLight.vertShader = state.vertShaderSample;
         testLight.fragShader = state.fragShaderSample;
         testLight.setup();
@@ -215,7 +218,7 @@ function main() {
         if (object.type === "mesh" || object.type === "light") {
             parseOBJFileToJSON(object.model, createMesh, object);
         } else if (object.type === "cube") {
-            let tempCube = new Cube(gl, object.name, object.parent, object.material.ambient, object.material.diffuse, object.material.specular, object.material.n, object.material.alpha, object.texture, object.textureNorm);
+            let tempCube = new Cube(gl, object);
             tempCube.vertShader = vertShaderSample;
             tempCube.fragShader = fragShaderSample;
             tempCube.setup();
@@ -225,7 +228,7 @@ function main() {
             }
             addObjectToScene(state, tempCube);
         } else if (object.type === "plane") {
-            let tempPlane = new Plane(gl, object.name, object.parent, object.material.ambient, object.material.diffuse, object.material.specular, object.material.n, object.material.alpha, object.texture, object.textureNorm);
+            let tempPlane = new Plane(gl, object);
             tempPlane.vertShader = vertShaderSample;
             tempPlane.fragShader = fragShaderSample;
             tempPlane.setup();
@@ -410,8 +413,6 @@ function drawScene(gl, deltaTime, state) {
                 gl.uniform1f(object.programInfo.uniformLocations.nVal, object.material.n);
 
                 gl.uniform1i(object.programInfo.uniformLocations.numLights, state.numLights);
-
-
 
                 //use this check to wait until the light meshes are loaded properly
                 if (lightColourArray.length > 0 && lightPositionArray.length > 0 && lightStrengthArray.length > 0) {

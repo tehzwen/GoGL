@@ -1,12 +1,12 @@
 class Light {
-    constructor(glContext, name, meshDetails, parent = null, ambient, diffuse, specular, n, alpha, colour, strength) {
+    constructor(glContext, object, meshDetails) {
         this.gl = glContext;
-        this.name = name;
-        this.parent = parent;
+        this.name = object.name;
+        this.parent = object.parent;
         this.type = "light";
         this.loaded = false;
 
-        this.material = { ambient, diffuse, specular, n, alpha };
+        this.material = object.material;
         this.model = {
             normals: meshDetails.normals,
             vertices: meshDetails.vertices,
@@ -16,8 +16,8 @@ class Light {
             scale: vec3.fromValues(1.0, 1.0, 1.0),
         };
         this.modelMatrix = mat4.create();
-        this.colour = vec3.fromValues(colour[0], colour[1], colour[2]);
-        this.strength = strength;
+        this.colour = vec3.fromValues(object.colour[0], object.colour[1], object.colour[2]);
+        this.strength = object.strength;
 
         this.lightingShader = this.lightingShader.bind(this);
     }

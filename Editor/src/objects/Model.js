@@ -1,12 +1,13 @@
 class Model {
-    constructor(glContext, name, meshDetails, parent = null, ambient, diffuse, specular, n, alpha, texture) {
+    constructor(glContext, object, meshDetails) {
         this.gl = glContext;
-        this.name = name;
-        this.parent = parent;
+        this.name = object.name;
+        this.parent = object.parent;
         this.type = "mesh";
         this.loaded = false;
+        this.modelName = object.model;
 
-        this.material = { ambient, diffuse, specular, n, alpha };
+        this.material = object.material;
         this.model = {
             normals: meshDetails.normals,
             vertices: meshDetails.vertices,
@@ -14,7 +15,7 @@ class Model {
             position: vec3.fromValues(0.0, 0.0, 0.0),
             rotation: mat4.create(),
             scale: vec3.fromValues(1.0, 1.0, 1.0),
-            texture: texture ? getTextures(glContext, texture) : null
+            texture: object.texture ? getTextures(glContext, object.texture) : null
         };
         this.modelMatrix = mat4.create();
 

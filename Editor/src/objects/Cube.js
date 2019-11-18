@@ -1,13 +1,13 @@
 class Cube {
-    constructor(glContext, name, parent = null, ambient, diffuse, specular, n, alpha, texture, textureNorm) {
+    constructor(glContext, object) {
         this.state = {};
         this.gl = glContext;
-        this.name = name;
-        this.parent = parent;
-        this.type = "primitive";
+        this.name = object.name;
+        this.parent = object.parent;
+        this.type = object.type;
         this.loaded = false;
 
-        this.material = { ambient, diffuse, specular, n, alpha };
+        this.material = object.material;
         this.model = {
             vertices: [
                 [0.0, 0.0, 0.0],
@@ -141,8 +141,10 @@ class Cube {
                 0, 0, -1,
                 0, 0, -1, // Bot
             ],
-            texture: texture ? getTextures(glContext, texture) : null,
-            textureNorm: textureNorm ? getTextures(glContext, textureNorm) : null,
+            diffuseTexture: object.texture ? object.texture : null,
+            normalTexture : object.textureNorm ? object.textureNorm : null,
+            texture: object.texture ? getTextures(glContext, object.texture) : null,
+            textureNorm: object.textureNorm ? getTextures(glContext, object.textureNorm) : null,
             buffers: null,
             modelMatrix: mat4.create(),
             position: vec3.fromValues(0.0, 0.0, 0.0),

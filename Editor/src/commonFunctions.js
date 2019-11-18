@@ -1,3 +1,5 @@
+const fs = require('fs')
+
 /**
  * @param  {} gl WebGL2 Context
  * @param  {string} vsSource Vertex shader GLSL source code
@@ -362,12 +364,70 @@ function parseSceneFile(file, state, cb) {
             return data.json();
         })
         .then((jData) => {
-            state.level = jData;
-            state.numberOfObjectsToLoad = jData.objects.length;
+            state.level = jData[0];
+            state.numberOfObjectsToLoad = jData[0].objects.length;
 
             cb();
         })
         .catch((err) => {
             console.error(err);
         })
+}
+
+function createSceneFile(state, filename) {
+    let totalState = [
+        {
+            objects: [],
+            lights: [],
+            settings: {
+
+            }
+        }];
+
+    //objects first
+    state.objects.map((object) => {
+        //console.log(object);
+        if (object.type === "cube" || object.type === "plane") {
+            totalState[0].objects.push({
+                name: object.name,
+                material: object.material,
+                type: object.type, //might change this to be an int value for speed
+                position: object.model.position,
+                scale: object.model.scale,
+                diffuseTexture: object.model.diffuseTexture,
+                normalTexture: object.model.normalTexture,
+                parent: object.parent
+            });
+        } else if (object.type === "mesh") {
+            totalState[0].objects.push({
+                name: object.name,
+                material: object.material,
+                type: object.type,
+                position: object.model.position,
+                scale: object.model.scale,
+                diffuseTexture: object.model.diffuseTexture,
+                normalTexture: object.model.normalTexture,
+                parent: object.parent,
+                model: object.modelName
+            });
+        } else if (object.type === "light") {
+            totalState[0].lights.push({
+                name: object.name,
+                material: object.material,
+                type: object.type,
+                position: object.model.position,
+                scale: object.model.scale,
+                diffuseTexture: object.model.diffuseTexture,
+                normalTexture: object.model.normalTexture,
+                parent: object.parent,
+                model: object.modelName,
+                colour: object.colour,
+                strength: object.strength
+            })
+        }
+    });
+    console.log(totalState);
+    fs.writeFile(filename, JSON.stringify(totalState), 'utf-8', () => {
+        console.log("Writing complete!")
+    })
 }
