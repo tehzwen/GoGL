@@ -1,12 +1,38 @@
 var total = 0;
 var state = {};
 var stats = new Stats();
+var exec = require('child_process').exec;
+var sceneFile = "alienScene.json";
+var saveFile = "testsave.json"
 
 window.onload = () => {
-    parseSceneFile("./statefiles/testsave2.json", state, main);
+    parseSceneFile("./statefiles/" + sceneFile, state, main);
     document.getElementById('saveButton').addEventListener('click', () => {
-        createSceneFile(state, "./statefiles/testsave2.json");
+        createSceneFile(state, "./statefiles/" + saveFile);
     })
+    console.log(__dirname);
+    document.getElementById('launchButton').addEventListener('click', () => {
+        buildCommand = exec("make -C ../Renderer/", function(err, stdout, stderr) {
+            if (err) {
+              // should have err.code here?  
+              console.error(err);
+            }
+            console.log(stdout);
+          })
+          
+          buildCommand.on('exit', function (code) {
+            // exit code is code
+            console.warn(code);
+            
+            runCommand = exec("../Renderer/GoGL " + __dirname + "/statefiles/" + saveFile, (err, stdout, stderr) => {
+                console.log(stdout);
+            })
+            runCommand.on('exit', (eCode) => {
+                console.warn(eCode);
+            })
+          });
+    })
+
 }
 
 /**
@@ -295,6 +321,7 @@ function startRendering(gl, state) {
         //wait until the scene is completely loaded to render it
         if (state.numberOfObjectsToLoad <= state.objects.length) {
             if (!state.gameStarted) {
+                console.log(state.objects)
                 startGame(state);
                 state.gameStarted = true;
             }
@@ -316,14 +343,11 @@ function startRendering(gl, state) {
                 //vec3.rotateY(state.camera.center, state.camera.center, state.camera.position, (state.camera.yaw - 0.25) * deltaTime * state.mouse.sensitivity);
                 vec3.rotateY(state.camera.center, state.camera.center, state.camera.position, (-state.mouse.rateX * deltaTime * state.mouse.sensitivity));
             }
-
             /*
             let apple = getObject(state, "apple");
-            let alien = getObject(state, "alien");
-
+            let alien = getObject(state, "alien"); 
             apple.centroid = alien.model.position;
             mat4.rotateY(apple.model.rotation, apple.model.rotation, 0.3 * deltaTime);
-
             */
             // Draw our scene
             drawScene(gl, deltaTime, state);
@@ -442,7 +466,6 @@ function drawScene(gl, deltaTime, state) {
                         gl.activeTexture(gl.TEXTURE0);
                         state.samplerExists = 0;
                         gl.uniform1i(object.programInfo.uniformLocations.samplerExists, state.samplerExists);
-                        gl.bindTexture(gl.TEXTURE_2D, null);
                     }
 
                     //check for normal texture and apply it
@@ -457,7 +480,6 @@ function drawScene(gl, deltaTime, state) {
                         gl.activeTexture(gl.TEXTURE1);
                         state.samplerNormExists = 0;
                         gl.uniform1i(object.programInfo.uniformLocations.normalSamplerExists, state.samplerNormExists);
-                        gl.bindTexture(gl.TEXTURE_2D, null);
                     }
 
                     // Draw the object

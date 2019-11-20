@@ -23,16 +23,16 @@
                     "alpha": 1
                 },
                 "type": "cube",
-                "position": {
-                    "0": 2,
-                    "1": -1,
-                    "2": -2
-                },
-                "scale": {
-                    "0": 1,
-                    "1": 4,
-                    "2": 10
-                },
+                "position": [
+                    1,
+                    0,
+                    0
+                ],
+                "scale": [
+                    1,
+                    4,
+                    10
+                ],
                 "diffuseTexture": "./materials/plywood.jpg",
                 "normalTexture": "./materials/checkerNorm.jpg",
                 "parent": null,
@@ -60,16 +60,16 @@
                     "alpha": 1
                 },
                 "type": "cube",
-                "position": {
-                    "0": -2,
-                    "1": -1,
-                    "2": -2
-                },
-                "scale": {
-                    "0": 1,
-                    "1": 4,
-                    "2": 10
-                },
+                "position": [
+                    -2,
+                    -1,
+                    -2
+                ],
+                "scale": [
+                    1,
+                    4,
+                    10
+                ],
                 "diffuseTexture": "./materials/plywood.jpg",
                 "normalTexture": null,
                 "parent": null,
@@ -97,16 +97,16 @@
                     "alpha": 1
                 },
                 "type": "plane",
-                "position": {
-                    "0": -5,
-                    "1": -1.5,
-                    "2": -6
-                },
-                "scale": {
-                    "0": 50,
-                    "1": 1,
-                    "2": 50
-                },
+                "position": [
+                    -5,
+                    -1.5,
+                    -6
+                ],
+                "scale": [
+                    50,
+                    1,
+                    50
+                ],
                 "diffuseTexture": "./materials/default.png",
                 "normalTexture": "./materials/concreteBricks.jpg",
                 "parent": null,
@@ -139,11 +139,11 @@
                     0,
                     1
                 ],
-                "scale": {
-                    "0": 2,
-                    "1": 2,
-                    "2": 2
-                },
+                "scale": [
+                    2,
+                    2,
+                    2
+                ],
                 "diffuseTexture": null,
                 "normalTexture": null,
                 "parent": null,
@@ -176,11 +176,11 @@
                     0,
                     1
                 ],
-                "scale": {
-                    "0": 1,
-                    "1": 1,
-                    "2": 1
-                },
+                "scale": [
+                    1,
+                    1,
+                    1
+                ],
                 "diffuseTexture": null,
                 "normalTexture": null,
                 "parent": null,
@@ -215,20 +215,20 @@
                     0.8,
                     -1.5
                 ],
-                "scale": {
-                    "0": 1,
-                    "1": 1,
-                    "2": 1
-                },
+                "scale": [
+                    1,
+                    1,
+                    1
+                ],
                 "diffuseTexture": null,
                 "normalTexture": null,
                 "parent": null,
                 "model": "./models/lightbulb.obj",
-                "colour": {
-                    "0": 1,
-                    "1": 1,
-                    "2": 1
-                },
+                "colour": [
+                    1,
+                    1,
+                    1
+                ],
                 "strength": 0.75
             },
             {
@@ -258,20 +258,20 @@
                     0.8,
                     2.5
                 ],
-                "scale": {
-                    "0": 1,
-                    "1": 1,
-                    "2": 1
-                },
+                "scale": [
+                    1,
+                    1,
+                    1
+                ],
                 "diffuseTexture": null,
                 "normalTexture": null,
                 "parent": null,
                 "model": "./models/lightbulb.obj",
-                "colour": {
-                    "0": 1,
-                    "1": 1,
-                    "2": 1
-                },
+                "colour": [
+                    1,
+                    1,
+                    1
+                ],
                 "strength": 0.75
             }
         ],

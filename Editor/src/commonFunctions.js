@@ -328,19 +328,18 @@ function getTextures(gl, imgPath) {
 }
 
 function parseOBJFileToJSON(objFileURL, cb, object) {
-    console.log(objFileURL)
     if (objFileURL) {
         fetch(objFileURL)
-        .then((data) => {
-            return data.text();
-        })
-        .then((text) => {
-            let mesh = OBJLoader.prototype.parse(text);
-            cb(mesh, object);
-        })
-        .catch((err) => {
-            console.error(err);
-        })
+            .then((data) => {
+                return data.text();
+            })
+            .then((text) => {
+                let mesh = OBJLoader.prototype.parse(text);
+                cb(mesh, object);
+            })
+            .catch((err) => {
+                console.error(err);
+            })
     }
 }
 
@@ -368,7 +367,7 @@ function parseSceneFile(file, state, cb) {
         })
         .then((jData) => {
             state.level = jData[0];
-            state.numberOfObjectsToLoad = jData[0].objects.length;
+            state.numberOfObjectsToLoad = jData[0].objects.length + jData[0].lights.length;
 
             cb();
         })
@@ -395,13 +394,13 @@ function createSceneFile(state, filename) {
                 name: object.name ? object.name : null,
                 material: object.material ? object.material : null,
                 type: object.type ? object.type : null,
-                position: object.model.position ? object.model.position : null,
-                scale: object.model.scale ? object.model.scale : null,
+                position: object.model.position ? [object.model.position[0], object.model.position[1], object.model.position[2]] : null, //change these to arrays
+                scale: object.model.scale ? [object.model.scale[0], object.model.scale[1], object.model.scale[2]] : null,
                 diffuseTexture: object.model.diffuseTexture ? object.model.diffuseTexture : null,
                 normalTexture: object.model.normalTexture ? object.model.normalTexture : null,
                 parent: object.parent ? object.parent : null,
                 model: object.modelName ? object.modelName : null,
-                colour: object.colour ? object.colour : null,
+                colour: object.colour ? [object.colour[0], object.colour[1], object.colour[2]] : null,
                 strength: object.strength ? object.strength : null
             })
         } else {
@@ -409,8 +408,8 @@ function createSceneFile(state, filename) {
                 name: object.name ? object.name : null,
                 material: object.material ? object.material : null,
                 type: object.type ? object.type : null, //might change this to be an int value for speed
-                position: object.model.position ? object.model.position : null,
-                scale: object.model.scale ? object.model.scale : null,
+                position: object.model.position ? [object.model.position[0], object.model.position[1], object.model.position[2]] : null,
+                scale: object.model.scale ? [object.model.scale[0], object.model.scale[1], object.model.scale[2]] : null,
                 diffuseTexture: object.model.diffuseTexture ? object.model.diffuseTexture : null,
                 normalTexture: object.model.normalTexture ? object.model.normalTexture : null,
                 parent: object.parent ? object.parent : null,
