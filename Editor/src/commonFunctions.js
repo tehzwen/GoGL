@@ -328,7 +328,9 @@ function getTextures(gl, imgPath) {
 }
 
 function parseOBJFileToJSON(objFileURL, cb, object) {
-    fetch(objFileURL)
+    console.log(objFileURL)
+    if (objFileURL) {
+        fetch(objFileURL)
         .then((data) => {
             return data.text();
         })
@@ -339,6 +341,7 @@ function parseOBJFileToJSON(objFileURL, cb, object) {
         .catch((err) => {
             console.error(err);
         })
+    }
 }
 
 /**
@@ -387,46 +390,35 @@ function createSceneFile(state, filename) {
     //objects first
     state.objects.map((object) => {
         //console.log(object);
-        if (object.type === "cube" || object.type === "plane") {
-            totalState[0].objects.push({
-                name: object.name,
-                material: object.material,
-                type: object.type, //might change this to be an int value for speed
-                position: object.model.position,
-                scale: object.model.scale,
-                diffuseTexture: object.model.diffuseTexture,
-                normalTexture: object.model.normalTexture,
-                parent: object.parent
-            });
-        } else if (object.type === "mesh") {
-            totalState[0].objects.push({
-                name: object.name,
-                material: object.material,
-                type: object.type,
-                position: object.model.position,
-                scale: object.model.scale,
-                diffuseTexture: object.model.diffuseTexture,
-                normalTexture: object.model.normalTexture,
-                parent: object.parent,
-                model: object.modelName
-            });
-        } else if (object.type === "light") {
+        if (object.type === "light") {
             totalState[0].lights.push({
-                name: object.name,
-                material: object.material,
-                type: object.type,
-                position: object.model.position,
-                scale: object.model.scale,
-                diffuseTexture: object.model.diffuseTexture,
-                normalTexture: object.model.normalTexture,
-                parent: object.parent,
-                model: object.modelName,
-                colour: object.colour,
-                strength: object.strength
+                name: object.name ? object.name : null,
+                material: object.material ? object.material : null,
+                type: object.type ? object.type : null,
+                position: object.model.position ? object.model.position : null,
+                scale: object.model.scale ? object.model.scale : null,
+                diffuseTexture: object.model.diffuseTexture ? object.model.diffuseTexture : null,
+                normalTexture: object.model.normalTexture ? object.model.normalTexture : null,
+                parent: object.parent ? object.parent : null,
+                model: object.modelName ? object.modelName : null,
+                colour: object.colour ? object.colour : null,
+                strength: object.strength ? object.strength : null
             })
+        } else {
+            totalState[0].objects.push({
+                name: object.name ? object.name : null,
+                material: object.material ? object.material : null,
+                type: object.type ? object.type : null, //might change this to be an int value for speed
+                position: object.model.position ? object.model.position : null,
+                scale: object.model.scale ? object.model.scale : null,
+                diffuseTexture: object.model.diffuseTexture ? object.model.diffuseTexture : null,
+                normalTexture: object.model.normalTexture ? object.model.normalTexture : null,
+                parent: object.parent ? object.parent : null,
+                model: object.modelName ? object.modelName : null
+            });
         }
     });
-    console.log(totalState);
+    //write the savefile 
     fs.writeFile(filename, JSON.stringify(totalState), 'utf-8', () => {
         console.log("Writing complete!")
     })

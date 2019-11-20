@@ -3,9 +3,9 @@ var state = {};
 var stats = new Stats();
 
 window.onload = () => {
-    parseSceneFile("./statefiles/alienScene.json", state, main);
+    parseSceneFile("./statefiles/testsave2.json", state, main);
     document.getElementById('saveButton').addEventListener('click', () => {
-        createSceneFile(state, "./statefiles/testsave.json");
+        createSceneFile(state, "./statefiles/testsave2.json");
     })
 }
 
@@ -241,6 +241,10 @@ function main() {
         }
     })
 
+    state.level.lights.map((light) => {
+        parseOBJFileToJSON(light.model, createMesh, light);
+    })
+
     //setup mouse click listener
     /*
     canvas.addEventListener('click', (event) => {
@@ -313,13 +317,14 @@ function startRendering(gl, state) {
                 vec3.rotateY(state.camera.center, state.camera.center, state.camera.position, (-state.mouse.rateX * deltaTime * state.mouse.sensitivity));
             }
 
+            /*
             let apple = getObject(state, "apple");
             let alien = getObject(state, "alien");
 
             apple.centroid = alien.model.position;
             mat4.rotateY(apple.model.rotation, apple.model.rotation, 0.3 * deltaTime);
 
-
+            */
             // Draw our scene
             drawScene(gl, deltaTime, state);
         }

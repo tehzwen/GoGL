@@ -18,6 +18,7 @@ class Light {
         this.modelMatrix = mat4.create();
         this.colour = vec3.fromValues(object.colour[0], object.colour[1], object.colour[2]);
         this.strength = object.strength;
+        this.modelName = "./models/lightbulb.obj";
 
         this.lightingShader = this.lightingShader.bind(this);
     }
