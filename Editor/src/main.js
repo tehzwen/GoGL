@@ -248,10 +248,12 @@ function main() {
             tempCube.vertShader = vertShaderSample;
             tempCube.fragShader = fragShaderSample;
             tempCube.setup();
-            tempCube.model.position = vec3.fromValues(object.position[0], object.position[1], object.position[2]);
+            //tempCube.model.position = vec3.fromValues(object.position[0], object.position[1], object.position[2]);
+            
             if (object.scale) {
                 tempCube.scale(object.scale);
             }
+            tempCube.translate(object.position);
             addObjectToScene(state, tempCube);
         } else if (object.type === "plane") {
             let tempPlane = new Plane(gl, object);

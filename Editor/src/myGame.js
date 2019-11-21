@@ -73,6 +73,22 @@ function startGame(state) {
                 })
                 break;
 
+            case "ArrowRight":
+                moveTestCubeTestCollision(state, "right");
+                break;
+
+            case "ArrowLeft":
+                moveTestCubeTestCollision(state, "left");
+                break;
+
+            case "ArrowUp":
+                moveTestCubeTestCollision(state, "forward");
+                break;
+            
+            case "ArrowDown":
+                moveTestCubeTestCollision(state, "backward");
+                break;
+
             default:
                 break;
         }
@@ -165,4 +181,30 @@ function moveRight(state) {
 
     state.camera.center = [cameraCenterVector[0], cameraCenterVector[1], cameraCenterVector[2]];
     state.camera.position = [cameraPositionVector[0], cameraPositionVector[1], cameraPositionVector[2]];
+}
+
+function moveTestCubeTestCollision(state, direction) {
+    let testCube = getObject(state, "testCube0");
+    let wall0 = getObject(state, "wall0");
+
+    if (direction === "left") {
+        testCube.translate([0.25, 0, 0]);
+    } else if (direction === "right") {
+        testCube.translate([-0.25, 0, 0]);
+    } else if (direction === "forward") {
+        testCube.translate([0, 0, 0.25]);
+    } else if (direction === "backward") {
+        testCube.translate([0, 0, -0.25]);
+    }
+    
+    let collide = false;
+
+    state.objects.map((obj) => {
+        if (obj !== testCube && obj.type === "cube") {
+            collide = intersect(testCube.boundingBox, obj.boundingBox);
+            if (collide) {
+                console.warn("Collided with", obj.name);
+            }
+        }
+    })
 }

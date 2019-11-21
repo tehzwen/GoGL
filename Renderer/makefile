@@ -1,5 +1,5 @@
 
-all: gogl
+all: clean gogl
 
 gogl:
 	go build -o GoGL

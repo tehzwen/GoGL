@@ -85,6 +85,7 @@ func ParseJsonFile(filePath string, state *State) {
 					scene[0].Objects[i].Name,
 				)
 				//tempArray = append(tempArray)
+				fmt.Printf("%v+\n", tempModel)
 				state.objects = append(state.objects, &tempCube)
 			}
 
