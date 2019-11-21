@@ -3,7 +3,8 @@ setup();
 function setup() {
     // Create a HTML tag to display to the user
     var navTag = document.createElement('nav');
-    navTag.classList = "navbar navbar-expand-lg navbar-dark bg-dark";
+    navTag.classList = "navbar navbar-expand-lg navbar-dark";
+    navTag.setAttribute("style", "background-color: #123456;")
     navTag.innerHTML = `
     <div>
     <a class="navbar-brand" href="#">WebGL Engine</a>

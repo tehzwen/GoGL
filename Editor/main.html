@@ -13,10 +13,20 @@
     <!-- This is the navigation bar at the top of the page -->
     <!-- This is populated by loading the common functions script -->
     <div id="myNavBar"></div>
-    <div>
-        <button id="saveButton">Save</button>
-        <button id="launchButton">Launch</button>
-    </div>
+    <ul class="nav nav-tabs nav-fill">
+        <li class="nav-item">
+            <a class="nav-link active" href="main.html">Engine</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="editor.html">Editor</a>
+        </li>
+        <li class="nav-item">
+            <button id="saveButton" class="btn btn-outline-primary btn-block btn-lg">Save</button>
+        </li>
+        <li class="nav-item">
+            <button id="launchButton" class="btn btn-outline-primary btn-block btn-lg">Compile & Run</button>
+        </li>
+    </ul>
     <!-- This is for displaying errors caused by our JavaScript -->
     <!-- This will only be populated when an error on the JavaScript side occurs -->
     <div id="webglError"></div>
