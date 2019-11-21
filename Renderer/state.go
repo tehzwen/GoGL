@@ -11,6 +11,7 @@ type State struct {
 	vertShader string
 	camera     Camera
 	lights     []Light
+	viewMatrix mgl32.Mat4
 }
 
 // Camera : struct for holding info about the camera

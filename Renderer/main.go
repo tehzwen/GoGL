@@ -11,9 +11,13 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
+var keys map[glfw.Key]bool
+var buttons map[glfw.MouseButton]bool
+var mouseMovement map[string]float64
+
 const (
-	width  = 500
-	height = 500
+	width  = 1280
+	height = 720
 
 	vertexShaderSource = `
 		#version 330
@@ -98,11 +102,15 @@ func main() {
 	//get arguments
 	argsWithoutProgram := os.Args[1:]
 
-	var state = State{
+	keys = make(map[glfw.Key]bool)
+	buttons = make(map[glfw.MouseButton]bool)
+	mouseMovement = make(map[string]float64)
+
+	state := State{
 		vertShader: vertexShaderSource,
 		fragShader: fragmentShaderSource,
 		camera: Camera{
-			position: mgl32.Vec3{0.0, 0.5, -2.5},
+			position: mgl32.Vec3{0.5, 0.0, -2.5},
 			center:   mgl32.Vec3{0.5, 0.0, 0.0},
 			up:       mgl32.Vec3{0.0, 1.0, 0.0},
 		},
@@ -124,65 +132,51 @@ func main() {
 	window := initGlfw()
 	defer glfw.Terminate()
 
+	window.SetKeyCallback(KeyHandler)
+	window.SetMouseButtonCallback(MouseButtonHandler)
+	window.SetCursorPosCallback(MouseMoveHandler)
+
 	ParseJsonFile(argsWithoutProgram[0], &state)
-
-	/*
-		testCube := Cube{}
-		testCube2 := Cube{}
-
-		err := testCube.SetShader(vertexShaderSource, fragmentShaderSource)
-		err = testCube2.SetShader(vertexShaderSource, fragmentShaderSource)
-
-		if err != nil {
-			panic(err)
-		} else {
-			testCube.Setup(
-				Material{
-					Diffuse:  []float32{0.6, 0.8, 0.6},
-					Ambient:  []float32{0.1, 0.1, 0.1},
-					Specular: []float32{0.8, 0.8, 0.8},
-					N:        100,
-				},
-				Model{
-					position: mgl32.Vec3{1, 0, 0},
-					scale:    mgl32.Vec3{1, 1, 1},
-					rotation: mgl32.Ident4(),
-				}, "testcube1")
-
-			testCube2.Setup(
-				Material{
-					Diffuse:  []float32{0.6, 0.2, 0.6},
-					Ambient:  []float32{0.1, 0.1, 0.1},
-					Specular: []float32{0.8, 0.8, 0.8},
-					N:        100,
-				}, Model{
-					position: mgl32.Vec3{0, 0, 0},
-					scale:    mgl32.Vec3{1, 1, 1},
-					rotation: mgl32.Ident4(),
-				}, "testcube2")
-
-			objectList = append(objectList, &testCube)
-			objectList = append(objectList, &testCube2)
-		} */
 
 	var err error
 	then := 0.0
 
 	for !window.ShouldClose() {
+		//mouseMovement["move"] = 0
+
 		now := glfw.GetTime()
 		deltaTime := now - then
 		then = now
 		angle += 0.5 * deltaTime
 
+		if keys[glfw.KeyW] {
+			MoveForward(&state, deltaTime)
+		}
+		if keys[glfw.KeyS] {
+			MoveBackward(&state, deltaTime)
+		}
+		if keys[glfw.KeyA] {
+			MoveLeft(&state, deltaTime)
+		}
+		if keys[glfw.KeyD] {
+			MoveRight(&state, deltaTime)
+		}
+
+		if mouseMovement["move"] == 1 && buttons[glfw.MouseButton2] {
+			rotation := RotateY(state.camera.center, state.camera.position, -(2 * deltaTime * mouseMovement["Xmove"]))
+			state.camera.center = rotation
+		}
+		mouseMovement["move"] = 0
+
 		if err == nil {
 			newRot := mgl32.HomogRotate3D(float32(angle), mgl32.Vec3{0, 1, 0})
 			state.objects[0].SetRotation(newRot)
 		}
-		draw(window, state)
+		draw(window, &state)
 	}
 }
 
-func draw(window *glfw.Window, state State) {
+func draw(window *glfw.Window, state *State) {
 	gl.ClearColor(0.0, 0.0, 0.0, 1.0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.Disable(gl.CULL_FACE)
@@ -236,8 +230,13 @@ func draw(window *glfw.Window, state State) {
 		//view matrix
 		viewMatrix := mgl32.LookAtV(state.camera.position, state.camera.center, state.camera.up)
 		gl.UniformMatrix4fv(currentProgramInfo.uniformLocations.view, 1, false, &viewMatrix[0])
+		//update camera
+		camPosition := []float32{state.camera.position[0], state.camera.position[1], state.camera.position[2]}
+		gl.Uniform3fv(currentProgramInfo.uniformLocations.cameraPosition, 1, &camPosition[0])
+		state.viewMatrix = viewMatrix
 
 		//model matrix
+
 		modelMatrix := mgl32.Ident4()
 		positionMat := mgl32.Translate3D(currentModel.position[0], currentModel.position[1], currentModel.position[2])
 		modelMatrix = modelMatrix.Mul4(positionMat)
@@ -247,6 +246,8 @@ func draw(window *glfw.Window, state State) {
 		negCent := mgl32.Translate3D(-currentCentroid[0], -currentCentroid[1], -currentCentroid[2])
 		modelMatrix = modelMatrix.Mul4(negCent)
 
+		modelMatrix = ScaleM4(modelMatrix, currentModel.scale)
+
 		gl.UniformMatrix4fv(currentProgramInfo.uniformLocations.model, 1, false, &modelMatrix[0])
 
 		gl.Uniform3fv(currentProgramInfo.uniformLocations.diffuseVal, 1, &currentMaterial.Diffuse[0])
@@ -255,10 +256,6 @@ func draw(window *glfw.Window, state State) {
 		gl.Uniform1f(currentProgramInfo.uniformLocations.nVal, currentMaterial.N)
 
 		gl.Uniform1i(currentProgramInfo.uniformLocations.numLights, int32(len(state.lights)))
-
-		//update camera
-		camPosition := []float32{state.camera.position[0], state.camera.position[1], state.camera.position[2]}
-		gl.Uniform3fv(currentProgramInfo.uniformLocations.cameraPosition, 1, &camPosition[0])
 
 		//update lights
 		if len(lightPositionArray) > 0 && len(lightColorArray) > 0 && len(lightStrengthArray) > 0 {

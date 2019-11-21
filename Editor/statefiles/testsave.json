@@ -24,9 +24,9 @@
                 },
                 "type": "cube",
                 "position": [
-                    1,
-                    0,
-                    0
+                    2,
+                    -1,
+                    -2
                 ],
                 "scale": [
                     1,
@@ -76,6 +76,80 @@
                 "model": null
             },
             {
+                "name": "testCube0",
+                "material": {
+                    "diffuse": [
+                        0.6,
+                        0.2,
+                        0.2
+                    ],
+                    "ambient": [
+                        0.1,
+                        0.1,
+                        0.1
+                    ],
+                    "specular": [
+                        0.8,
+                        0.8,
+                        0.8
+                    ],
+                    "n": 10,
+                    "alpha": 1
+                },
+                "type": "cube",
+                "position": [
+                    0,
+                    -1,
+                    0
+                ],
+                "scale": [
+                    1,
+                    2,
+                    1
+                ],
+                "diffuseTexture": null,
+                "normalTexture": null,
+                "parent": null,
+                "model": null
+            },
+            {
+                "name": "testCube1",
+                "material": {
+                    "diffuse": [
+                        0.2,
+                        0.6,
+                        0.2
+                    ],
+                    "ambient": [
+                        0.1,
+                        0.1,
+                        0.1
+                    ],
+                    "specular": [
+                        0.8,
+                        0.8,
+                        0.8
+                    ],
+                    "n": 10,
+                    "alpha": 1
+                },
+                "type": "cube",
+                "position": [
+                    1,
+                    -1,
+                    0
+                ],
+                "scale": [
+                    1,
+                    1,
+                    1
+                ],
+                "diffuseTexture": null,
+                "normalTexture": null,
+                "parent": null,
+                "model": null
+            },
+            {
                 "name": "floorPlane",
                 "material": {
                     "diffuse": [
@@ -113,43 +187,6 @@
                 "model": null
             },
             {
-                "name": "alien",
-                "material": {
-                    "diffuse": [
-                        0.2,
-                        0.2,
-                        0.2
-                    ],
-                    "ambient": [
-                        0.001,
-                        0.001,
-                        0.001
-                    ],
-                    "specular": [
-                        0.8,
-                        0.8,
-                        0.8
-                    ],
-                    "n": 12,
-                    "alpha": 1
-                },
-                "type": "mesh",
-                "position": [
-                    1,
-                    0,
-                    1
-                ],
-                "scale": [
-                    1,
-                    1,
-                    1
-                ],
-                "diffuseTexture": null,
-                "normalTexture": null,
-                "parent": null,
-                "model": "./models/alien.obj"
-            },
-            {
                 "name": "apple",
                 "material": {
                     "diffuse": [
@@ -185,35 +222,33 @@
                 "normalTexture": null,
                 "parent": null,
                 "model": "./models/apple.obj"
-            }
-        ],
-        "lights": [
+            },
             {
-                "name": "light0",
+                "name": "alien",
                 "material": {
                     "diffuse": [
-                        1,
-                        1,
-                        1
+                        0.2,
+                        0.2,
+                        0.2
                     ],
                     "ambient": [
-                        0.1,
-                        0.1,
-                        0.1
+                        0.001,
+                        0.001,
+                        0.001
                     ],
                     "specular": [
-                        0.3,
-                        0.3,
-                        0.3
+                        0.8,
+                        0.8,
+                        0.8
                     ],
-                    "n": 1000,
+                    "n": 12,
                     "alpha": 1
                 },
-                "type": "light",
+                "type": "mesh",
                 "position": [
-                    -1.45,
-                    0.8,
-                    -1.5
+                    1,
+                    0,
+                    1
                 ],
                 "scale": [
                     1,
@@ -223,14 +258,10 @@
                 "diffuseTexture": null,
                 "normalTexture": null,
                 "parent": null,
-                "model": "./models/lightbulb.obj",
-                "colour": [
-                    1,
-                    1,
-                    1
-                ],
-                "strength": 0.75
-            },
+                "model": "./models/alien.obj"
+            }
+        ],
+        "lights": [
             {
                 "name": "light1",
                 "material": {
@@ -257,6 +288,49 @@
                     1.9,
                     0.8,
                     2.5
+                ],
+                "scale": [
+                    1,
+                    1,
+                    1
+                ],
+                "diffuseTexture": null,
+                "normalTexture": null,
+                "parent": null,
+                "model": "./models/lightbulb.obj",
+                "colour": [
+                    1,
+                    1,
+                    1
+                ],
+                "strength": 0.75
+            },
+            {
+                "name": "light0",
+                "material": {
+                    "diffuse": [
+                        1,
+                        1,
+                        1
+                    ],
+                    "ambient": [
+                        0.1,
+                        0.1,
+                        0.1
+                    ],
+                    "specular": [
+                        0.3,
+                        0.3,
+                        0.3
+                    ],
+                    "n": 1000,
+                    "alpha": 1
+                },
+                "type": "light",
+                "position": [
+                    -1.45,
+                    0.8,
+                    -1.5
                 ],
                 "scale": [
                     1,
