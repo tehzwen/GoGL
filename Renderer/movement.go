@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/go-gl/glfw/v3.1/glfw"
-	"github.com/go-gl/mathgl/mgl32"
 )
 
 //Callbacks for inputs
@@ -32,44 +31,4 @@ func MouseMoveHandler(win *glfw.Window, xPos float64, yPos float64) {
 	mouseMovement["X"] = xPos
 	mouseMovement["Y"] = yPos
 	mouseMovement["move"] = 1
-}
-
-func MoveForward(state *State, deltaTime float64) {
-	forwardVector := state.viewMatrix.Row(2)
-	forwardVector = forwardVector.Mul(float32(deltaTime))
-
-	state.camera.position = state.camera.position.Add(mgl32.Vec3{-forwardVector[0], -forwardVector[1], -forwardVector[2]})
-	state.camera.center = state.camera.center.Add(mgl32.Vec3{-forwardVector[0], -forwardVector[1], -forwardVector[2]})
-}
-
-func MoveBackward(state *State, deltaTime float64) {
-	forwardVector := state.viewMatrix.Row(2)
-	forwardVector = forwardVector.Mul(float32(deltaTime))
-
-	state.camera.position = state.camera.position.Add(mgl32.Vec3{forwardVector[0], forwardVector[1], forwardVector[2]})
-	state.camera.center = state.camera.center.Add(mgl32.Vec3{forwardVector[0], forwardVector[1], forwardVector[2]})
-}
-
-func MoveLeft(state *State, deltaTime float64) {
-	forwardVector := state.viewMatrix.Row(2)
-	newForwardVector := mgl32.Vec3{forwardVector[0], forwardVector[1], forwardVector[2]}
-	sideWaysVector := newForwardVector.Cross(state.camera.up)
-	sideWaysVector = Normalize(sideWaysVector)
-
-	sideWaysVector = sideWaysVector.Mul(float32(deltaTime))
-
-	state.camera.position = state.camera.position.Add(mgl32.Vec3{sideWaysVector[0], sideWaysVector[1], sideWaysVector[2]})
-	state.camera.center = state.camera.center.Add(mgl32.Vec3{sideWaysVector[0], sideWaysVector[1], sideWaysVector[2]})
-}
-
-func MoveRight(state *State, deltaTime float64) {
-	forwardVector := state.viewMatrix.Row(2)
-	newForwardVector := mgl32.Vec3{-forwardVector[0], -forwardVector[1], -forwardVector[2]}
-	sideWaysVector := newForwardVector.Cross(state.camera.up)
-	sideWaysVector = Normalize(sideWaysVector)
-
-	sideWaysVector = sideWaysVector.Mul(float32(deltaTime))
-
-	state.camera.position = state.camera.position.Add(mgl32.Vec3{sideWaysVector[0], sideWaysVector[1], sideWaysVector[2]})
-	state.camera.center = state.camera.center.Add(mgl32.Vec3{sideWaysVector[0], sideWaysVector[1], sideWaysVector[2]})
 }
