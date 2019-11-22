@@ -7,32 +7,6 @@ var saveFile = "testsave.json"
 
 window.onload = () => {
     parseSceneFile("./statefiles/" + sceneFile, state, main);
-    document.getElementById('saveButton').addEventListener('click', () => {
-        createSceneFile(state, "./statefiles/" + saveFile);
-    })
-    console.log(__dirname);
-    document.getElementById('launchButton').addEventListener('click', () => {
-        buildCommand = exec("make -C ../Renderer/", function (err, stdout, stderr) {
-            if (err) {
-                // should have err.code here?  
-                console.error(err);
-            }
-            console.log(stdout);
-        })
-
-        buildCommand.on('exit', function (code) {
-            // exit code is code
-            console.warn(code);
-
-            runCommand = exec("../Renderer/GoGL " + __dirname + "/statefiles/" + saveFile, (err, stdout, stderr) => {
-                console.log(stdout);
-            })
-            runCommand.on('exit', (eCode) => {
-                console.warn(eCode);
-            })
-        });
-    })
-
 }
 
 /**

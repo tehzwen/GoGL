@@ -1,5 +1,8 @@
 setup();
 
+var sceneFile = "alienScene.json";
+var saveFile = "testsave.json"
+
 function setup() {
     // Create a HTML tag to display to the user
     var navTag = document.createElement('nav');
@@ -13,6 +16,15 @@ function setup() {
 
     // Insert the tag into the HMTL document
     document.getElementById('myNavBar').appendChild(navTag);
+
+    //listeners for header button presses
+    document.getElementById('saveButton').addEventListener('click', () => {
+        createSceneFile(state, "./statefiles/" + saveFile);
+    })
+    console.log(__dirname);
+    document.getElementById('launchButton').addEventListener('click', () => {
+        document.location.href = "compiler.html?scene=" + __dirname + "/statefiles/" + saveFile
+    })
 }
 
 function createSceneGui(state) {

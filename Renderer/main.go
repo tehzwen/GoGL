@@ -144,7 +144,6 @@ func main() {
 
 	geometry.ParseJsonFile(argsWithoutProgram[0], &state)
 
-	var err error
 	then := 0.0
 
 	game.Start(&state) //main logic start
@@ -157,25 +156,6 @@ func main() {
 
 		game.Update(&state, deltaTime) //main logic update
 
-		/*
-			if state.Keys[glfw.KeyW] {
-				MoveForward(&state, deltaTime)
-			}
-			if state.Keys[glfw.KeyS] {
-				MoveBackward(&state, deltaTime)
-			}
-			if state.Keys[glfw.KeyA] {
-				MoveLeft(&state, deltaTime)
-			}
-			if state.Keys[glfw.KeyD] {
-				MoveRight(&state, deltaTime)
-			}
-
-			if state.Keys[glfw.KeyZ] {
-				testCube := state.Objects[0]
-				testCube.Translate(mgl32.Vec3{0.1 * float32(deltaTime), 0, 0})
-			} */
-
 		state.Keys = keys
 
 		if mouseMovement["move"] == 1 && buttons[glfw.MouseButton2] {
@@ -183,11 +163,6 @@ func main() {
 			state.Camera.Center = Rotation
 		}
 		mouseMovement["move"] = 0
-
-		if err == nil {
-			//newRot := mgl32.HomogRotate3D(float32(angle), mgl32.Vec3{0, 1, 0})
-			//state.objects[0].SetRotation(newRot)
-		}
 		draw(window, &state)
 	}
 }

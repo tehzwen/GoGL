@@ -106,7 +106,7 @@ func ScaleM4(a mgl32.Mat4, v mgl32.Vec3) mgl32.Mat4 {
 }
 
 func ParseJsonFile(filePath string, state *State) {
-	fmt.Printf("here: %s\n", filePath)
+	fmt.Printf("Opening scene file: %s\n", filePath)
 
 	jsonFile, err := os.Open(filePath)
 
@@ -145,8 +145,6 @@ func ParseJsonFile(filePath string, state *State) {
 					tempModel,
 					scene[0].Objects[i].Name,
 				)
-				//tempArray = append(tempArray)
-				fmt.Printf("%v+\n", tempModel)
 				state.Objects = append(state.Objects, &tempCube)
 			}
 
