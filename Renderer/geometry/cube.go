@@ -60,6 +60,10 @@ func (c Cube) GetBuffers() ObjectBuffers {
 	return c.buffers
 }
 
+func (c Cube) GetType() string {
+	return "cube"
+}
+
 // SetRotation : helper function for setting rotation of cube to a mat4
 func (c *Cube) SetRotation(rot mgl32.Mat4) {
 	c.model.Rotation = rot

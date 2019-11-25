@@ -20,10 +20,15 @@ window.onload = () => {
 
         runCommand = exec("../Renderer/GoGL " + sceneFile, (err, stdout, stderr) => {
             console.log(stdout);
+            if (stderr) {
+                console.error(stderr);
+            }
         })
         runCommand.on('exit', (eCode) => {
             console.warn(eCode);
-            window.location.href = "main.html"
+            if (eCode === 0) {
+                //window.location.href = "main.html"
+            }
         })
     });
 }

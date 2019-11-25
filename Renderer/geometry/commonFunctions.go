@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"../parser"
+
 	"github.com/go-gl/mathgl/mgl32"
 )
 
@@ -180,10 +182,33 @@ func ParseJsonFile(filePath string, state *State) {
 			}
 		} else if scene[0].Objects[i].ObjectType == "mesh" {
 			fmt.Println("Mesh here")
-			/*meshPath := exPath + "/../Editor/" + scene[0].Objects[i].Model
-			fmt.Println(scene[0].Objects[i].Model)
-			tempMesh := NewModel(meshPath)
-			fmt.Println(tempMesh)*/
+			meshPath := exPath + "/../Editor/" + scene[0].Objects[i].Model
+			fmt.Println(scene[0].Objects[i].Model, meshPath)
+			tempMeshVals := parser.Parse(meshPath)
+
+			tempModelObject := ModelObject{}
+
+			err := tempModelObject.SetShader(state.VertShader, state.FragShader)
+
+			if err != nil {
+				fmt.Println(err)
+				panic(err)
+			} else {
+				tempModelObject.SetVertexValues(tempMeshVals.Vertices, tempMeshVals.Normals, tempMeshVals.UVs)
+				tempModel := Model{
+					Position: mgl32.Vec3{scene[0].Objects[i].Position[0], scene[0].Objects[i].Position[1], scene[0].Objects[i].Position[2]},
+					Scale:    mgl32.Vec3{scene[0].Objects[i].Scale[0], scene[0].Objects[i].Scale[1], scene[0].Objects[i].Scale[2]},
+					Rotation: mgl32.Ident4(),
+				}
+				tempModelObject.Setup(
+					scene[0].Objects[i].Material,
+					tempModel,
+					scene[0].Objects[i].Name,
+				)
+
+				state.Objects = append(state.Objects, &tempModelObject)
+
+			}
 		}
 	}
 

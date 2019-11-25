@@ -33,12 +33,14 @@ func addFace(a *int, b *int, c *int, d *int, ua *int, ub *int, uc *int, ud *int,
 		addVertex(ia, ib, ic, mesh)
 
 	} else {
+
 		id := parseVertexIndex((*d), vLen)
 		addVertex(ia, ib, id, mesh)
 		addVertex(ib, ic, id, mesh)
 	}
 
 	if ua != nil {
+
 		uvLen := len(mesh.Sparse.UVs)
 
 		ia := parseUVIndex((*ua), uvLen)
@@ -57,6 +59,7 @@ func addFace(a *int, b *int, c *int, d *int, ua *int, ub *int, uc *int, ud *int,
 	}
 
 	if na != nil {
+
 		nLen := len(mesh.Normals)
 		ia := parseVertexIndex((*na), nLen)
 
@@ -72,7 +75,7 @@ func addFace(a *int, b *int, c *int, d *int, ua *int, ub *int, uc *int, ud *int,
 			ic = parseVertexIndex((*nc), nLen)
 		}
 
-		if &d == nil {
+		if d == nil {
 			addNormal(ia, ib, ic, mesh)
 		} else {
 			id := parseVertexIndex((*nd), nLen)
@@ -139,7 +142,7 @@ func parseVertexIndex(value int, len int) int {
 	return (int(value) + len/3) * 3
 }
 
-func Parse(filePath string) {
+func Parse(filePath string) Mesh {
 	objFile, err := os.Open(filePath)
 	if err != nil {
 		panic(err)
@@ -182,22 +185,64 @@ func Parse(filePath string) {
 				//split on whitespace first
 				whiteSpaceSplit := strings.Split(line, " ")
 				var values []int
+
 				//now iterate through the 3 values and pull the values out
 				for i := 1; i < len(whiteSpaceSplit); i++ {
-					//fmt.Printf("%s ", whiteSpaceSplit[i])
 					slashSplit := strings.Split(whiteSpaceSplit[i], "/")
-					for j := 0; j < 3; j++ {
+					for j := 0; j < len(slashSplit); j++ {
 						if s, err := strconv.ParseInt(slashSplit[j], 10, 32); err == nil {
 							values = append(values, int(s))
 						}
 					}
 				}
-				addFace(&values[0], &values[3], &values[6], &values[9],
+				addFace(
+					&values[0], &values[3], &values[6], &values[9],
 					&values[1], &values[4], &values[7], &values[10],
-					&values[2], &values[5], &values[8], &values[11], &newMesh)
+					&values[2], &values[5], &values[8], &values[11],
+					&newMesh)
+
+			} else if result, err := regexp.MatchString(`^f\s+(-?\d+)\/(-?\d+)\s+(-?\d+)\/(-?\d+)\s+(-?\d+)\/(-?\d+)(?:\s+(-?\d+)\/(-?\d+))?`, line); err == nil && result {
+				//split on whitespace first
+				whiteSpaceSplit := strings.Split(line, " ")
+				var values []int
+
+				//now iterate through the 3 values and pull the values out
+				for i := 1; i < len(whiteSpaceSplit); i++ {
+					slashSplit := strings.Split(whiteSpaceSplit[i], "/")
+					for j := 0; j < len(slashSplit); j++ {
+						if s, err := strconv.ParseInt(slashSplit[j], 10, 32); err == nil {
+							values = append(values, int(s))
+						}
+					}
+				}
+				addFace(
+					&values[0], &values[2], &values[4], &values[6],
+					&values[1], &values[3], &values[5], &values[7],
+					nil, nil, nil, nil,
+					&newMesh)
+			} else if result, err := regexp.MatchString(`^f\s+(-?\d+)\/\/(-?\d+)\s+(-?\d+)\/\/(-?\d+)\s+(-?\d+)\/\/(-?\d+)(?:\s+(-?\d+)\/\/(-?\d+))?`, line); err == nil && result {
+				//split on whitespace first
+				whiteSpaceSplit := strings.Split(line, " ")
+				var values []int
+
+				//now iterate through the 3 values and pull the values out
+				for i := 1; i < len(whiteSpaceSplit); i++ {
+					slashSplit := strings.Split(whiteSpaceSplit[i], "/")
+					for j := 0; j < len(slashSplit); j++ {
+						if s, err := strconv.ParseInt(slashSplit[j], 10, 32); err == nil {
+							values = append(values, int(s))
+						}
+					}
+				}
+				addFace(
+					&values[0], &values[2], &values[4], nil,
+					nil, nil, nil, nil,
+					&values[1], &values[3], &values[5], nil,
+					&newMesh)
 			}
 		}
 	}
 
 	fmt.Println("Vertices:", len(newMesh.Normals), "normals:", len(newMesh.Normals), "uvs:", len(newMesh.UVs))
+	return newMesh
 }

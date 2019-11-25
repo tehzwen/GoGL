@@ -58,6 +58,10 @@ func (p Plane) GetBuffers() ObjectBuffers {
 	return p.buffers
 }
 
+func (p Plane) GetType() string {
+	return "plane"
+}
+
 // Scale : function used to scale the cube and recalculate the centroid
 func (p *Plane) Scale(scaleVec mgl32.Vec3) {
 	p.model.Scale = scaleVec

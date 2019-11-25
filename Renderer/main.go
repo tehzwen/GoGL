@@ -258,7 +258,12 @@ func draw(window *glfw.Window, state *geometry.State) {
 		}
 
 		gl.BindVertexArray(currentBuffers.Vao)
-		gl.DrawElements(gl.TRIANGLES, int32(len(currentVertices.Vertices)), gl.UNSIGNED_INT, gl.Ptr(nil))
+		if state.Objects[i].GetType() != "mesh" {
+			gl.DrawElements(gl.TRIANGLES, int32(len(currentVertices.Vertices)), gl.UNSIGNED_INT, gl.Ptr(nil))
+		} else {
+			gl.DrawArrays(gl.TRIANGLES, 0, int32(len(currentVertices.Vertices)))
+		}
+
 		gl.BindVertexArray(0)
 
 		//window.SwapBuffers()

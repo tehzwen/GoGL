@@ -11,6 +11,7 @@ type Geometry interface {
 	SetShader(string, string) error
 	GetProgramInfo() (ProgramInfo, error)
 	GetModel() (Model, error)
+	GetType() string
 	GetCentroid() mgl32.Vec3
 	GetMaterial() Material
 	GetBuffers() ObjectBuffers

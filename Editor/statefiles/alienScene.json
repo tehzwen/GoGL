@@ -221,7 +221,7 @@
                 "diffuseTexture": null,
                 "normalTexture": null,
                 "parent": null,
-                "model": "./models/crate.obj"
+                "model": "./models/apple.obj"
             },
             {
                 "name": "alien",
