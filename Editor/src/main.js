@@ -1,9 +1,7 @@
 var total = 0;
 var state = {};
 var stats = new Stats();
-var exec = require('child_process').exec;
 var sceneFile = "alienScene.json";
-var saveFile = "testsave.json"
 
 window.onload = () => {
     parseSceneFile("./statefiles/" + sceneFile, state, main);
@@ -316,7 +314,6 @@ function startRendering(gl, state) {
             }
 
             if (state.mouse['camMove']) {
-                //vec3.rotateY(state.camera.center, state.camera.center, state.camera.position, (state.camera.yaw - 0.25) * deltaTime * state.mouse.sensitivity);
                 vec3.rotateY(state.camera.center, state.camera.center, state.camera.position, (-state.mouse.rateX * deltaTime * state.mouse.sensitivity));
             }
             

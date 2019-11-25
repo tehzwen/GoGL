@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
+	"path/filepath"
 
 	"github.com/go-gl/mathgl/mgl32"
 )
@@ -108,6 +109,13 @@ func ScaleM4(a mgl32.Mat4, v mgl32.Vec3) mgl32.Mat4 {
 func ParseJsonFile(filePath string, state *State) {
 	fmt.Printf("Opening scene file: %s\n", filePath)
 
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+
+	exPath := filepath.Dir(ex)
+
 	jsonFile, err := os.Open(filePath)
 
 	if err != nil {
@@ -148,6 +156,34 @@ func ParseJsonFile(filePath string, state *State) {
 				state.Objects = append(state.Objects, &tempCube)
 			}
 
+		} else if scene[0].Objects[i].ObjectType == "plane" {
+			fmt.Printf("Plane here\n")
+			tempPlane := Plane{}
+
+			err := tempPlane.SetShader(state.VertShader, state.FragShader)
+
+			if err != nil {
+				fmt.Println(err)
+				panic(err)
+			} else {
+				tempModel := Model{
+					Position: mgl32.Vec3{scene[0].Objects[i].Position[0], scene[0].Objects[i].Position[1], scene[0].Objects[i].Position[2]},
+					Scale:    mgl32.Vec3{scene[0].Objects[i].Scale[0], scene[0].Objects[i].Scale[1], scene[0].Objects[i].Scale[2]},
+					Rotation: mgl32.Ident4(),
+				}
+				tempPlane.Setup(
+					scene[0].Objects[i].Material,
+					tempModel,
+					scene[0].Objects[i].Name,
+				)
+				state.Objects = append(state.Objects, &tempPlane)
+			}
+		} else if scene[0].Objects[i].ObjectType == "mesh" {
+			fmt.Println("Mesh here")
+			/*meshPath := exPath + "/../Editor/" + scene[0].Objects[i].Model
+			fmt.Println(scene[0].Objects[i].Model)
+			tempMesh := NewModel(meshPath)
+			fmt.Println(tempMesh)*/
 		}
 	}
 

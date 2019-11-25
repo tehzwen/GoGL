@@ -26,9 +26,8 @@ func (p *Plane) SetShader(vertShader string, fragShader string) error {
 		p.fragShader = fragShader
 		p.vertShader = vertShader
 		return nil
-	} else {
-		return errors.New("Error setting the shader, shader code must not be blank")
 	}
+	return errors.New("Error setting the shader, shader code must not be blank")
 }
 
 // GetProgramInfo : getter for programinfo
@@ -59,6 +58,17 @@ func (p Plane) GetBuffers() ObjectBuffers {
 	return p.buffers
 }
 
+// Scale : function used to scale the cube and recalculate the centroid
+func (p *Plane) Scale(scaleVec mgl32.Vec3) {
+	p.model.Scale = scaleVec
+	p.centroid = CalculateCentroid(p.vertexValues.Vertices, p.model.Scale)
+}
+
+func (p *Plane) Translate(translateVec mgl32.Vec3) {
+	p.model.Position = p.model.Position.Add(translateVec)
+	p.centroid = p.centroid.Add(translateVec)
+}
+
 // SetRotation : helper function for setting rotation of cube to a mat4
 func (p *Plane) SetRotation(rot mgl32.Mat4) {
 	p.model.Rotation = rot
@@ -79,8 +89,6 @@ func (p *Plane) Setup(mat Material, mod Model, name string) error {
 	p.programInfo = ProgramInfo{}
 
 	p.programInfo.Program = InitOpenGL(p.vertShader, p.fragShader)
-	//fmt.Printf("%v+\n", p)
-	//fmt.Printf("\nhere!\n")
 
 	p.programInfo.attributes = Attributes{
 		position: 0,
@@ -107,10 +115,9 @@ func (p *Plane) Setup(mat Material, mod Model, name string) error {
 		0.0, 1.0, 0.0,
 	}
 	SetupAttributes(&p.programInfo)
-	//p.model.position = mgl32.Vec3{1, 0, 0}
-	//p.model.scale = mgl32.Vec3{1, 1, 1}
-	//p.model.rotation = mgl32.Ident4()
-	p.model = mod
+	p.Scale(mod.Scale)
+	p.model.Position = mod.Position
+	p.model.Rotation = mod.Rotation
 	p.centroid = CalculateCentroid(p.vertexValues.Vertices, p.model.Scale)
 	p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, p.vertexValues.normals, p.vertexValues.faces)
 
