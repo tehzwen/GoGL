@@ -1,9 +1,10 @@
 var total = 0;
 var state = {};
 var stats = new Stats();
-var sceneFile = "alienScene.json";
+
 
 window.onload = () => {
+    var sceneFile = "testsave.json";
     parseSceneFile("./statefiles/" + sceneFile, state, main);
 }
 
@@ -137,8 +138,6 @@ function main() {
             vec3 ambient = vec3(0,0,0);
             vec3 diffuse = vec3(0,0,0);
             vec3 specular = vec3(0,0,0);
-            vec3 lightDirection;
-            float lightDistance;
 
             if (uTextureNormExists == 1) {
                 normal = texture(uTextureNorm, oUV).xyz;
@@ -150,27 +149,30 @@ function main() {
             }
 
             for (int i = 0; i < numLights; i++) {
-                lightDirection = normalize(uLightPositions[i] - oFragPosition);
-                lightDistance = distance(uLightPositions[i], oFragPosition);
-
-                //ambient
-                ambient += (ambientVal * uLightColours[i]) * uLightStrengths[i];
-
-                //diffuse
-                float NdotL = max(dot(lightDirection, normal), 0.0);
-                diffuse += ((diffuseVal * uLightColours[i]) * NdotL * uLightStrengths[i]) / lightDistance;
-
-                //specular
                 vec3 nCameraPosition = normalize(uCameraPosition); // Normalize the camera position
                 vec3 V = normalize(nCameraPosition - oFragPosition);
-                vec3 H = normalize(V + lightDirection); // H = V + L normalized
 
-                if (NdotL > 0.0f)
+                vec3 lightDirection = normalize(uLightPositions[i] - oFragPosition);
+                float diff = max(dot(lightDirection, normal), 0.0);
+                vec3 reflectDir = reflect(-lightDirection, normal);
+                float spec = pow(max(dot(V, reflectDir), 0.0), nVal);
+                float lightDistance = length(uLightPositions[i] - oFragPosition);
+                float attenuation = 1.0 / (lightDistance * lightDistance);
+                attenuation *= uLightStrengths[i];
+
+                //ambient
+                ambient += (ambientVal * uLightColours[i]) * diffuseVal;
+                //diffuse
+                diffuse += diffuseVal * uLightColours[i] * diff;
+
+                if (diff > 0.0f)
                 {
-                    float NDotH = max(dot(normal, H), 0.0);
-                    float NHPow = pow(NDotH, nVal); // (N dot H)^n
-                    specular += ((specularVal * uLightColours[i]) * NHPow) / lightDistance;
+                    specular += specularVal * uLightColours[i] * spec;
+					specular *= attenuation;
                 }
+
+                //ambient *= attenuation; causes much darker scene
+				diffuse *= attenuation;
             }
 
             vec4 textureColor = texture(uTexture, oUV);
@@ -340,6 +342,8 @@ function drawScene(gl, deltaTime, state) {
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.enable(gl.DEPTH_TEST); // Enable depth testing
     gl.depthFunc(gl.LEQUAL); // Near things obscure far things
+    gl.cullFace(gl.BACK);
+    gl.enable(gl.CULL_FACE);
     gl.clearDepth(1.0); // Clear everything
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 

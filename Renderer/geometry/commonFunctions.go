@@ -108,6 +108,28 @@ func ScaleM4(a mgl32.Mat4, v mgl32.Vec3) mgl32.Mat4 {
 	return out
 }
 
+func addObjectToState(object Geometry, state *State, sceneObj SceneObject) {
+	err := object.SetShader(state.VertShader, state.FragShader)
+
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	} else {
+		//create model
+		tempModel := Model{
+			Position: mgl32.Vec3{sceneObj.Position[0], sceneObj.Position[1], sceneObj.Position[2]},
+			Scale:    mgl32.Vec3{sceneObj.Scale[0], sceneObj.Scale[1], sceneObj.Scale[2]},
+			Rotation: mgl32.Ident4(),
+		}
+		object.Setup(
+			sceneObj.Material,
+			tempModel,
+			sceneObj.Name,
+		)
+		state.Objects = append(state.Objects, object)
+	}
+}
+
 func ParseJsonFile(filePath string, state *State) {
 	fmt.Printf("Opening scene file: %s\n", filePath)
 
@@ -128,7 +150,9 @@ func ParseJsonFile(filePath string, state *State) {
 
 	var scene []Scene
 
+	fmt.Println("Starting scene file read.....")
 	err = json.Unmarshal(byteValue, &scene)
+	fmt.Println("Reading scene file complete.....")
 
 	if err != nil {
 		fmt.Println(err)
@@ -136,54 +160,22 @@ func ParseJsonFile(filePath string, state *State) {
 
 	for i := 0; i < len(scene[0].Objects); i++ {
 		if scene[0].Objects[i].ObjectType == "cube" {
+			fmt.Println(scene[0].Objects[i].Name, " loading....")
 			tempCube := Cube{}
-
-			err := tempCube.SetShader(state.VertShader, state.FragShader)
-
-			if err != nil {
-				fmt.Println(err)
-				panic(err)
-			} else {
-				//create model
-				tempModel := Model{
-					Position: mgl32.Vec3{scene[0].Objects[i].Position[0], scene[0].Objects[i].Position[1], scene[0].Objects[i].Position[2]},
-					Scale:    mgl32.Vec3{scene[0].Objects[i].Scale[0], scene[0].Objects[i].Scale[1], scene[0].Objects[i].Scale[2]},
-					Rotation: mgl32.Ident4(),
-				}
-				tempCube.Setup(
-					scene[0].Objects[i].Material,
-					tempModel,
-					scene[0].Objects[i].Name,
-				)
-				state.Objects = append(state.Objects, &tempCube)
-			}
+			addObjectToState(&tempCube, state, scene[0].Objects[i])
+			state.LoadedObjects++
+			fmt.Println(scene[0].Objects[i].Name, " loaded successfully!")
 
 		} else if scene[0].Objects[i].ObjectType == "plane" {
-			fmt.Printf("Plane here\n")
+			fmt.Println(scene[0].Objects[i].Name, " loading....")
 			tempPlane := Plane{}
+			addObjectToState(&tempPlane, state, scene[0].Objects[i])
+			state.LoadedObjects++
+			fmt.Println(scene[0].Objects[i].Name, " loaded successfully!")
 
-			err := tempPlane.SetShader(state.VertShader, state.FragShader)
-
-			if err != nil {
-				fmt.Println(err)
-				panic(err)
-			} else {
-				tempModel := Model{
-					Position: mgl32.Vec3{scene[0].Objects[i].Position[0], scene[0].Objects[i].Position[1], scene[0].Objects[i].Position[2]},
-					Scale:    mgl32.Vec3{scene[0].Objects[i].Scale[0], scene[0].Objects[i].Scale[1], scene[0].Objects[i].Scale[2]},
-					Rotation: mgl32.Ident4(),
-				}
-				tempPlane.Setup(
-					scene[0].Objects[i].Material,
-					tempModel,
-					scene[0].Objects[i].Name,
-				)
-				state.Objects = append(state.Objects, &tempPlane)
-			}
 		} else if scene[0].Objects[i].ObjectType == "mesh" {
-			fmt.Println("Mesh here")
+			fmt.Println(scene[0].Objects[i].Name, " loading....")
 			meshPath := exPath + "/../Editor/" + scene[0].Objects[i].Model
-			fmt.Println(scene[0].Objects[i].Model, meshPath)
 			tempMeshVals := parser.Parse(meshPath)
 
 			tempModelObject := ModelObject{}
@@ -200,6 +192,7 @@ func ParseJsonFile(filePath string, state *State) {
 					Scale:    mgl32.Vec3{scene[0].Objects[i].Scale[0], scene[0].Objects[i].Scale[1], scene[0].Objects[i].Scale[2]},
 					Rotation: mgl32.Ident4(),
 				}
+
 				tempModelObject.Setup(
 					scene[0].Objects[i].Material,
 					tempModel,
@@ -207,9 +200,18 @@ func ParseJsonFile(filePath string, state *State) {
 				)
 
 				state.Objects = append(state.Objects, &tempModelObject)
-
+				state.LoadedObjects++
+				fmt.Println(scene[0].Objects[i].Name, " loaded successfully!")
 			}
 		}
 	}
 
+	for j := 0; j < len(scene[0].Lights); j++ {
+		tempLight := Light{
+			Colour:   scene[0].Lights[j].Colour,
+			Strength: scene[0].Lights[j].Strength,
+			Position: scene[0].Lights[j].Position,
+		}
+		state.Lights = append(state.Lights, tempLight)
+	}
 }

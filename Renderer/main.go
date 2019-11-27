@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"sync"
 	"syscall"
-	"time"
 
 	"./game"
 	"./geometry"
@@ -23,8 +22,6 @@ var buttons map[glfw.MouseButton]bool
 var mouseMovement map[string]float64
 var mu sync.Mutex
 var objectsToRender chan RenderObject
-var totalRenders int64 = 0
-var totalRenderTime int64 = 0.0
 
 type RenderObject struct {
 	viewMatrix      mgl32.Mat4
@@ -41,8 +38,8 @@ type RenderObject struct {
 }
 
 const (
-	width  = 1280
-	height = 720
+	width  = 1400
+	height = 800
 
 	vertexShaderSource = `
 		#version 330
@@ -109,12 +106,13 @@ const (
 
 				ambient += ambientVal * lightColours[i] * diffuseVal;
 				diffuse += diffuseVal * lightColours[i] * diff;
-				specular += specularVal * lightColours[i] * spec;
 
-				ambient *= attenuation;
+				if (diff > 0.0f) {
+					specular += specularVal * lightColours[i] * spec;
+					specular *= attenuation;
+				}
+				//ambient *= attenuation; causes much darker scene
 				diffuse *= attenuation;
-				specular *= attenuation;
-
 			}
 			frag_colour = vec4(diffuse + ambient + specular, 1.0); 
 		}
@@ -130,7 +128,7 @@ func main() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		fmt.Println("draw calls: ", totalRenders, "Total time: ", totalRenderTime, "Average: ", float64(totalRenderTime/totalRenders)/1000000000, "s")
+		fmt.Println("Terminated successfully!")
 		os.Exit(1)
 	}()
 
@@ -150,20 +148,10 @@ func main() {
 			Center:   mgl32.Vec3{0.5, 0.0, 0.0},
 			Up:       mgl32.Vec3{0.0, 1.0, 0.0},
 		},
-		Lights: []geometry.Light{
-			geometry.Light{
-				Colour:   []float32{1.0, 1.0, 1.0},
-				Strength: 10,
-				Position: []float32{1.0, 0.0, -2.0},
-			},
-			geometry.Light{
-				Colour:   []float32{1.0, 1.0, 1.0},
-				Strength: 0.4,
-				Position: []float32{2.0, 0.0, -0.5},
-			},
-		},
-		Objects: []geometry.Geometry{},
-		Keys:    make(map[glfw.Key]bool),
+		Lights:        []geometry.Light{},
+		Objects:       []geometry.Geometry{},
+		Keys:          make(map[glfw.Key]bool),
+		LoadedObjects: 0,
 	}
 
 	window := initGlfw()
@@ -175,36 +163,43 @@ func main() {
 
 	geometry.ParseJsonFile(argsWithoutProgram[0], &state)
 
+	fmt.Println(len(state.Objects))
+
 	then := 0.0
 
 	game.Start(&state) //main logic start
 
 	for !window.ShouldClose() {
-		now := glfw.GetTime()
-		deltaTime := now - then
-		then = now
-		angle += 0.5 * deltaTime
+		if state.LoadedObjects == len(state.Objects) {
 
-		game.Update(&state, deltaTime) //main logic update
+			now := glfw.GetTime()
+			deltaTime := now - then
+			then = now
+			angle += 0.5 * deltaTime
 
-		state.Keys = keys
+			game.Update(&state, deltaTime) //main logic update
 
-		if mouseMovement["move"] == 1 && buttons[glfw.MouseButton2] {
-			Rotation := geometry.RotateY(state.Camera.Center, state.Camera.Position, -(2 * deltaTime * mouseMovement["Xmove"]))
-			state.Camera.Center = Rotation
+			state.Keys = keys
+
+			if mouseMovement["move"] == 1 && buttons[glfw.MouseButton2] {
+				Rotation := geometry.RotateY(state.Camera.Center, state.Camera.Position, -(2 * deltaTime * mouseMovement["Xmove"]))
+				state.Camera.Center = Rotation
+			}
+			mouseMovement["move"] = 0
+			draw(window, &state)
 		}
-		mouseMovement["move"] = 0
-		draw(window, &state)
 	}
+	fmt.Println("Program ended succesfully!")
 }
 
 func draw(window *glfw.Window, state *geometry.State) {
-	startTime := time.Now()
-	totalRenders++
 	gl.ClearColor(0.0, 0.0, 0.0, 1.0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	gl.Disable(gl.CULL_FACE)
+	gl.Enable(gl.CULL_FACE)
+	gl.CullFace(gl.BACK)
+	gl.FrontFace(gl.CCW)
 	gl.Enable(gl.DEPTH_TEST)
+	gl.ClearDepth(1.0)
 	glfw.PollEvents()
 
 	//create light arrays
@@ -232,7 +227,6 @@ func draw(window *glfw.Window, state *geometry.State) {
 		renderObject(state, tempObject, lightPositionArray, lightColorArray, lightStrengthArray)
 	}
 	window.SwapBuffers()
-	totalRenderTime += startTime.Unix()
 }
 
 func renderObject(state *geometry.State, object RenderObject, lightPositionArray []float32, lightColorArray []float32, lightStrengthArray []float32) {

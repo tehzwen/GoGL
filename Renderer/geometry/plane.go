@@ -109,14 +109,14 @@ func (p *Plane) Setup(mat Material, mod Model, name string) error {
 	}
 
 	p.vertexValues.faces = []uint32{
-		0, 1, 2, 0, 2, 3,
+		0, 2, 1, 2, 0, 3,
 	}
 
 	p.vertexValues.normals = []float32{
-		0.0, 1.0, 0.0,
-		0.0, 1.0, 0.0,
-		0.0, 1.0, 0.0,
-		0.0, 1.0, 0.0,
+		0.0, -1.0, 0.0,
+		0.0, -1.0, 0.0,
+		0.0, -1.0, 0.0,
+		0.0, -1.0, 0.0,
 	}
 	SetupAttributes(&p.programInfo)
 	p.Scale(mod.Scale)

@@ -7,13 +7,14 @@ import (
 
 // State : struct for holding scene state
 type State struct {
-	Objects    []Geometry
-	FragShader string
-	VertShader string
-	Camera     Camera
-	Lights     []Light
-	ViewMatrix mgl32.Mat4
-	Keys       map[glfw.Key]bool
+	Objects       []Geometry
+	FragShader    string
+	VertShader    string
+	Camera        Camera
+	Lights        []Light
+	ViewMatrix    mgl32.Mat4
+	Keys          map[glfw.Key]bool
+	LoadedObjects int
 }
 
 // Camera : struct for holding info about the camera

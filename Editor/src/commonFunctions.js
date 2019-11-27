@@ -360,6 +360,7 @@ function hexToRGB(hex) {
 function parseSceneFile(file, state, cb) {
     state.lights = [];
     state.objects = [];
+    console.log(file)
 
     fetch(file)
         .then((data) => {

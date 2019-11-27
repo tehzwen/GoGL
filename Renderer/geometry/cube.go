@@ -100,31 +100,37 @@ func (c *Cube) Setup(mat Material, mod Model, name string) error {
 
 	c.material = mat
 	c.vertexValues.Vertices = []float32{
+		//front face
 		0.0, 0.0, 0.0,
 		0.0, 0.5, 0.0,
 		0.5, 0.5, 0.0,
 		0.5, 0.0, 0.0,
 
+		//back face
 		0.0, 0.0, 0.5,
 		0.0, 0.5, 0.5,
 		0.5, 0.5, 0.5,
 		0.5, 0.0, 0.5,
 
+		//top face
 		0.0, 0.5, 0.5,
 		0.0, 0.5, 0.0,
 		0.5, 0.5, 0.0,
 		0.5, 0.5, 0.5,
 
+		//bottom face
 		0.0, 0.0, 0.5,
 		0.5, 0.0, 0.5,
 		0.5, 0.0, 0.0,
 		0.0, 0.0, 0.0,
 
+		//side face
 		0.5, 0.0, 0.5,
 		0.5, 0.0, 0.0,
 		0.5, 0.5, 0.5,
 		0.5, 0.5, 0.0,
 
+		//side face
 		0.0, 0.0, 0.5,
 		0.0, 0.0, 0.0,
 		0.0, 0.5, 0.5,
@@ -132,12 +138,18 @@ func (c *Cube) Setup(mat Material, mod Model, name string) error {
 	}
 
 	c.vertexValues.faces = []uint32{
-		0, 1, 2, 0, 2, 3,
-		4, 5, 6, 4, 6, 7,
-		8, 9, 10, 8, 10, 11,
-		12, 13, 14, 12, 14, 15,
-		16, 17, 18, 17, 18, 19,
-		20, 21, 22, 21, 22, 23,
+		//front face
+		2, 0, 1, 3, 0, 2,
+		//backface
+		5, 4, 6, 6, 4, 7,
+		//top face
+		10, 9, 8, 10, 8, 11,
+		//bottom face
+		13, 12, 14, 14, 12, 15,
+		//
+		18, 16, 17, 18, 17, 19,
+
+		22, 21, 20, 23, 21, 22,
 	}
 
 	c.vertexValues.normals = []float32{
