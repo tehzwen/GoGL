@@ -10,7 +10,7 @@ function setup() {
     navTag.setAttribute("style", "background-color: #123456;")
     navTag.innerHTML = `
     <div>
-    <a class="navbar-brand" href="#">WebGL Engine</a>
+    <a class="navbar-brand" style="font-family:helvetica;font-weight:bold" href="#">NOSTROMO</a>
     </div
     `;
 
@@ -19,9 +19,11 @@ function setup() {
 
     //listeners for header button presses
     document.getElementById('saveButton').addEventListener('click', () => {
-        createSceneFile(state, "./statefiles/" + saveFile);
+        if (!document.location.href.includes("editor")) {
+            createSceneFile(state, "./statefiles/" + saveFile);
+        }
     })
-    console.log(__dirname);
+
     document.getElementById('launchButton').addEventListener('click', () => {
         document.location.href = "compiler.html?scene=" + __dirname + "/statefiles/" + saveFile
     })

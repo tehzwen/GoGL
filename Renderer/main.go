@@ -168,6 +168,7 @@ func main() {
 	then := 0.0
 
 	game.Start(&state) //main logic start
+	fmt.Println("PID: ", os.Getpid())
 
 	for !window.ShouldClose() {
 		if state.LoadedObjects == len(state.Objects) {

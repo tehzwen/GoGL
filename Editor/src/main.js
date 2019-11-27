@@ -2,7 +2,6 @@ var total = 0;
 var state = {};
 var stats = new Stats();
 
-
 window.onload = () => {
     var sceneFile = "testsave.json";
     parseSceneFile("./statefiles/" + sceneFile, state, main);
