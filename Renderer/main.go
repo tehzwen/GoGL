@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"os/signal"
 	"runtime"
 	"sync"
+	"syscall"
+	"time"
 
 	"./game"
 	"./geometry"
@@ -20,6 +23,8 @@ var buttons map[glfw.MouseButton]bool
 var mouseMovement map[string]float64
 var mu sync.Mutex
 var objectsToRender chan RenderObject
+var totalRenders int64 = 0
+var totalRenderTime int64 = 0.0
 
 type RenderObject struct {
 	viewMatrix      mgl32.Mat4
@@ -121,11 +126,18 @@ var angle = 0.0
 func main() {
 	runtime.LockOSThread()
 
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		fmt.Println("draw calls: ", totalRenders, "Total time: ", totalRenderTime, "Average: ", float64(totalRenderTime/totalRenders)/1000000000, "s")
+		os.Exit(1)
+	}()
+
 	//get arguments
 	argsWithoutProgram := os.Args[1:]
 
 	objectsToRender = make(chan RenderObject, 10)
-
 	keys = make(map[glfw.Key]bool)
 	buttons = make(map[glfw.MouseButton]bool)
 	mouseMovement = make(map[string]float64)
@@ -187,6 +199,8 @@ func main() {
 }
 
 func draw(window *glfw.Window, state *geometry.State) {
+	startTime := time.Now()
+	totalRenders++
 	gl.ClearColor(0.0, 0.0, 0.0, 1.0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.Disable(gl.CULL_FACE)
@@ -218,10 +232,11 @@ func draw(window *glfw.Window, state *geometry.State) {
 		renderObject(state, tempObject, lightPositionArray, lightColorArray, lightStrengthArray)
 	}
 	window.SwapBuffers()
-
+	totalRenderTime += startTime.Unix()
 }
 
 func renderObject(state *geometry.State, object RenderObject, lightPositionArray []float32, lightColorArray []float32, lightStrengthArray []float32) {
+
 	currentProgramInfo := object.currentProgram
 	projection := object.projMatrix
 	viewMatrix := object.viewMatrix
@@ -261,6 +276,7 @@ func renderObject(state *geometry.State, object RenderObject, lightPositionArray
 	}
 
 	gl.BindVertexArray(0)
+
 }
 
 func doObjectMath(object geometry.Geometry, state geometry.State, objects chan<- RenderObject) {
