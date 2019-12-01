@@ -65,36 +65,15 @@ class Light {
 
     lightingShader() {
         //console.log(this.model.vertices)
+        var shaderProgram;
+        var programInfo;
 
-        const shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
-        // Collect all the info needed to use the shader program.
-        const programInfo = {
+        shaderProgram = initShaderProgram(this.gl, shaders.flatNoTexture.vert, shaders.flatNoTexture.frag);
+        programInfo = {
             // The actual shader program
             program: shaderProgram,
-            // The attribute locations. WebGL will use there to hook up the buffers to the shader program.
-            // NOTE: it may be wise to check if these calls fail by seeing that the returned location is not -1.
-            attribLocations: {
-                vertexPosition: this.gl.getAttribLocation(shaderProgram, 'aPosition'),
-                vertexNormal: this.gl.getAttribLocation(shaderProgram, 'aNormal'),
-                vertexUV: this.gl.getAttribLocation(shaderProgram, 'aUV'),
-            },
-            uniformLocations: {
-                projection: this.gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
-                view: this.gl.getUniformLocation(shaderProgram, 'uViewMatrix'),
-                model: this.gl.getUniformLocation(shaderProgram, 'uModelMatrix'),
-                normalMatrix: this.gl.getUniformLocation(shaderProgram, 'normalMatrix'),
-                diffuseVal: this.gl.getUniformLocation(shaderProgram, 'diffuseVal'),
-                ambientVal: this.gl.getUniformLocation(shaderProgram, 'ambientVal'),
-                specularVal: this.gl.getUniformLocation(shaderProgram, 'specularVal'),
-                nVal: this.gl.getUniformLocation(shaderProgram, 'nVal'),
-                cameraPosition: this.gl.getUniformLocation(shaderProgram, 'uCameraPosition'),
-                numLights: this.gl.getUniformLocation(shaderProgram, 'numLights'),
-                lightPositions: this.gl.getUniformLocation(shaderProgram, 'uLightPositions'),
-                lightColours: this.gl.getUniformLocation(shaderProgram, 'uLightColours'),
-                lightStrengths: this.gl.getUniformLocation(shaderProgram, 'uLightStrengths'),
-                sampler: this.gl.getUniformLocation(shaderProgram, 'uTexture'),
-                samplerExists: this.gl.getUniformLocation(shaderProgram, "samplerExists")
-            },
+            attribLocations: setupAttributes(this.gl, shaders.flatNoTexture.attributes, shaderProgram),
+            uniformLocations: setupUniforms(this.gl, shaders.flatNoTexture.uniforms, shaderProgram),
         };
 
         shaderValuesErrorCheck(programInfo);

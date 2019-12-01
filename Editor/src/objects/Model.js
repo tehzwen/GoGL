@@ -47,15 +47,28 @@ class Model {
         var vertexArrayObject = this.gl.createVertexArray();
 
         this.gl.bindVertexArray(vertexArrayObject);
+        this.buffers;
 
-        this.buffers = {
-            vao: vertexArrayObject,
-            attributes: {
-                position: initPositionAttribute(this.gl, this.programInfo, positions),
-                normal: initNormalAttribute(this.gl, this.programInfo, normals),
-                uv: initTextureCoords(this.gl, this.programInfo, textureCoords),
-            },
-            numVertices: positions.length
+        if (this.material.shaderType === 1) {
+            this.buffers = {
+                vao: vertexArrayObject,
+                attributes: {
+                    position: initPositionAttribute(this.gl, this.programInfo, positions),
+                    normal: initNormalAttribute(this.gl, this.programInfo, normals),
+                },
+                numVertices: positions.length
+            }
+        } else if (this.material.shaderType === 4) {
+            this.buffers = {
+                vao: vertexArrayObject,
+                attributes: {
+                    position: initPositionAttribute(this.gl, this.programInfo, positions),
+                    normal: initNormalAttribute(this.gl, this.programInfo, normals),
+                    uv: initTextureCoords(this.gl, this.programInfo, textureCoords),
+                    bitangents: initBitangentBuffer(this.gl, this.programInfo, bitangents)
+                },
+                numVertices: positions.length
+            }
         }
 
         this.loaded = true;
@@ -65,37 +78,32 @@ class Model {
     lightingShader() {
         //console.log(this.model.vertices)
 
-        const shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
-        // Collect all the info needed to use the shader program.
-        const programInfo = {
-            // The actual shader program
-            program: shaderProgram,
-            // The attribute locations. WebGL will use there to hook up the buffers to the shader program.
-            // NOTE: it may be wise to check if these calls fail by seeing that the returned location is not -1.
-            attribLocations: {
-                vertexPosition: this.gl.getAttribLocation(shaderProgram, 'aPosition'),
-                vertexNormal: this.gl.getAttribLocation(shaderProgram, 'aNormal'),
-                vertexUV: this.gl.getAttribLocation(shaderProgram, 'aUV'),
-            },
-            uniformLocations: {
-                projection: this.gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
-                view: this.gl.getUniformLocation(shaderProgram, 'uViewMatrix'),
-                model: this.gl.getUniformLocation(shaderProgram, 'uModelMatrix'),
-                normalMatrix: this.gl.getUniformLocation(shaderProgram, 'normalMatrix'),
-                diffuseVal: this.gl.getUniformLocation(shaderProgram, 'diffuseVal'),
-                ambientVal: this.gl.getUniformLocation(shaderProgram, 'ambientVal'),
-                specularVal: this.gl.getUniformLocation(shaderProgram, 'specularVal'),
-                nVal: this.gl.getUniformLocation(shaderProgram, 'nVal'),
-                cameraPosition: this.gl.getUniformLocation(shaderProgram, 'uCameraPosition'),
-                numLights: this.gl.getUniformLocation(shaderProgram, 'numLights'),
-                lightPositions: this.gl.getUniformLocation(shaderProgram, 'uLightPositions'),
-                lightColours: this.gl.getUniformLocation(shaderProgram, 'uLightColours'),
-                lightStrengths: this.gl.getUniformLocation(shaderProgram, 'uLightStrengths'),
-                sampler: this.gl.getUniformLocation(shaderProgram, 'uTexture'),
-                samplerExists: this.gl.getUniformLocation(shaderProgram, "samplerExists")
-            },
-        };
+        var shaderProgram;
+        var programInfo;
 
+        if (this.material.shaderType === 0) {
+            console.warn("DO FLAT SHADING!")
+        } else if (this.material.shaderType === 1) {
+            shaderProgram = initShaderProgram(this.gl, shaders.blinnNoTexture.vert, shaders.blinnNoTexture.frag);
+            programInfo = {
+                // The actual shader program
+                program: shaderProgram,
+                attribLocations: setupAttributes(this.gl, shaders.blinnNoTexture.attributes, shaderProgram),
+                uniformLocations: setupUniforms(this.gl, shaders.blinnNoTexture.uniforms, shaderProgram),
+            };
+        } else if (this.material.shaderType === 3) {
+            //blinn phong with diffusetexture only
+        } else if (this.material.shaderType === 4) {
+            shaderProgram = initShaderProgram(this.gl, shaders.blinnTexture.vert, shaders.blinnTexture.frag);
+            programInfo = {
+                // The actual shader program
+                program: shaderProgram,
+                attribLocations: setupAttributes(this.gl, shaders.blinnTexture.attributes, shaderProgram),
+                uniformLocations: setupUniforms(this.gl, shaders.blinnTexture.uniforms, shaderProgram),
+            };
+        }
+
+        
         shaderValuesErrorCheck(programInfo);
         this.programInfo = programInfo;
         this.initBuffers();

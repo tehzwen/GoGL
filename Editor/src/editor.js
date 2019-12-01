@@ -26,6 +26,8 @@ window.onload = () => {
         enableLiveAutocompletion: true
     })
 
+    state.editor = editor;
+
     document.getElementById('saveButton').addEventListener('click', () => {
         saveCurrentFile(state, editor);
     })
@@ -58,19 +60,19 @@ window.onload = () => {
     })
 }
 
-function setEditorTextFromFile(filePath, editor) {
+function setEditorTextFromFile(filePath) {
     fs.readFile(filePath, 'utf-8', (err, data) => {
         if (!err) {
-            editor.setValue(data, -1);
+            state.editor.setValue(data, -1);
         } else {
             console.error(err);
         }
     })
 }
 
-function saveCurrentFile(state, editor) {
+function saveCurrentFile(state) {
     //I will want to run go.fmt on this file first to make sure it has no errors
-    fs.writeFile(state.currentFile, editor.getValue(), (err) => {
+    fs.writeFile(state.currentFile, state.editor.getValue(), (err) => {
         if (err) {
             console.error(err);
         } else {
@@ -78,12 +80,18 @@ function saveCurrentFile(state, editor) {
             console.log("writing of ", state.currentFile, " successful!");
         }
     })
-
 }
 
 function checkFileSyntax(state) {
     file = state.currentFile.trim()
-    console.log()
+    let importCommand = "goimports -w " + state.currentFile.trim();
+
+    importsCommandExec = exec(importCommand, (err, stdout, stderr) => {
+        if (err) {
+            console.error(err);
+        }
+    })
+
     let command = "make -C ../Renderer/";
     syntaxCommand = exec(command, (err, stdout, stderr) => {
         if (err) {
@@ -94,13 +102,7 @@ function checkFileSyntax(state) {
     syntaxCommand.on('exit', (code) => {
         if (code === 0) {
             console.log("GOOD")
-            //now run govet
-            /*let vetCommand = "go vet " + file; 
-            goVetCommand = exec(vetCommand, (err, stdout, stderr) => {
-                if (err) {
-                    console.error(err.message);
-                }
-            }) */
+            setEditorTextFromFile(state.currentFile);
         }
     })
 }

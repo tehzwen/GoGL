@@ -1,4 +1,3 @@
-const fs = require('fs')
 
 /**
  * @param  {} gl WebGL2 Context

@@ -44,6 +44,7 @@ window.onload = () => {
                     let currTime = new Date();
                     tempText.innerHTML = currTime.toLocaleTimeString() + "<b> " +data + "</b>";
                     compilationText.appendChild(tempText)
+                    compilationText.scrollTop = compilationText.scrollHeight; //causes output to auto scroll down
                 }
             });
         })
