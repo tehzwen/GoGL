@@ -1,6 +1,5 @@
 setup();
 
-var sceneFile = "alienScene.json";
 var saveFile = "testsave.json"
 
 function setup() {
@@ -103,6 +102,11 @@ function handleTypeSelectChange(event) {
     }
 }
 
+/**
+ * Purpose: Function to show controls to manipulate object,
+ * does different actions depending on what object we select
+ * @param {Game Object to manipulate} object 
+ */
 function displayObjectValues(object) {
     let selectedObjectDiv = document.getElementById("selectedObject");
     selectedObjectDiv.innerHTML = "";
@@ -170,23 +174,27 @@ function displayObjectValues(object) {
     positionalInputDiv.appendChild(prependDivZ);
     positionalInputDiv.appendChild(objectPositionZ);
 
-    let objectTitle = document.createElement("h3");
-    objectTitle.innerHTML = `<i>${object.name}</i>`;
-
-    let positionTitle = document.createElement("h4");
-    positionTitle.innerHTML = "Position";
-
-    selectedObjectDiv.appendChild(objectTitle);
-    selectedObjectDiv.appendChild(positionTitle);
+    selectedObjectDiv.appendChild(createHeader(`<i>${object.name}</i>`, "h3"));
+    selectedObjectDiv.appendChild(createHeader("Position", "h4"));
     selectedObjectDiv.appendChild(positionalInputDiv);
 
-    if (object.type === "mesh" || object.type === "primitive") {
+
+    if (object.type !== "light") {
         let diffuseTitle = document.createElement("h4");
         diffuseTitle.innerHTML = "Diffuse Color";
         selectedObjectDiv.appendChild(diffuseTitle);
         selectedObjectDiv.appendChild(diffuseColorPicker);
+    } else {
+        //for light, we want to change its color not diffuse material
     }
 }
+
+function createHeader(text, size) {
+    let tempTitle = document.createElement(size);
+    tempTitle.innerHTML = text;
+    return tempTitle;
+}
+
 
 function shaderValuesErrorCheck(programInfo) {
     let missing = [];

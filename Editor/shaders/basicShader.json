@@ -1,0 +1,26 @@
+{
+    "vertShader": [
+        "#version 300 es",
+        "in vec3 vertexPosition;",
+        "\n",
+        "void main() {",
+        "    gl_Position = vec4(vertexPosition, 1.0);",
+        "}"
+    ],
+    "attribs": [
+        "vertexPosition"
+    ],
+    "uniforms": [
+
+    ],
+    "fragShader": [
+        "#version 300 es",
+        "#define MAX_LIGHTS 128",
+        "precision highp float;",
+        "\n",
+        "out vec4 fragColor;",
+        "void main() {",
+        "   fragColor = vec4(0.5, 0.2, 0.3, 1.0);",
+        "}"
+    ]
+}

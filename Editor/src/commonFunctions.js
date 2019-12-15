@@ -64,6 +64,8 @@ function loadShader(gl, type, source) {
  * @param {array of x,y,z vertices} vertices 
  */
 function calculateCentroid(vertices, cb) {
+    //console.log(vertices);
+
     var center = vec3.fromValues(0.0, 0.0, 0.0);
     for (let t = 0; t < vertices.length; t += 3) {
         vec3.add(center, center, vec3.fromValues(vertices[t], vertices[t + 1], vertices[t + 2]));
@@ -72,6 +74,7 @@ function calculateCentroid(vertices, cb) {
 
     if (cb) {
         cb();
+        
         return center;
     } else {
         return center;
@@ -326,7 +329,7 @@ function getTextures(gl, imgPath) {
     }
 }
 
-function parseOBJFileToJSON(objFileURL, cb, object) {
+function parseOBJFileToJSON(objFileURL, cb) {
     if (objFileURL) {
         fetch(objFileURL)
             .then((data) => {
@@ -334,7 +337,7 @@ function parseOBJFileToJSON(objFileURL, cb, object) {
             })
             .then((text) => {
                 let mesh = OBJLoader.prototype.parse(text);
-                cb(mesh, object);
+                cb(mesh);
             })
             .catch((err) => {
                 console.error(err);
@@ -368,7 +371,6 @@ function parseSceneFile(file, state, cb) {
         .then((jData) => {
             state.level = jData[0];
             state.numberOfObjectsToLoad = jData[0].objects.length + jData[0].lights.length;
-
             cb();
         })
         .catch((err) => {
@@ -421,4 +423,150 @@ function createSceneFile(state, filename) {
     fs.writeFile(filename, JSON.stringify(totalState), 'utf-8', () => {
         console.log("Writing complete!")
     })
+}
+
+function initShaderUniforms(gl, shaderProgram, uniforms, attribs) {
+    let programInfo = {
+        attribLocations: {},
+        uniformLocations: {}
+    };
+
+    //map and check attribs
+    attribs.map((attrib) => {
+        programInfo.attribLocations[attrib] = gl.getAttribLocation(shaderProgram, attrib);
+    })
+
+    //map and check uniforms
+    uniforms.map((uniform) => {
+        programInfo.uniformLocations[uniform] = gl.getUniformLocation(shaderProgram, uniform);
+    })
+
+    programInfo.program = shaderProgram;
+
+    return programInfo;
+}
+
+function calculateBitangents(vertices, uvs) {
+
+    let tangents = [], bitangents = [];
+
+    for (let i = 0; i < vertices.length / 3; i += 3) {
+
+        let v0 = getVertexRowN(vertices, i);
+        let v1 = getVertexRowN(vertices, i + 1);
+        let v2 = getVertexRowN(vertices, i + 2);
+
+        let uv0 = getUVRowN(uvs, i);
+        let uv1 = getUVRowN(uvs, i + 1);
+        let uv2 = getUVRowN(uvs, i + 2);
+
+        let deltaPos1 = vec3.fromValues(0, 0, 0);
+        let deltaPos2 = vec3.fromValues(0, 0, 0);
+
+        vec3.sub(deltaPos1, v1, v0);
+        vec3.sub(deltaPos2, v2, v0);
+
+        let deltaUV1 = vec2.fromValues(0, 0);
+        let deltaUV2 = vec2.fromValues(0, 0);
+
+        vec2.sub(deltaUV1, uv1, uv0);
+        vec2.sub(deltaUV2, uv2, uv0);
+
+        let r = 1.0 / (deltaUV1[0] * deltaUV2[1] - deltaUV1[1] * deltaUV2[0]);
+
+        //calculate the tangent
+        let tangent = vec3.fromValues(0, 0, 0);
+        let tempTangent1 = vec3.fromValues(0, 0, 0);
+        let tempTangent2 = vec3.fromValues(0, 0, 0);
+
+        vec3.scale(tempTangent1, deltaPos1, deltaUV2[1]);
+        vec3.scale(tempTangent2, deltaPos2, deltaUV1[1]);
+
+        vec3.subtract(tangent, tempTangent1, tempTangent2);
+        vec3.scale(tangent, tangent, r);
+
+        //calculate the bitangent
+        let bitangent = vec3.fromValues(0, 0, 0);
+        let tempBitangent1 = vec3.fromValues(0, 0, 0);
+        let tempBitangent2 = vec3.fromValues(0, 0, 0);
+
+        vec3.scale(tempBitangent1, deltaPos2, deltaUV1[0]);
+        vec3.scale(tempBitangent2, deltaPos1, deltaUV2[0]);
+
+        vec3.subtract(bitangent, tempBitangent1, tempBitangent2);
+        vec3.scale(bitangent, bitangent, r);
+        //push the same tangent and bitangent for all three vertices
+
+        for (let j = 0; j < 3; j++) {
+            bitangents.push(bitangent[0]);
+            bitangents.push(bitangent[1]);
+            bitangents.push(bitangent[2]);
+
+            tangents.push(tangent[0]);
+            tangents.push(tangent[1]);
+            tangents.push(tangent[2]);
+        }
+
+
+    }
+
+    return { tangents, bitangents };
+}
+
+function getVertexRowN(vertices, n) {
+    let vertex = vec3.fromValues(vertices[n * 3], vertices[(n * 3) + 1], vertices[(n * 3) + 1]);
+    return vertex;
+}
+
+function getUVRowN(uvs, n) {
+    let uv = vec2.fromValues(uvs[n * 2], uvs[(n * 2) + 1]);
+    return uv;
+}
+
+function initTangentBuffer(gl, programInfo, tangents) {
+    if (tangents != null && tangents.length > 0) {
+        // Create a buffer for the positions.
+        const tangentBuffer = gl.createBuffer();
+
+        // Select the buffer as the one to apply buffer
+        // operations to from here out.
+        gl.bindBuffer(gl.ARRAY_BUFFER, tangentBuffer);
+
+        // Now pass the list of positions into WebGL to build the
+        // shape. We do this by creating a Float32Array from the
+        // JavaScript array, then use it to fill the current buffer.
+        gl.bufferData(
+            gl.ARRAY_BUFFER, // The kind of buffer this is
+            tangents, // The data in an Array object
+            gl.STATIC_DRAW // We are not going to change this data, so it is static
+        );
+
+        // Tell WebGL how to pull out the positions from the position
+        // buffer into the vertexPosition attribute.
+        {
+            const numComponents = 3;
+            const type = gl.FLOAT; // the data in the buffer is 32bit floats
+            const normalize = false; // don't normalize between 0 and 1
+            const stride = 0; // how many bytes to get from one set of values to the next
+            // Set stride to 0 to use type and numComponents above
+            const offset = 0; // how many bytes inside the buffer to start from
+
+            // Set the information WebGL needs to read the buffer properly
+            gl.vertexAttribPointer(
+                programInfo.attribLocations.vertexTangent,
+                numComponents,
+                type,
+                normalize,
+                stride,
+                offset
+            );
+            // Tell WebGL to use this attribute
+            gl.enableVertexAttribArray(
+                programInfo.attribLocations.vertexTangent);
+        }
+
+        // TODO: Create and populate a buffer for the UV coordinates
+
+        return tangentBuffer;
+    }
 }

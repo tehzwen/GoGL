@@ -10,35 +10,35 @@ class Cube {
         this.material = object.material;
         this.model = {
             vertices: [
-                [0.0, 0.0, 0.0],
-                [0.0, 0.5, 0.0],
-                [0.5, 0.5, 0.0],
-                [0.5, 0.0, 0.0],
+                0.0, 0.0, 0.0,
+                0.0, 0.5, 0.0,
+                0.5, 0.5, 0.0,
+                0.5, 0.0, 0.0,
 
-                [0.0, 0.0, 0.5],
-                [0.0, 0.5, 0.5],
-                [0.5, 0.5, 0.5],
-                [0.5, 0.0, 0.5],
+                0.0, 0.0, 0.5,
+                0.0, 0.5, 0.5,
+                0.5, 0.5, 0.5,
+                0.5, 0.0, 0.5,
 
-                [0.0, 0.5, 0.5],
-                [0.0, 0.5, 0.0],
-                [0.5, 0.5, 0.0],
-                [0.5, 0.5, 0.5],
+                0.0, 0.5, 0.5,
+                0.0, 0.5, 0.0,
+                0.5, 0.5, 0.0,
+                0.5, 0.5, 0.5,
 
-                [0.0, 0.0, 0.5],
-                [0.5, 0.0, 0.5],
-                [0.5, 0.0, 0.0],
-                [0.0, 0.0, 0.0],
+                0.0, 0.0, 0.5,
+                0.5, 0.0, 0.5,
+                0.5, 0.0, 0.0,
+                0.0, 0.0, 0.0,
 
-                [0.5, 0.0, 0.5],
-                [0.5, 0.0, 0.0],
-                [0.5, 0.5, 0.5],
-                [0.5, 0.5, 0.0],
+                0.5, 0.0, 0.5,
+                0.5, 0.0, 0.0,
+                0.5, 0.5, 0.5,
+                0.5, 0.5, 0.0,
 
-                [0.0, 0.0, 0.5],
-                [0.0, 0.0, 0.0],
-                [0.0, 0.5, 0.5],
-                [0.0, 0.5, 0.0]
+                0.0, 0.0, 0.5,
+                0.0, 0.0, 0.0,
+                0.0, 0.5, 0.5,
+                0.0, 0.5, 0.0
             ],
             triangles: [
                 //front face
@@ -116,37 +116,7 @@ class Cube {
                 -1.0, 0.0, 0.0,
                 -1.0, 0.0, 0.0
             ],
-            bitangents: [
-                0, -1, 0,
-                0, -1, 0,
-                0, -1, 0,
-                0, -1, 0, // Front
 
-                0, -1, 0,
-                0, -1, 0,
-                0, -1, 0,
-                0, -1, 0, // Back
-
-                0, -1, 0,
-                0, -1, 0,
-                0, -1, 0,
-                0, -1, 0, // Right
-
-                0, -1, 0,
-                0, -1, 0,
-                0, -1, 0,
-                0, -1, 0, // Left
-
-                0, 0, 1,
-                0, 0, 1,
-                0, 0, 1,
-                0, 0, 1, // Top
-
-                0, 0, -1,
-                0, 0, -1,
-                0, 0, -1,
-                0, 0, -1, // Bot
-            ],
             diffuseTexture: object.diffuseTexture ? object.diffuseTexture : null,
             normalTexture: object.normalTexture ? object.normalTexture : null,
             texture: object.diffuseTexture ? getTextures(glContext, object.diffuseTexture) : null,
@@ -160,6 +130,7 @@ class Cube {
     }
 
     scale(scaleVec) {
+
         let xVal = this.model.scale[0];
         let yVal = this.model.scale[1];
         let zVal = this.model.scale[2];
@@ -184,83 +155,113 @@ class Cube {
         var programInfo;
 
         if (this.material.shaderType === 0) {
-            shaderProgram = initShaderProgram(this.gl, shaders.flatNoTexture.vert, shaders.flatNoTexture.frag);
-            programInfo = {
-                // The actual shader program
-                program: shaderProgram,
-                attribLocations: setupAttributes(this.gl, shaders.flatNoTexture.attributes, shaderProgram),
-                uniformLocations: setupUniforms(this.gl, shaders.flatNoTexture.uniforms, shaderProgram),
-            };
+            fetch('./shaders/basicShader.json')
+                .then((res) => {
+                    return res.json();
+                })
+                .then((data) => {
+                    this.fragShader = data.fragShader.join("\n");
+                    this.vertShader = data.vertShader.join("\n");
+                    shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
+                    programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
+                    shaderValuesErrorCheck(programInfo);
+                    this.programInfo = programInfo;
+                    this.initBuffers();
+                })
+                .catch((err) => {
+                    console.error(err);
+                })
         } else if (this.material.shaderType === 1) {
-            shaderProgram = initShaderProgram(this.gl, shaders.blinnNoTexture.vert, shaders.blinnNoTexture.frag);
-            programInfo = {
-                // The actual shader program
-                program: shaderProgram,
-                attribLocations: setupAttributes(this.gl, shaders.blinnNoTexture.attributes, shaderProgram),
-                uniformLocations: setupUniforms(this.gl, shaders.blinnNoTexture.uniforms, shaderProgram),
-            };
+            fetch('./shaders/blinnNoTexture.json')
+                .then((res) => {
+                    return res.json();
+                })
+                .then((data) => {
+                    this.fragShader = data.fragShader.join("\n");
+                    this.vertShader = data.vertShader.join("\n");
+                    shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
+                    programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
+                    shaderValuesErrorCheck(programInfo);
+                    this.programInfo = programInfo;
+                    this.initBuffers();
+                })
+                .catch((err) => {
+                    console.error(err);
+                })
         } else if (this.material.shaderType === 3) {
-            //blinn phong with diffusetexture only
+            fetch('./shaders/blinnTexture.json')
+                .then((res) => {
+                    return res.json();
+                })
+                .then((data) => {
+                    this.fragShader = data.fragShader.join("\n");
+                    this.vertShader = data.vertShader.join("\n");
+                    shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
+                    programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
+                    shaderValuesErrorCheck(programInfo);
+                    this.programInfo = programInfo;
+                    this.initBuffers();
+                })
+                .catch((err) => {
+                    console.error(err);
+                })
         } else if (this.material.shaderType === 4) {
-            shaderProgram = initShaderProgram(this.gl, shaders.blinnTexture.vert, shaders.blinnTexture.frag);
-            programInfo = {
-                // The actual shader program
-                program: shaderProgram,
-                attribLocations: setupAttributes(this.gl, shaders.blinnTexture.attributes, shaderProgram),
-                uniformLocations: setupUniforms(this.gl, shaders.blinnTexture.uniforms, shaderProgram),
-            };
-        }
+            let tangentCalc = calculateBitangents(this.model.vertices, this.model.uvs);
+            this.model.bitangents = tangentCalc.bitangents;
+            this.model.tangents = tangentCalc.tangents;
 
-        
-        shaderValuesErrorCheck(programInfo);
-        this.programInfo = programInfo;
+            fetch('./shaders/blinnDiffuseAndNormal.json')
+                .then((res) => {
+                    return res.json();
+                })
+                .then((data) => {
+                    this.fragShader = data.fragShader.join("\n");
+                    this.vertShader = data.vertShader.join("\n");
+                    shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
+                    programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
+                    shaderValuesErrorCheck(programInfo);
+                    this.programInfo = programInfo;
+                    this.initBuffers();
+                })
+                .catch((err) => {
+                    console.error(err);
+                })
+        }
 
     }
 
     initBuffers() {
         //create vertices, normal and indicies arrays
-        const positions = new Float32Array(this.model.vertices.flat());
-        const normals = new Float32Array(this.model.normals.flat());
+        const positions = new Float32Array(this.model.vertices);
+        const normals = new Float32Array(this.model.normals);
         const indices = new Uint16Array(this.model.triangles);
         const textureCoords = new Float32Array(this.model.uvs);
         const bitangents = new Float32Array(this.model.bitangents);
+        const tangents = new Float32Array(this.model.tangents);
 
         var vertexArrayObject = this.gl.createVertexArray();
 
         this.gl.bindVertexArray(vertexArrayObject);
-        this.buffers;
-        
-        if (this.material.shaderType === 1 || this.material.shaderType === 0) {
-            this.buffers = {
-                vao: vertexArrayObject,
-                attributes: {
-                    position: initPositionAttribute(this.gl, this.programInfo, positions),
-                    normal: initNormalAttribute(this.gl, this.programInfo, normals),
-                },
-                indicies: initIndexBuffer(this.gl, indices),
-                numVertices: indices.length
-            }
-        } else if (this.material.shaderType === 4) {
-            this.buffers = {
-                vao: vertexArrayObject,
-                attributes: {
-                    position: initPositionAttribute(this.gl, this.programInfo, positions),
-                    normal: initNormalAttribute(this.gl, this.programInfo, normals),
-                    uv: initTextureCoords(this.gl, this.programInfo, textureCoords),
-                    bitangents: initBitangentBuffer(this.gl, this.programInfo, bitangents)
-                },
-                indicies: initIndexBuffer(this.gl, indices),
-                numVertices: indices.length
-            }
+
+        this.buffers = {
+            vao: vertexArrayObject,
+            attributes: {
+                position: this.programInfo.attribLocations.vertexPosition != null ? initPositionAttribute(this.gl, this.programInfo, positions) : null,
+                normal: this.programInfo.attribLocations.vertexNormal != null ? initNormalAttribute(this.gl, this.programInfo, normals) : null,
+                uv: this.programInfo.attribLocations.vertexUV != null ? initTextureCoords(this.gl, this.programInfo, textureCoords) : null,
+                bitangents: this.programInfo.attribLocations.vertexBitangent != null ? initBitangentBuffer(this.gl, this.programInfo, bitangents) : null,
+                tangents: this.programInfo.attribLocations.vertexTangent != null ? initBitangentBuffer(this.gl, this.programInfo, tangents) : null
+            },
+            indicies: initIndexBuffer(this.gl, indices),
+            numVertices: indices.length
         }
 
         this.loaded = true;
     }
 
     setup() {
-        this.lightingShader();
-        this.centroid = calculateCentroid(this.model.vertices.flat());
+        this.centroid = calculateCentroid(this.model.vertices);
         this.boundingBox = getBoundingBox(this.model.vertices);
-        this.initBuffers();
+        this.lightingShader();
     }
 }

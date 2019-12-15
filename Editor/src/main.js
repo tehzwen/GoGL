@@ -5,34 +5,6 @@ window.onload = () => {
     var sceneFile = "testsave.json";
     parseSceneFile("./statefiles/" + sceneFile, state, main);
     //console.log(shaders);
-    getUniformsFromShaders(shaders);
-}
-
-/**
- * 
- * @param {object - contains vertex, normal, uv information for the mesh to be made} mesh 
- * @param {object - the game object that will use the mesh information} object 
- * @purpose - Helper function called as a callback function when the mesh is done loading for the object
- */
-function createMesh(mesh, object) {
-    if (object.type === "mesh") {
-        let testModel = new Model(state.gl, object, mesh);
-        testModel.setup();
-        testModel.model.position = object.position;
-        if (object.scale) {
-            testModel.scale(object.scale);
-        }
-        addObjectToScene(state, testModel);
-    } else {
-        let testLight = new Light(state.gl, object, mesh);
-        testLight.setup();
-        testLight.model.position = object.position;
-        if (object.scale) {
-            testLight.scale(object.scale);
-        }
-
-        addObjectToScene(state, testLight);
-    }
 }
 
 /**
@@ -98,12 +70,20 @@ function main() {
     //iterate through the level's objects and add them
     state.level.objects.map((object) => {
         if (object.type === "mesh" || object.type === "light") {
-            parseOBJFileToJSON(object.model, createMesh, object);
+            //parseOBJFileToJSON(object.model, createMesh, object);
+            let tempMesh = new Model(gl, object);
+            tempMesh.setup();
+            if (object.scale) {
+                tempMesh.scale(object.scale);
+            }
+
+            tempMesh.model.position = object.position;
+
+            addObjectToScene(state, tempMesh);
         } else if (object.type === "cube") {
             let tempCube = new Cube(gl, object);
             tempCube.setup();
             //tempCube.model.position = vec3.fromValues(object.position[0], object.position[1], object.position[2]);
-
             if (object.scale) {
                 tempCube.scale(object.scale);
             }
@@ -122,7 +102,17 @@ function main() {
     })
 
     state.level.lights.map((light) => {
-        parseOBJFileToJSON(light.model, createMesh, light);
+        //parseOBJFileToJSON(light.model, createMesh, light);
+        let tempLight = new Light(gl, light);
+        tempLight.setup();
+
+        if (light.scale) {
+            tempLight.scale(light.scale);
+        }
+
+        tempLight.model.position = light.position;
+
+        addObjectToScene(state, tempLight);
     })
 
     //setup mouse click listener
@@ -140,7 +130,6 @@ function main() {
  * @purpose - Helper function for adding a new object to the scene and refreshing the GUI
  */
 function addObjectToScene(state, object) {
-    //console.log(object);
     if (object.type === "light") {
         state.lightIndices.push(state.objectCount);
         state.numLights++;
@@ -174,7 +163,6 @@ function startRendering(gl, state) {
         //wait until the scene is completely loaded to render it
         if (state.numberOfObjectsToLoad <= state.objects.length) {
             if (!state.gameStarted) {
-                console.log(state.objects)
                 startGame(state);
                 state.gameStarted = true;
             }
@@ -195,7 +183,7 @@ function startRendering(gl, state) {
             if (state.mouse['camMove']) {
                 vec3.rotateY(state.camera.center, state.camera.center, state.camera.position, (-state.mouse.rateX * state.mouse.sensitivity));
             }
-            
+
             // Draw our scene
             drawScene(gl, deltaTime, state);
         }
@@ -237,7 +225,7 @@ function drawScene(gl, deltaTime, state) {
 
     state.objects.map((object) => {
         if (object.loaded) {
-
+            //console.log(object);
             gl.useProgram(object.programInfo.program);
             {
 
@@ -338,6 +326,9 @@ function drawScene(gl, deltaTime, state) {
                     if (object.type === "mesh" || object.type === "light") {
                         gl.drawArrays(gl.TRIANGLES, offset, object.buffers.numVertices / 3);
                     } else {
+                        if (object.type === 'cube') {
+                            //console.log(object);
+                        }
                         gl.drawElements(gl.TRIANGLES, object.buffers.numVertices, gl.UNSIGNED_SHORT, offset);
                     }
                 }

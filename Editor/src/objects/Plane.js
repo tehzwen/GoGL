@@ -10,10 +10,10 @@ class Plane {
         this.material = object.material;
         this.model = {
             vertices: [
-                [0.0, 0.5, 0.5],
-                [0.0, 0.5, 0.0],
-                [0.5, 0.5, 0.0],
-                [0.5, 0.5, 0.5],
+                0.0, 0.5, 0.5,
+                0.0, 0.5, 0.0,
+                0.5, 0.5, 0.0,
+                0.5, 0.5, 0.5,
             ],
             triangles: [
                 0, 2, 1, 2, 0, 3,
@@ -37,7 +37,7 @@ class Plane {
                 0, -1, 0, // top
             ],
             diffuseTexture: object.diffuseTexture ? object.diffuseTexture : null,
-            normalTexture : object.normalTexture ? object.normalTexture : null,
+            normalTexture: object.normalTexture ? object.normalTexture : null,
             texture: object.diffuseTexture ? getTextures(glContext, object.diffuseTexture) : null,
             textureNorm: object.normalTexture ? getTextures(glContext, object.normalTexture) : null,
             buffers: null,
@@ -65,30 +65,78 @@ class Plane {
         var programInfo;
 
         if (this.material.shaderType === 0) {
-            console.warn("DO FLAT SHADING!")
+            fetch('./shaders/basicShader.json')
+                .then((res) => {
+                    return res.json();
+                })
+                .then((data) => {
+                    this.fragShader = data.fragShader.join("\n");
+                    this.vertShader = data.vertShader.join("\n");
+                    shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
+                    programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
+                    shaderValuesErrorCheck(programInfo);
+                    this.programInfo = programInfo;
+                    this.initBuffers();
+                })
+                .catch((err) => {
+                    console.error(err);
+                })
         } else if (this.material.shaderType === 1) {
-            shaderProgram = initShaderProgram(this.gl, shaders.blinnNoTexture.vert, shaders.blinnNoTexture.frag);
-            programInfo = {
-                // The actual shader program
-                program: shaderProgram,
-                attribLocations: setupAttributes(this.gl, shaders.blinnNoTexture.attributes, shaderProgram),
-                uniformLocations: setupUniforms(this.gl, shaders.blinnNoTexture.uniforms, shaderProgram),
-            };
+            fetch('./shaders/blinnNoTexture.json')
+                .then((res) => {
+                    return res.json();
+                })
+                .then((data) => {
+                    this.fragShader = data.fragShader.join("\n");
+                    this.vertShader = data.vertShader.join("\n");
+                    shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
+                    programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
+                    shaderValuesErrorCheck(programInfo);
+                    this.programInfo = programInfo;
+                    this.initBuffers();
+                })
+                .catch((err) => {
+                    console.error(err);
+                })
         } else if (this.material.shaderType === 3) {
-            //blinn phong with diffusetexture only
+            fetch('./shaders/blinnTexture.json')
+                .then((res) => {
+                    return res.json();
+                })
+                .then((data) => {
+                    this.fragShader = data.fragShader.join("\n");
+                    this.vertShader = data.vertShader.join("\n");
+                    shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
+                    programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
+                    shaderValuesErrorCheck(programInfo);
+                    this.programInfo = programInfo;
+                    this.initBuffers();
+                })
+                .catch((err) => {
+                    console.error(err);
+                })
         } else if (this.material.shaderType === 4) {
-            shaderProgram = initShaderProgram(this.gl, shaders.blinnTexture.vert, shaders.blinnTexture.frag);
-            programInfo = {
-                // The actual shader program
-                program: shaderProgram,
-                attribLocations: setupAttributes(this.gl, shaders.blinnTexture.attributes, shaderProgram),
-                uniformLocations: setupUniforms(this.gl, shaders.blinnTexture.uniforms, shaderProgram),
-            };
-        }
+            let tangentCalc = calculateBitangents(this.model.vertices, this.model.uvs);
+            this.model.bitangents = tangentCalc.bitangents;
+            this.model.tangents = tangentCalc.tangents;
 
-        
-        shaderValuesErrorCheck(programInfo);
-        this.programInfo = programInfo;
+            fetch('./shaders/blinnDiffuseAndNormal.json')
+                .then((res) => {
+                    return res.json();
+                })
+                .then((data) => {
+                    this.fragShader = data.fragShader.join("\n");
+                    this.vertShader = data.vertShader.join("\n");
+                    shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
+                    programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
+                    shaderValuesErrorCheck(programInfo);
+                    this.programInfo = programInfo;
+                    this.initBuffers();
+                })
+                .catch((err) => {
+                    console.error(err);
+                })
+        }
 
     }
 
@@ -133,8 +181,7 @@ class Plane {
     }
 
     setup() {
-        this.lightingShader();
         this.centroid = calculateCentroid(this.model.vertices.flat());
-        this.initBuffers();
+        this.lightingShader();
     }
 }

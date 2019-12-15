@@ -1,5 +1,5 @@
 class Light {
-    constructor(glContext, object, meshDetails) {
+    constructor(glContext, object) {
         this.gl = glContext;
         this.name = object.name;
         this.parent = object.parent;
@@ -8,9 +8,9 @@ class Light {
 
         this.material = object.material;
         this.model = {
-            normals: meshDetails.normals,
-            vertices: meshDetails.vertices,
-            uvs: meshDetails.uvs,
+            normals: null,
+            vertices: null,
+            uvs: null,
             position: vec3.fromValues(0.0, 0.0, 0.0),
             rotation: mat4.create(),
             scale: vec3.fromValues(1.0, 1.0, 1.0),
@@ -36,8 +36,10 @@ class Light {
     }
 
     setup() {
-        this.centroid = calculateCentroid(this.model.vertices, this.lightingShader);
+        //this.centroid = calculateCentroid(this.model.vertices, this.lightingShader);
+        parseOBJFileToJSON(this.modelName, this.lightingShader);
     }
+
 
     initBuffers() {
         //create vertices, normal and indicies arrays
@@ -52,9 +54,9 @@ class Light {
         this.buffers = {
             vao: vertexArrayObject,
             attributes: {
-                position: initPositionAttribute(this.gl, this.programInfo, positions),
-                normal: initNormalAttribute(this.gl, this.programInfo, normals),
-                uv: initTextureCoords(this.gl, this.programInfo, textureCoords),
+                position: this.programInfo.attribLocations.vertexPosition != null ? initPositionAttribute(this.gl, this.programInfo, positions) : null,
+                normal: this.programInfo.attribLocations.vertexNormal != null ? initNormalAttribute(this.gl, this.programInfo, normals) : null,
+                uv: this.programInfo.attribLocations.vertexUV != null ? initTextureCoords(this.gl, this.programInfo, textureCoords) : null,
             },
             numVertices: positions.length
         }
@@ -63,22 +65,92 @@ class Light {
         console.log(this.name + " loaded successfully!");
     }
 
-    lightingShader() {
-        //console.log(this.model.vertices)
-        var shaderProgram;
-        var programInfo;
+    lightingShader(mesh) {
+        this.model.vertices = mesh.vertices;
+        this.model.normals = mesh.normals;
+        this.model.uvs = mesh.uvs;
+        let shaderProgram;
+        let programInfo;
 
-        shaderProgram = initShaderProgram(this.gl, shaders.flatNoTexture.vert, shaders.flatNoTexture.frag);
-        programInfo = {
-            // The actual shader program
-            program: shaderProgram,
-            attribLocations: setupAttributes(this.gl, shaders.flatNoTexture.attributes, shaderProgram),
-            uniformLocations: setupUniforms(this.gl, shaders.flatNoTexture.uniforms, shaderProgram),
-        };
-
-        shaderValuesErrorCheck(programInfo);
-        this.programInfo = programInfo;
-        this.initBuffers();
-
+        //plain flat shading
+        if (this.material.shaderType === 0) {
+            fetch('./shaders/basicShader.json')
+                .then((res) => {
+                    return res.json();
+                })
+                .then((data) => {
+                    this.fragShader = data.fragShader.join("\n");
+                    this.vertShader = data.vertShader.join("\n");
+                    shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
+                    programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
+                    shaderValuesErrorCheck(programInfo);
+                    this.programInfo = programInfo;
+                    this.centroid = calculateCentroid(this.model.vertices);
+                    this.boundingBox = getBoundingBox(this.model.vertices);
+                    this.initBuffers();
+                })
+                .catch((err) => {
+                    console.error(err);
+                })
+        }
+        //blinn phong with no textures
+        else if (this.material.shaderType === 1) {
+            fetch('./shaders/blinnNoTexture.json')
+                .then((res) => {
+                    return res.json();
+                })
+                .then((data) => {
+                    this.fragShader = data.fragShader.join("\n");
+                    this.vertShader = data.vertShader.join("\n");
+                    shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
+                    programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
+                    shaderValuesErrorCheck(programInfo);
+                    this.programInfo = programInfo;
+                    this.centroid = calculateCentroid(this.model.vertices);
+                    this.boundingBox = getBoundingBox(this.model.vertices);
+                    this.initBuffers();
+                })
+                .catch((err) => {
+                    console.error(err);
+                })
+        } else if (this.material.shaderType === 3) {
+            fetch('./shaders/blinnTexture.json')
+                .then((res) => {
+                    return res.json();
+                })
+                .then((data) => {
+                    this.fragShader = data.fragShader.join("\n");
+                    this.vertShader = data.vertShader.join("\n");
+                    shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
+                    programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
+                    shaderValuesErrorCheck(programInfo);
+                    this.programInfo = programInfo;
+                    this.centroid = calculateCentroid(this.model.vertices);
+                    this.boundingBox = getBoundingBox(this.model.vertices);
+                    this.initBuffers();
+                })
+                .catch((err) => {
+                    console.error(err);
+                })
+        } else if (this.material.shaderType === 4) {
+            fetch('./shaders/blinnNormalAndDiffuseTexture.json')
+                .then((res) => {
+                    return res.json();
+                })
+                .then((data) => {
+                    this.fragShader = data.fragShader.join("\n");
+                    this.vertShader = data.vertShader.join("\n");
+                    shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
+                    programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
+                    shaderValuesErrorCheck(programInfo);
+                    this.programInfo = programInfo;
+                    this.centroid = calculateCentroid(this.model.vertices);
+                    this.boundingBox = getBoundingBox(this.model.vertices);
+                    this.initBuffers();
+                })
+                .catch((err) => {
+                    console.error(err);
+                })
+        }
     }
 }
