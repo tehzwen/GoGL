@@ -12,15 +12,14 @@
 <body>
     <!-- This is the navigation bar at the top of the page -->
     <!-- This is populated by loading the common functions script -->
-    <div id="myNavBar"></div>
-    <ul class="nav nav-tabs nav-fill">
-        <li class="nav-item">
+    <ul class="nav nav-tabs nav-fill" style="background-color: #282D33;">
+        <li class="nav-item" >
             <a class="nav-link active" href="main.html">Engine</a>
         </li>
         <li class="nav-item">
             <a class="nav-link" href="editor.html">Editor</a>
         </li>
-        <li class="nav-item">
+        <li class="nav-item" >
             <button id="saveButton" class="btn btn-outline-primary btn-block btn-lg">Save</button>
         </li>
         <li class="nav-item">
@@ -35,22 +34,21 @@
 
     <!-- This is a container for our content -->
     <div class="row">
-        <div class="col">
-            <div class="mx-auto text-center my-5">
-                <!-- Title -->
-            </div>
+        <div class="col-8">
             <div class="mx-auto text-center">
                 <!-- This is our canvas for the example -->
                 <!-- Our script will find this tag and populate it with our drawing -->
-                <canvas id="glCanvas" width="1400" height="800"></canvas>
+                <canvas tabindex="1" id="glCanvas" width="100%" height="100%"></canvas>
             </div>
         </div>
-        <div class="col">
+        <div class="col-1 column-transparent">
             <div class="mx-auto text-center my-5">
                 <h3>Scene Objects</h3>
             </div>
             <div class="mx-auto text-center" id="objectsNav">
             </div>
+        </div>
+        <div class="col-3 column-transparent">
             <div class="mx-auto text-center my-5">
                 <h3>Selected Object</h3>
             </div>

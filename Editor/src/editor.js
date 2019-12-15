@@ -5,10 +5,12 @@ const exec = require('child_process').exec;
 window.onload = () => {
     state = {};
 
+    //set the size of the parent div to the client height
+    document.getElementById('editorParent').style.height = document.body.clientHeight * 1.5 + "vh";
+
     var editor = ace.edit("editorWindow", {
-        theme: "ace/theme/monokai",
+        theme: "ace/theme/tomorrow_night",
         mode: "ace/mode/golang",
-        autoScrollEditorIntoView: true,
         maxLines: 200,
         minLines: 30
     });

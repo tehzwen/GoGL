@@ -2,7 +2,7 @@ var exec = require('child_process').exec;
 
 window.onload = () => {
     const urlParams = new URLSearchParams(window.location.search);
-    const sceneFile = urlParams.get('scene');    
+    const sceneFile = urlParams.get('scene');
     const compilationText = document.getElementById("compilationOutput")
     console.log(sceneFile);
 
@@ -12,7 +12,7 @@ window.onload = () => {
             console.error(err);
         }
         console.log(stdout);
-        
+
     })
 
     buildCommand.on('exit', function (code) {
@@ -20,11 +20,13 @@ window.onload = () => {
 
         if (code === 0) {
             let tempText = document.createElement('p');
+            tempText.classList = "orange-text";
             let currTime = new Date();
             tempText.innerHTML = currTime.toLocaleTimeString() + "<b> Compilation successful!</b>";
             compilationText.appendChild(tempText)
         } else {
             let tempText = document.createElement('p');
+            tempText.classList = "orange-text";
             let currTime = new Date();
             tempText.innerHTML = currTime.toLocaleTimeString() + "<b> Compilation failed!</b>";
             compilationText.appendChild(tempText)
@@ -42,7 +44,8 @@ window.onload = () => {
                 let tempText = document.createElement('p');
                 if (tempText) {
                     let currTime = new Date();
-                    tempText.innerHTML = currTime.toLocaleTimeString() + "<b> " +data + "</b>";
+                    tempText.innerHTML = currTime.toLocaleTimeString() + "<b> " + data + "</b>";
+                    tempText.classList = "orange-text";
                     compilationText.appendChild(tempText)
                     compilationText.scrollTop = compilationText.scrollHeight; //causes output to auto scroll down
                 }

@@ -4,19 +4,6 @@ var sceneFile = "alienScene.json";
 var saveFile = "testsave.json"
 
 function setup() {
-    // Create a HTML tag to display to the user
-    var navTag = document.createElement('nav');
-    navTag.classList = "navbar navbar-expand-lg navbar-dark";
-    navTag.setAttribute("style", "background-color: #123456;")
-    navTag.innerHTML = `
-    <div>
-    <a class="navbar-brand" style="font-family:helvetica;font-weight:bold" href="#">NOSTROMO</a>
-    </div
-    `;
-
-    // Insert the tag into the HMTL document
-    document.getElementById('myNavBar').appendChild(navTag);
-
     //listeners for header button presses
     document.getElementById('saveButton').addEventListener('click', () => {
         if (!document.location.href.includes("editor")) {
@@ -127,6 +114,7 @@ function displayObjectValues(object) {
     prependDivX.classList = "input-group-prepend";
 
     objectPositionX = document.createElement("input");
+    objectPositionX.type = "number";
     objectPositionX.addEventListener('input', (event) => {
         handlePositionChange('x', event.target.value, object.model);
     })
@@ -135,6 +123,7 @@ function displayObjectValues(object) {
     objectPositionX.value = object.model.position[0];
 
     objectPositionY = document.createElement("input");
+    objectPositionY.type = "number";
     objectPositionY.addEventListener('input', (event) => {
         handlePositionChange('y', event.target.value, object.model);
     })
@@ -143,6 +132,7 @@ function displayObjectValues(object) {
     objectPositionY.value = object.model.position[1];
 
     objectPositionZ = document.createElement("input");
+    objectPositionZ.type = "number";
     objectPositionZ.addEventListener('input', (event) => {
         handlePositionChange('z', event.target.value, object.model);
     })
@@ -184,7 +174,7 @@ function displayObjectValues(object) {
     objectTitle.innerHTML = `<i>${object.name}</i>`;
 
     let positionTitle = document.createElement("h4");
-    positionTitle.innerHTML = "<u>Position</u>";
+    positionTitle.innerHTML = "Position";
 
     selectedObjectDiv.appendChild(objectTitle);
     selectedObjectDiv.appendChild(positionTitle);
@@ -192,12 +182,10 @@ function displayObjectValues(object) {
 
     if (object.type === "mesh" || object.type === "primitive") {
         let diffuseTitle = document.createElement("h4");
-        diffuseTitle.innerHTML = "<u>Diffuse Color</u>";
+        diffuseTitle.innerHTML = "Diffuse Color";
         selectedObjectDiv.appendChild(diffuseTitle);
         selectedObjectDiv.appendChild(diffuseColorPicker);
     }
-
-
 }
 
 function shaderValuesErrorCheck(programInfo) {

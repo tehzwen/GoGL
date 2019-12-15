@@ -1,6 +1,5 @@
 var total = 0;
 var state = {};
-var stats = new Stats();
 
 window.onload = () => {
     var sceneFile = "testsave.json";
@@ -55,10 +54,11 @@ function addObject(type, url = null) {
 }
 
 function main() {
-    stats.showPanel(0);
-    document.getElementById("fps").appendChild(stats.dom);
     //document.body.appendChild( stats.dom );
     const canvas = document.querySelector("#glCanvas");
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
     // Initialize the WebGL2 context
     var gl = canvas.getContext("webgl2");
@@ -78,7 +78,7 @@ function main() {
         objectTable: {},
         lightIndices: [],
         keyboard: {},
-        mouse: { sensitivity: 0.2 },
+        mouse: { sensitivity: 0.002 },
         gameStarted: false,
         camera: {
             name: 'camera',
@@ -165,7 +165,6 @@ function startRendering(gl, state) {
 
     // This function is called when we want to render a frame to the canvas
     function render(now) {
-        stats.begin();
         now *= 0.001; // convert to seconds
         const deltaTime = now - then;
         then = now;
@@ -194,13 +193,12 @@ function startRendering(gl, state) {
             }
 
             if (state.mouse['camMove']) {
-                vec3.rotateY(state.camera.center, state.camera.center, state.camera.position, (-state.mouse.rateX * deltaTime * state.mouse.sensitivity));
+                vec3.rotateY(state.camera.center, state.camera.center, state.camera.position, (-state.mouse.rateX * state.mouse.sensitivity));
             }
             
             // Draw our scene
             drawScene(gl, deltaTime, state);
         }
-        stats.end();
         // Request another frame when this one is done
         requestAnimationFrame(render);
     }

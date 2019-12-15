@@ -1,11 +1,13 @@
-var moveSpeed = 2;
+var moveSpeed = 5;
 
 function startGame(state) {
-    document.addEventListener("contextmenu", function (e) {
+    let canvas = document.getElementById('glCanvas');
+
+    canvas.addEventListener("contextmenu", function (e) {
         e.preventDefault();
     }, false);
 
-    document.addEventListener('mousemove', (event) => {
+    canvas.addEventListener('mousemove', (event) => {
         //handle right click
         if (event.buttons == 2) {
             state.mouse['camMove'] = true;
@@ -13,12 +15,17 @@ function startGame(state) {
         }
     });
 
-    document.addEventListener('mouseup', (event) => {
+    canvas.addEventListener('mouseup', (event) => {
         state.mouse['camMove'] = false;
         state.mouse.rateX = 0;
     })
 
-    document.addEventListener('keypress', (event) => {
+    canvas.addEventListener('mouseout', (event) => {
+        state.mouse['camMove'] = false;
+        state.mouse.rateX = 0;
+    })
+
+    canvas.addEventListener('keypress', (event) => {
         switch (event.code) {
             case "KeyW":
                 state.keyboard[event.key] = true;
@@ -41,7 +48,7 @@ function startGame(state) {
         }
     });
 
-    document.addEventListener('keyup', (event) => {
+    canvas.addEventListener('keyup', (event) => {
         switch (event.code) {
             case "KeyW":
                 state.keyboard[event.key] = false;
