@@ -11,6 +11,8 @@ type Plane struct {
 	name         string
 	fragShader   string
 	vertShader   string
+	shaderType   string
+	boundingBox  BoundingBox
 	buffers      ObjectBuffers
 	programInfo  ProgramInfo
 	material     Material
@@ -43,6 +45,10 @@ func (p Plane) GetMaterial() Material {
 	return p.material
 }
 
+func (p Plane) GetDetails() (string, string) {
+	return p.name, p.shaderType
+}
+
 // GetVertices : getter for vertexValues
 func (p Plane) GetVertices() VertexValues {
 	return p.vertexValues
@@ -60,6 +66,10 @@ func (p Plane) GetBuffers() ObjectBuffers {
 
 func (p Plane) GetType() string {
 	return "plane"
+}
+
+func (p Plane) GetBoundingBox() BoundingBox {
+	return p.boundingBox
 }
 
 // Scale : function used to scale the cube and recalculate the centroid
@@ -118,9 +128,12 @@ func (p *Plane) Setup(mat Material, mod Model, name string) error {
 		0.0, -1.0, 0.0,
 		0.0, -1.0, 0.0,
 	}
+	p.boundingBox = GetBoundingBox(p.vertexValues.Vertices)
 	SetupAttributes(&p.programInfo)
 	p.Scale(mod.Scale)
+	p.boundingBox = ScaleBoundingBox(p.boundingBox, mod.Scale)
 	p.model.Position = mod.Position
+	p.boundingBox = TranslateBoundingBox(p.boundingBox, mod.Position)
 	p.model.Rotation = mod.Rotation
 	p.centroid = CalculateCentroid(p.vertexValues.Vertices, p.model.Scale)
 	p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, p.vertexValues.normals, p.vertexValues.faces)

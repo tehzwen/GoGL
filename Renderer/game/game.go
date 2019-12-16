@@ -29,7 +29,7 @@ func Update(state *geometry.State, deltaTime float64) {
 	//lightToMove.Strength += float32(math.Sin(angle))
 	lightToMove.Position[2] += float32(math.Sin(angle) * 0.5)
 	//angle += 0.5 * deltaTime
-	fmt.Printf("position: %+v\n", lightToMove.Position)
+	//fmt.Printf("position: %+v\n", lightToMove.Position)
 	speed := deltaTime * walkSpeed
 
 	if state.Keys[glfw.KeyLeftShift] {

@@ -5,12 +5,15 @@ import (
 	"math"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"sync"
 	"syscall"
 
 	"./game"
 	"./geometry"
+	"./mymath"
+	"./parser"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
@@ -124,6 +127,31 @@ var angle = 0.0
 func main() {
 	runtime.LockOSThread()
 
+	//load our shaders in here
+	var shaderFiles []string
+
+	root := "../Editor/shaders/"
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() {
+			fmt.Printf("%s\n", path)
+			shaderFiles = append(shaderFiles, path)
+		}
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	err, shaders := parser.ParseShaderFiles(shaderFiles)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for x := 0; x < len(shaders); x++ {
+		fmt.Printf("%s\n", shaders[x].VertShaderText)
+	}
+
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
@@ -223,10 +251,13 @@ func draw(window *glfw.Window, state *geometry.State) {
 	}
 
 	//render sequentially using channel values
+	state.RenderedObjects = 0
 	for x := 0; x < len(state.Objects); x++ {
 		tempObject := <-objectsToRender
 		renderObject(state, tempObject, lightPositionArray, lightColorArray, lightStrengthArray)
 	}
+	fmt.Println("Rendered ", state.RenderedObjects, " vs ", len(state.Objects))
+
 	window.SwapBuffers()
 }
 
@@ -247,6 +278,21 @@ func renderObject(state *geometry.State, object RenderObject, lightPositionArray
 	gl.UniformMatrix4fv(currentProgramInfo.UniformLocations.View, 1, false, &viewMatrix[0])
 	gl.Uniform3fv(currentProgramInfo.UniformLocations.CameraPosition, 1, &camPosition[0])
 	gl.UniformMatrix4fv(currentProgramInfo.UniformLocations.Model, 1, false, &modelMatrix[0])
+
+	model, err := object.currentObject.GetModel()
+	if err != nil {
+		panic(err)
+	}
+
+	frustum := mymath.ConstructFrustrum(viewMatrix, projection)
+	testLen := object.currentObject.GetBoundingBox().Max.Len()
+	result := frustum.SphereIntersection(model.Position, testLen)
+
+	if !result {
+		return
+	}
+
+	state.RenderedObjects++
 
 	gl.Uniform3fv(currentProgramInfo.UniformLocations.DiffuseVal, 1, &currentMaterial.Diffuse[0])
 	gl.Uniform3fv(currentProgramInfo.UniformLocations.AmbientVal, 1, &currentMaterial.Ambient[0])
@@ -310,7 +356,6 @@ func doObjectMath(object geometry.Geometry, state geometry.State, objects chan<-
 	modelMatrix = modelMatrix.Mul4(currentModel.Rotation)
 	negCent := mgl32.Translate3D(-currentCentroid[0], -currentCentroid[1], -currentCentroid[2])
 	modelMatrix = modelMatrix.Mul4(negCent)
-
 	modelMatrix = geometry.ScaleM4(modelMatrix, currentModel.Scale)
 
 	result := RenderObject{

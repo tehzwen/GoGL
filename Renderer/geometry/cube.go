@@ -2,6 +2,7 @@ package geometry
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/go-gl/mathgl/mgl32"
 )
@@ -11,6 +12,8 @@ type Cube struct {
 	name         string
 	fragShader   string
 	vertShader   string
+	shaderType   string
+	boundingBox  BoundingBox
 	buffers      ObjectBuffers
 	programInfo  ProgramInfo
 	material     Material
@@ -45,6 +48,10 @@ func (c Cube) GetMaterial() Material {
 	return c.material
 }
 
+func (c Cube) GetDetails() (string, string) {
+	return c.name, c.shaderType
+}
+
 // GetVertices : getter for vertexValues
 func (c Cube) GetVertices() VertexValues {
 	return c.vertexValues
@@ -58,6 +65,10 @@ func (c Cube) GetCentroid() mgl32.Vec3 {
 // GetBuffers : getter for buffers
 func (c Cube) GetBuffers() ObjectBuffers {
 	return c.buffers
+}
+
+func (c Cube) GetBoundingBox() BoundingBox {
+	return c.boundingBox
 }
 
 func (c Cube) GetType() string {
@@ -183,9 +194,13 @@ func (c *Cube) Setup(mat Material, mod Model, name string) error {
 		-1.0, 0.0, 0.0,
 		-1.0, 0.0, 0.0,
 	}
+	c.boundingBox = GetBoundingBox(c.vertexValues.Vertices)
 	SetupAttributes(&c.programInfo)
 	c.Scale(mod.Scale)
+	c.boundingBox = ScaleBoundingBox(c.boundingBox, mod.Scale)
 	c.model.Position = mod.Position
+	c.boundingBox = TranslateBoundingBox(c.boundingBox, mod.Position)
+	fmt.Println("BOUNDING BOX", c.boundingBox)
 	c.model.Rotation = mod.Rotation
 	c.centroid = CalculateCentroid(c.vertexValues.Vertices, c.model.Scale)
 	c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, c.vertexValues.normals, c.vertexValues.faces)

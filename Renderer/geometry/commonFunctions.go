@@ -130,6 +130,71 @@ func addObjectToState(object Geometry, state *State, sceneObj SceneObject) {
 	}
 }
 
+func GetBoundingBox(vertices []float32) BoundingBox {
+	min := mgl32.Vec3{0, 0, 0}
+	max := mgl32.Vec3{0, 0, 0}
+
+	for i := 0; i < len(vertices); i += 3 {
+		if vertices[i] < min[0] {
+			min[0] = vertices[i]
+		}
+
+		if vertices[i] > max[0] {
+			max[0] = vertices[i]
+		}
+
+		if vertices[i+1] < min[1] {
+			min[1] = vertices[i+1]
+		}
+
+		if vertices[i+1] > max[1] {
+			max[1] = vertices[i+1]
+		}
+
+		if vertices[i+2] < min[2] {
+			min[2] = vertices[i+2]
+		}
+
+		if vertices[i+2] > max[2] {
+			max[2] = vertices[i+2]
+		}
+	}
+
+	result := BoundingBox{}
+	result.Max = max
+	result.Min = min
+
+	return result
+}
+
+func ScaleBoundingBox(box BoundingBox, scaleVec mgl32.Vec3) BoundingBox {
+	result := BoundingBox{}
+	result.Min = box.Min
+
+	for i := 0; i < 3; i++ {
+		if box.Max[i] == 0 && scaleVec[i] > 1 {
+			result.Max[i] = box.Max[i] + scaleVec[i]
+		} else {
+			result.Max[i] = box.Max[i] * scaleVec[i]
+		}
+	}
+
+	return result
+}
+
+func TranslateBoundingBox(box BoundingBox, translateVec mgl32.Vec3) BoundingBox {
+	result := BoundingBox{}
+
+	result.Min[0] = box.Min[0] + translateVec[0]
+	result.Max[0] = box.Max[0] + translateVec[0]
+	result.Min[1] = box.Min[1] + translateVec[1]
+	result.Max[1] = box.Max[1] + translateVec[1]
+	result.Min[2] = box.Min[2] + translateVec[2]
+	result.Max[2] = box.Max[2] + translateVec[2]
+
+	return result
+}
+
 func ParseJsonFile(filePath string, state *State) {
 	fmt.Printf("Opening scene file: %s\n", filePath)
 

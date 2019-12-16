@@ -11,6 +11,8 @@ type ModelObject struct {
 	name         string
 	fragShader   string
 	vertShader   string
+	shaderType   string
+	boundingBox  BoundingBox
 	buffers      ObjectBuffers
 	programInfo  ProgramInfo
 	material     Material
@@ -45,9 +47,17 @@ func (m ModelObject) GetMaterial() Material {
 	return m.material
 }
 
+func (m ModelObject) GetDetails() (string, string) {
+	return m.name, m.shaderType
+}
+
 // GetVertices : getter for vertexValues
 func (m ModelObject) GetVertices() VertexValues {
 	return m.vertexValues
+}
+
+func (m ModelObject) GetBoundingBox() BoundingBox {
+	return m.boundingBox
 }
 
 // GetCentroid : getter for centroid
@@ -103,10 +113,13 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string) error {
 		normal:   1,
 	}
 
+	m.boundingBox = GetBoundingBox(m.vertexValues.Vertices)
 	m.material = mat
 	SetupAttributes(&m.programInfo)
 	m.Scale(mod.Scale)
+	m.boundingBox = ScaleBoundingBox(m.boundingBox, mod.Scale)
 	m.Model.Position = mod.Position
+	m.boundingBox = TranslateBoundingBox(m.boundingBox, mod.Position)
 	m.Model.Rotation = mod.Rotation
 	m.centroid = CalculateCentroid(m.vertexValues.Vertices, m.Model.Scale)
 	m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, nil)

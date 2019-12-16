@@ -18,6 +18,8 @@ type Geometry interface {
 	SetRotation(mgl32.Mat4)
 	Scale(mgl32.Vec3)
 	Translate(mgl32.Vec3)
+	GetDetails() (string, string)
+	GetBoundingBox() BoundingBox
 }
 
 // Attributes : struct for holding vertex attribute locations
@@ -83,4 +85,9 @@ type Model struct {
 	Position mgl32.Vec3
 	Rotation mgl32.Mat4
 	Scale    mgl32.Vec3
+}
+
+type BoundingBox struct {
+	Min mgl32.Vec3
+	Max mgl32.Vec3
 }
