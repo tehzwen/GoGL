@@ -1,17 +1,21 @@
-var total = 0;
+import myMath from "./mymath/index.js";
+
+var currentlyRendered = 0;
 var state = {};
+
+var renderedText = document.getElementById("renderedNumText");
+renderedText.style.color = "white";
 
 window.onload = () => {
     var sceneFile = "testsave.json";
     parseSceneFile("./statefiles/" + sceneFile, state, main);
-    //console.log(shaders);
 }
 
 /**
  * 
  * @param {string - type of object to be added to the scene} type 
  * @param {string - url of the model being added to the game} url 
- * @purpose **WIP** Adds a new object to the scene from using the gui to add said object 
+ * @purpose **WIP** Adds a new object to the scene from using the gui to add said object //move to helpers
  */
 function addObject(type, url = null) {
     if (type === "Cube") {
@@ -70,20 +74,13 @@ function main() {
     //iterate through the level's objects and add them
     state.level.objects.map((object) => {
         if (object.type === "mesh" || object.type === "light") {
-            //parseOBJFileToJSON(object.model, createMesh, object);
             let tempMesh = new Model(gl, object);
             tempMesh.setup();
-            if (object.scale) {
-                tempMesh.scale(object.scale);
-            }
-
-            tempMesh.model.position = object.position;
 
             addObjectToScene(state, tempMesh);
         } else if (object.type === "cube") {
             let tempCube = new Cube(gl, object);
             tempCube.setup();
-            //tempCube.model.position = vec3.fromValues(object.position[0], object.position[1], object.position[2]);
             if (object.scale) {
                 tempCube.scale(object.scale);
             }
@@ -92,8 +89,7 @@ function main() {
         } else if (object.type === "plane") {
             let tempPlane = new Plane(gl, object);
             tempPlane.setup();
-
-            tempPlane.model.position = vec3.fromValues(object.position[0], object.position[1], object.position[2]);
+            tempPlane.translate(object.position);
             if (object.scale) {
                 tempPlane.scale(object.scale);
             }
@@ -186,6 +182,8 @@ function startRendering(gl, state) {
 
             // Draw our scene
             drawScene(gl, deltaTime, state);
+            renderedText.innerHTML = "Rendered: " + currentlyRendered;
+            currentlyRendered = 0;
         }
         // Request another frame when this one is done
         requestAnimationFrame(render);
@@ -204,7 +202,6 @@ function startRendering(gl, state) {
  */
 function drawScene(gl, deltaTime, state) {
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    //gl.clearColor(1.0, 1.0, 1.0, 1.0);
     gl.enable(gl.DEPTH_TEST); // Enable depth testing
     gl.depthFunc(gl.LEQUAL); // Near things obscure far things
     gl.cullFace(gl.BACK);
@@ -225,10 +222,8 @@ function drawScene(gl, deltaTime, state) {
 
     state.objects.map((object) => {
         if (object.loaded) {
-            //console.log(object);
             gl.useProgram(object.programInfo.program);
             {
-
                 var projectionMatrix = mat4.create();
                 var fovy = 60.0 * Math.PI / 180.0; // Vertical field of view in radians
                 var aspect = state.canvas.clientWidth / state.canvas.clientHeight; // Aspect ratio of the canvas
@@ -236,7 +231,6 @@ function drawScene(gl, deltaTime, state) {
                 var far = 100.0; // Far clipping plane
 
                 mat4.perspective(projectionMatrix, fovy, aspect, near, far);
-
                 gl.uniformMatrix4fv(object.programInfo.uniformLocations.uProjectionMatrix, false, projectionMatrix);
 
                 state.projectionMatrix = projectionMatrix;
@@ -248,16 +242,24 @@ function drawScene(gl, deltaTime, state) {
                     state.camera.center,
                     state.camera.up,
                 );
+
                 gl.uniformMatrix4fv(object.programInfo.uniformLocations.uViewMatrix, false, viewMatrix);
-
                 gl.uniform3fv(object.programInfo.uniformLocations.uCameraPosition, state.camera.position);
-
                 state.viewMatrix = viewMatrix;
 
+                //perform frustum culling
+                let frustum = new myMath.Frustum(projectionMatrix, viewMatrix);
+                if (! frustum.sphereIntersection(object.model.position, 
+                    vec3.len(vec3.fromValues(object.boundingBox.xMax, object.boundingBox.yMax, object.boundingBox.zMax)))) {
+                    return;
+                }
+
+                currentlyRendered++;
+
+                //Apply transformations to model matrix
                 var modelMatrix = mat4.create();
                 var negCentroid = vec3.fromValues(0.0, 0.0, 0.0);
                 vec3.negate(negCentroid, object.centroid);
-
                 mat4.translate(modelMatrix, modelMatrix, object.model.position);
                 mat4.translate(modelMatrix, modelMatrix, object.centroid);
                 mat4.mul(modelMatrix, modelMatrix, object.model.rotation);
@@ -265,19 +267,16 @@ function drawScene(gl, deltaTime, state) {
                 mat4.scale(modelMatrix, modelMatrix, object.model.scale);
 
                 object.modelMatrix = modelMatrix;
-
                 var normalMatrix = mat4.create();
                 mat4.invert(normalMatrix, modelMatrix);
                 mat4.transpose(normalMatrix, normalMatrix);
 
                 gl.uniformMatrix4fv(object.programInfo.uniformLocations.uModelMatrix, false, modelMatrix);
                 gl.uniformMatrix4fv(object.programInfo.uniformLocations.normalMatrix, false, normalMatrix);
-
                 gl.uniform3fv(object.programInfo.uniformLocations.diffuseVal, object.material.diffuse);
                 gl.uniform3fv(object.programInfo.uniformLocations.ambientVal, object.material.ambient);
                 gl.uniform3fv(object.programInfo.uniformLocations.specularVal, object.material.specular);
                 gl.uniform1f(object.programInfo.uniformLocations.nVal, object.material.n);
-
                 gl.uniform1i(object.programInfo.uniformLocations.numLights, state.numLights);
 
                 //use this check to wait until the light meshes are loaded properly
@@ -312,7 +311,6 @@ function drawScene(gl, deltaTime, state) {
                         gl.uniform1i(object.programInfo.uniformLocations.uTextureNormExists, state.samplerNormExists);
                         gl.uniform1i(object.programInfo.uniformLocations.uTextureNorm, 1);
                         gl.bindTexture(gl.TEXTURE_2D, object.model.textureNorm);
-                        //console.log("here")
                     } else {
                         gl.activeTexture(gl.TEXTURE1);
                         state.samplerNormExists = 0;
@@ -326,9 +324,6 @@ function drawScene(gl, deltaTime, state) {
                     if (object.type === "mesh" || object.type === "light") {
                         gl.drawArrays(gl.TRIANGLES, offset, object.buffers.numVertices / 3);
                     } else {
-                        if (object.type === 'cube') {
-                            //console.log(object);
-                        }
                         gl.drawElements(gl.TRIANGLES, object.buffers.numVertices, gl.UNSIGNED_SHORT, offset);
                     }
                 }

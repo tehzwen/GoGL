@@ -48,6 +48,11 @@ class Plane {
         };
     }
 
+    translate(translateVec) {
+        vec3.add(this.model.position, this.model.position, vec3.fromValues(translateVec[0], translateVec[1], translateVec[2]));
+        this.boundingBox = translateBoundingBox(this.boundingBox, translateVec);
+    }
+
     scale(scaleVec) {
         let xVal = this.model.scale[0];
         let yVal = this.model.scale[1];
@@ -57,6 +62,7 @@ class Plane {
         yVal *= scaleVec[1];
         zVal *= scaleVec[2];
 
+        this.boundingBox = scaleBoundingBox(this.boundingBox, scaleVec);
         this.model.scale = vec3.fromValues(xVal, yVal, zVal);
     }
 
@@ -182,6 +188,7 @@ class Plane {
 
     setup() {
         this.centroid = calculateCentroid(this.model.vertices.flat());
+        this.boundingBox = getBoundingBox(this.model.vertices);
         this.lightingShader();
     }
 }

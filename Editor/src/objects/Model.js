@@ -13,14 +13,19 @@ class Model {
             normals: null,
             vertices: null,
             uvs: null,
-            position: vec3.fromValues(0.0, 0.0, 0.0),
+            position: vec3.fromValues(object.position[0], object.position[1], object.position[2]),
             rotation: mat4.create(),
-            scale: vec3.fromValues(1.0, 1.0, 1.0),
+            scale: vec3.fromValues(object.scale[0], object.scale[1], object.scale[2]),
             texture: object.texture ? getTextures(glContext, object.texture) : null
         };
         this.modelMatrix = mat4.create();
 
         this.lightingShader = this.lightingShader.bind(this);
+    }
+    
+    translate(translateVec) {
+        vec3.add(this.model.position, this.model.position, vec3.fromValues(translateVec[0], translateVec[1], translateVec[2]));
+        this.boundingBox = translateBoundingBox(this.boundingBox, translateVec);
     }
 
     scale(scaleVec) {
@@ -32,6 +37,7 @@ class Model {
         yVal *= scaleVec[1];
         zVal *= scaleVec[2];
 
+        this.boundingBox = scaleBoundingBox(this.boundingBox, scaleVec);
         this.model.scale = vec3.fromValues(xVal, yVal, zVal);
     }
 
@@ -61,6 +67,8 @@ class Model {
             numVertices: positions.length
         }
 
+        this.boundingBox = scaleBoundingBox(this.boundingBox, this.scale);
+        this.translate(this.model.position);
         this.loaded = true;
         console.log(this.name + " loaded successfully!");
     }

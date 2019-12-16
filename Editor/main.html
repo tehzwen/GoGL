@@ -30,7 +30,9 @@
     <!-- This will only be populated when an error on the JavaScript side occurs -->
     <div id="webglError"></div>
 
-    <div id="fps"></div>
+    <div id="fps">
+        <p id="renderedNumText"></p>
+    </div>
 
     <!-- This is a container for our content -->
     <div class="row">
@@ -76,6 +78,7 @@
     <script src="./lib/stats.js" type="text/javascript"></script>
     <script src="./src/mousePicker.js" type="text/javascript"></script>
     <script src="./src/commonFunctions.js" type="text/javascript"></script>
+    <script src="./src/mymath/index.js" type="module"></script>
 
 
 
@@ -84,7 +87,7 @@
 
     <!-- This is our example 
     <script src="./main.js" type="text/javascript"></script>-->
-    <script src="./src/main.js" type="text/javascript"></script>
+    <script src="./src/main.js" type="module"></script>
     <script src="./src/uiSetup.js" type="text/javascript"></script>
 
 </body>

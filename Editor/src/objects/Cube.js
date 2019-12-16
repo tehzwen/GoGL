@@ -141,7 +141,6 @@ class Cube {
 
         //need to scale bounding box
         this.boundingBox = scaleBoundingBox(this.boundingBox, scaleVec);
-
         this.model.scale = vec3.fromValues(xVal, yVal, zVal);
     }
 
