@@ -1,4 +1,6 @@
 import myMath from "./mymath/index.js";
+import UI from "./uiSetup.js";
+import { Cube, Light, Plane, Model } from "./objects/index.js";
 
 var currentlyRendered = 0;
 var state = {};
@@ -25,7 +27,7 @@ function addObject(type, url = null) {
         testCube.setup();
 
         addObjectToScene(state, testCube);
-        createSceneGui(state);
+        UI.createSceneGui(state);
     }
 }
 
@@ -54,15 +56,15 @@ function main() {
         objectTable: {},
         lightIndices: [],
         keyboard: {},
-        mouse: { sensitivity: 0.002 },
+        mouse: { sensitivity: 0.2 },
         gameStarted: false,
         camera: {
             name: 'camera',
             position: vec3.fromValues(0.5, 0.0, -2.5),
-            center: vec3.fromValues(0.5, 0.0, 0.0),
+            front: vec3.fromValues(0.0, 0.0, 1.0),
             up: vec3.fromValues(0.0, 1.0, 0.0),
             pitch: 0,
-            yaw: 0,
+            yaw: 90, //works when the camera front is 0, 0, 1 to start
             roll: 0
         },
         samplerExists: 0,
@@ -73,26 +75,17 @@ function main() {
 
     //iterate through the level's objects and add them
     state.level.objects.map((object) => {
-        if (object.type === "mesh" || object.type === "light") {
+        if (object.type === "mesh") {
             let tempMesh = new Model(gl, object);
             tempMesh.setup();
-
             addObjectToScene(state, tempMesh);
         } else if (object.type === "cube") {
             let tempCube = new Cube(gl, object);
             tempCube.setup();
-            if (object.scale) {
-                tempCube.scale(object.scale);
-            }
-            tempCube.translate(object.position);
             addObjectToScene(state, tempCube);
         } else if (object.type === "plane") {
             let tempPlane = new Plane(gl, object);
             tempPlane.setup();
-            tempPlane.translate(object.position);
-            if (object.scale) {
-                tempPlane.scale(object.scale);
-            }
             addObjectToScene(state, tempPlane);
         }
     })
@@ -101,13 +94,6 @@ function main() {
         //parseOBJFileToJSON(light.model, createMesh, light);
         let tempLight = new Light(gl, light);
         tempLight.setup();
-
-        if (light.scale) {
-            tempLight.scale(light.scale);
-        }
-
-        tempLight.model.position = light.position;
-
         addObjectToScene(state, tempLight);
     })
 
@@ -135,7 +121,7 @@ function addObjectToScene(state, object) {
     state.objects.push(object);
     state.objectTable[object.name] = state.objectCount;
     state.objectCount++;
-    createSceneGui(state);
+    UI.createSceneGui(state);
 }
 
 /**
@@ -177,7 +163,24 @@ function startRendering(gl, state) {
             }
 
             if (state.mouse['camMove']) {
-                vec3.rotateY(state.camera.center, state.camera.center, state.camera.position, (-state.mouse.rateX * state.mouse.sensitivity));
+                let front = vec3.fromValues(0, 0, 0);
+                state.camera.yaw += state.mouse.rateX * state.mouse.sensitivity;
+                state.camera.pitch += state.mouse.rateY * state.mouse.sensitivity;
+
+                if (state.camera.pitch > 89) {
+                    state.camera.pitch = 89
+                }
+                if (state.camera.pitch < -89) {
+                    state.camera.pitch = -89
+                }
+
+                front[0] = Math.cos(toRadians(state.camera.yaw)) * Math.cos(toRadians(state.camera.pitch));
+                front[1] = Math.sin(toRadians(state.camera.pitch));
+                front[2] = Math.sin(toRadians(state.camera.yaw)) * Math.cos(toRadians(state.camera.pitch));
+
+                vec3.normalize(state.camera.front, front);
+
+                //vec3.rotateY(state.camera.front, state.camera.front, state.camera.position, (-state.mouse.rateX * state.mouse.sensitivity));
             }
 
             // Draw our scene
@@ -236,10 +239,13 @@ function drawScene(gl, deltaTime, state) {
                 state.projectionMatrix = projectionMatrix;
 
                 var viewMatrix = mat4.create();
+                //create camera front value
+                let camFront = vec3.fromValues(0, 0, 0);
+                vec3.add(camFront, state.camera.position, state.camera.front);
                 mat4.lookAt(
                     viewMatrix,
                     state.camera.position,
-                    state.camera.center,
+                    camFront,
                     state.camera.up,
                 );
 
@@ -249,8 +255,8 @@ function drawScene(gl, deltaTime, state) {
 
                 //perform frustum culling
                 let frustum = new myMath.Frustum(projectionMatrix, viewMatrix);
-                if (! frustum.sphereIntersection(object.model.position, 
-                    vec3.len(vec3.fromValues(object.boundingBox.xMax, object.boundingBox.yMax, object.boundingBox.zMax)))) {
+                if (!frustum.sphereIntersection(object.model.position,
+                    Math.pow(vec3.len(vec3.fromValues(object.boundingBox.xMax, object.boundingBox.yMax, object.boundingBox.zMax)), 2))) { //use the squared len value for greater tolerance
                     return;
                 }
 
@@ -265,6 +271,11 @@ function drawScene(gl, deltaTime, state) {
                 mat4.mul(modelMatrix, modelMatrix, object.model.rotation);
                 mat4.translate(modelMatrix, modelMatrix, negCentroid);
                 mat4.scale(modelMatrix, modelMatrix, object.model.scale);
+
+                if (object.parent) {
+                    let parent = getObject(state, object.parent);
+                    mat4.mul(modelMatrix, parent.modelMatrix, modelMatrix);
+                }
 
                 object.modelMatrix = modelMatrix;
                 var normalMatrix = mat4.create();
@@ -331,3 +342,5 @@ function drawScene(gl, deltaTime, state) {
         }
     });
 }
+
+export default state;

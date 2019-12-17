@@ -1,3 +1,5 @@
+import UI from "../uiSetup.js"
+
 class Cube {
     constructor(glContext, object) {
         this.state = {};
@@ -6,7 +8,7 @@ class Cube {
         this.parent = object.parent;
         this.type = object.type;
         this.loaded = false;
-
+        this.initialTransform = { position: object.position, scale: object.scale };
         this.material = object.material;
         this.model = {
             vertices: [
@@ -116,7 +118,6 @@ class Cube {
                 -1.0, 0.0, 0.0,
                 -1.0, 0.0, 0.0
             ],
-
             diffuseTexture: object.diffuseTexture ? object.diffuseTexture : null,
             normalTexture: object.normalTexture ? object.normalTexture : null,
             texture: object.diffuseTexture ? getTextures(glContext, object.diffuseTexture) : null,
@@ -163,7 +164,7 @@ class Cube {
                     this.vertShader = data.vertShader.join("\n");
                     shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
                     programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
-                    shaderValuesErrorCheck(programInfo);
+                    UI.shaderValuesErrorCheck(programInfo);
                     this.programInfo = programInfo;
                     this.initBuffers();
                 })
@@ -180,7 +181,7 @@ class Cube {
                     this.vertShader = data.vertShader.join("\n");
                     shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
                     programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
-                    shaderValuesErrorCheck(programInfo);
+                    UI.shaderValuesErrorCheck(programInfo);
                     this.programInfo = programInfo;
                     this.initBuffers();
                 })
@@ -197,7 +198,7 @@ class Cube {
                     this.vertShader = data.vertShader.join("\n");
                     shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
                     programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
-                    shaderValuesErrorCheck(programInfo);
+                    UI.shaderValuesErrorCheck(programInfo);
                     this.programInfo = programInfo;
                     this.initBuffers();
                 })
@@ -218,7 +219,7 @@ class Cube {
                     this.vertShader = data.vertShader.join("\n");
                     shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
                     programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
-                    shaderValuesErrorCheck(programInfo);
+                    UI.shaderValuesErrorCheck(programInfo);
                     this.programInfo = programInfo;
                     this.initBuffers();
                 })
@@ -239,7 +240,6 @@ class Cube {
         const tangents = new Float32Array(this.model.tangents);
 
         var vertexArrayObject = this.gl.createVertexArray();
-
         this.gl.bindVertexArray(vertexArrayObject);
 
         this.buffers = {
@@ -254,13 +254,16 @@ class Cube {
             indicies: initIndexBuffer(this.gl, indices),
             numVertices: indices.length
         }
-
         this.loaded = true;
     }
 
     setup() {
         this.centroid = calculateCentroid(this.model.vertices);
         this.boundingBox = getBoundingBox(this.model.vertices);
+        this.scale(this.initialTransform.scale);
+        this.translate(this.initialTransform.position);
         this.lightingShader();
     }
 }
+
+export default Cube;

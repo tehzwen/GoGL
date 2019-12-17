@@ -12,26 +12,26 @@ function getBoundingBox(vertices) {
     let xMin = 0, xMax = 0, yMin = 0, yMax = 0, zMin = 0, zMax = 0;
 
     for (let i = 0; i < vertices.length / 3; i += 3) {
-        if (vertices[i][0] > xMax) {
-            xMax = vertices[i][0];
+        if (vertices[i] > xMax) {
+            xMax = vertices[i];
         }
-        if (vertices[i][0] < xMin) {
-            xMin = vertices[i][0];
+        if (vertices[i] < xMin) {
+            xMin = vertices[i];
         }
-        if (vertices[i + 1][1] > yMax) {
-            yMax = vertices[i + 1][1];
+        if (vertices[i + 1] > yMax) {
+            yMax = vertices[i + 1];
         }
-        if (vertices[i + 1][1] < yMin) {
-            yMin = vertices[i + 1][1];
+        if (vertices[i + 1] < yMin) {
+            yMin = vertices[i + 1];
         }
-        if (vertices[i + 2][2] > zMax) {
-            zMax = vertices[i + 2][2];
+        if (vertices[i + 2] > zMax) {
+            zMax = vertices[i + 2];
         }
-        if (vertices[i + 2][2] < zMin) {
-            zMin = vertices[i + 2][2];
+        if (vertices[i + 2] < zMin) {
+            zMin = vertices[i + 2];
         }
     }
-    //console.log( { xMin, yMin, zMin, xMax, yMax, zMax });
+    
     return { xMin, yMin, zMin, xMax, yMax, zMax };
 }
 

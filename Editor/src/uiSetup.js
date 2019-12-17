@@ -1,3 +1,5 @@
+import state from './main.js';
+
 setup();
 
 var saveFile = "testsave.json"
@@ -117,32 +119,35 @@ function displayObjectValues(object) {
     let prependDivX = document.createElement("div");
     prependDivX.classList = "input-group-prepend";
 
-    objectPositionX = document.createElement("input");
+    //X move input handler
+    let objectPositionX = document.createElement("input");
     objectPositionX.type = "number";
     objectPositionX.addEventListener('input', (event) => {
-        handlePositionChange('x', event.target.value, object.model);
+        object.translate([event.target.value - object.model.position[0], 0, 0]);
     })
     objectPositionX.id = object.name + "-positionX";
     objectPositionX.classList = "form-control";
-    objectPositionX.value = object.model.position[0];
+    objectPositionX.value = parseFloat(object.model.position[0]).toFixed(1);
 
-    objectPositionY = document.createElement("input");
+    //Y move input handler
+    let objectPositionY = document.createElement("input");
     objectPositionY.type = "number";
     objectPositionY.addEventListener('input', (event) => {
-        handlePositionChange('y', event.target.value, object.model);
+        object.translate([0, event.target.value - object.model.position[1], 0]);
     })
     objectPositionY.id = object.name + "-positionY";
     objectPositionY.classList = "form-control";
-    objectPositionY.value = object.model.position[1];
+    objectPositionY.value = parseFloat(object.model.position[1]).toFixed(1);
 
-    objectPositionZ = document.createElement("input");
+    //Z move input handler
+    let objectPositionZ = document.createElement("input");
     objectPositionZ.type = "number";
     objectPositionZ.addEventListener('input', (event) => {
-        handlePositionChange('z', event.target.value, object.model);
+        object.translate([0, 0, event.target.value - object.model.position[2]])
     })
     objectPositionZ.id = object.name + "-positionZ";
     objectPositionZ.classList = "form-control";
-    objectPositionZ.value = object.model.position[2];
+    objectPositionZ.value = parseFloat(object.model.position[2]).toFixed(1);
 
     prependDivX.innerHTML = `
         <span class="input-group-text">X</span>
@@ -158,6 +163,7 @@ function displayObjectValues(object) {
         `;
 
 
+    //diffuse color picker
     let diffuseColorPicker = document.createElement("input");
     diffuseColorPicker.type = "color";
     diffuseColorPicker.classList = "form-control";
@@ -167,13 +173,13 @@ function displayObjectValues(object) {
         object.material.diffuse = newColor;
     });
 
+    //add all the elements in
     positionalInputDiv.appendChild(prependDivX);
     positionalInputDiv.appendChild(objectPositionX);
     positionalInputDiv.appendChild(prependDivY);
     positionalInputDiv.appendChild(objectPositionY);
     positionalInputDiv.appendChild(prependDivZ);
     positionalInputDiv.appendChild(objectPositionZ);
-
     selectedObjectDiv.appendChild(createHeader(`<i>${object.name}</i>`, "h3"));
     selectedObjectDiv.appendChild(createHeader("Position", "h4"));
     selectedObjectDiv.appendChild(positionalInputDiv);
@@ -234,21 +240,9 @@ function printError(tag, errorStr) {
     console.error(tag + ": " + errorStr);
 }
 
-function handlePositionChange(axis, value, model) {
-    let newVal = parseFloat(value);
-
-    if (!Number.isNaN(newVal)) {
-        switch (axis) {
-            case 'x':
-                vec3.set(model.position, newVal, model.position[1], model.position[2]);
-                break;
-            case 'y':
-                vec3.set(model.position, model.position[0], newVal, model.position[2]);
-                break;
-
-            case 'z':
-                vec3.set(model.position, model.position[0], model.position[1], newVal);
-                break;
-        }
-    }
+let UI = {
+    createSceneGui,
+    shaderValuesErrorCheck
 }
+
+export default UI;

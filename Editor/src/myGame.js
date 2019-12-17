@@ -12,17 +12,20 @@ function startGame(state) {
         if (event.buttons == 2) {
             state.mouse['camMove'] = true;
             state.mouse.rateX = event.movementX;
+            state.mouse.rateY = -event.movementY;
         }
     });
 
     canvas.addEventListener('mouseup', (event) => {
         state.mouse['camMove'] = false;
         state.mouse.rateX = 0;
+        state.mouse.rateY = 0;
     })
 
     canvas.addEventListener('mouseout', (event) => {
         state.mouse['camMove'] = false;
         state.mouse.rateX = 0;
+        state.mouse.rateY = 0;
     })
 
     canvas.addEventListener('keypress', (event) => {
@@ -91,7 +94,7 @@ function startGame(state) {
             case "ArrowUp":
                 moveTestCubeTestCollision(state, "forward");
                 break;
-            
+
             case "ArrowDown":
                 moveTestCubeTestCollision(state, "backward");
                 break;
@@ -113,47 +116,45 @@ function printForwardVector(state, important = null) {
 }
 
 function moveForward(state) {
-    let inverseView = mat4.create(), forwardVector = vec3.fromValues(0, 0, 0), cameraCenterVector = vec3.fromValues(0, 0, 0), cameraPositionVector = vec3.fromValues(0, 0, 0);
+    let inverseView = mat4.create(), forwardVector = vec3.fromValues(0, 0, 0), camerafrontVector = vec3.fromValues(0, 0, 0), cameraPositionVector = vec3.fromValues(0, 0, 0);
 
     mat4.invert(inverseView, state.viewMatrix);
     //forward vector from the viewmatrix
-    forwardVector = vec3.fromValues(inverseView[2], inverseView[6], -inverseView[10]);
+    forwardVector = vec3.fromValues(inverseView[2], -inverseView[6], -inverseView[10]);
 
     vec3.normalize(forwardVector, forwardVector);
     vec3.scale(forwardVector, forwardVector, (state.deltaTime * moveSpeed));
 
     cameraPositionVector = vec3.fromValues(state.camera.position[0], state.camera.position[1], state.camera.position[2]);
-    cameraCenterVector = vec3.fromValues(state.camera.center[0], state.camera.center[1], state.camera.center[2]);
+    camerafrontVector = vec3.fromValues(state.camera.front[0], state.camera.front[1], state.camera.front[2]);
 
     vec3.add(cameraPositionVector, cameraPositionVector, forwardVector);
-    vec3.add(cameraCenterVector, cameraPositionVector, forwardVector);
+    vec3.add(camerafrontVector, cameraPositionVector, forwardVector);
 
-    state.camera.position = [cameraPositionVector[0], cameraPositionVector[1], cameraPositionVector[2]];
-    state.camera.center = [cameraCenterVector[0], cameraCenterVector[1], cameraCenterVector[2]];
+    state.camera.position = [cameraPositionVector[0], state.camera.position[1], cameraPositionVector[2]];
 }
 
 function moveBackward(state) {
-    let inverseView = mat4.create(), forwardVector = vec3.fromValues(0, 0, 0), cameraCenterVector = vec3.fromValues(0, 0, 0), cameraPositionVector = vec3.fromValues(0, 0, 0);
+    let inverseView = mat4.create(), forwardVector = vec3.fromValues(0, 0, 0), camerafrontVector = vec3.fromValues(0, 0, 0), cameraPositionVector = vec3.fromValues(0, 0, 0);
 
     mat4.invert(inverseView, state.viewMatrix);
     //forward vector from the viewmatrix
-    forwardVector = vec3.fromValues(-inverseView[2], -inverseView[6], inverseView[10]);
+    forwardVector = vec3.fromValues(-inverseView[2], inverseView[6], inverseView[10]);
     vec3.normalize(forwardVector, forwardVector);
 
     vec3.normalize(forwardVector, forwardVector);
     vec3.scale(forwardVector, forwardVector, (state.deltaTime * moveSpeed));
 
     cameraPositionVector = vec3.fromValues(state.camera.position[0], state.camera.position[1], state.camera.position[2]);
-    cameraCenterVector = vec3.fromValues(state.camera.center[0], state.camera.center[1], state.camera.center[2]);
+    camerafrontVector = vec3.fromValues(state.camera.front[0], state.camera.front[1], state.camera.front[2]);
 
     vec3.add(cameraPositionVector, cameraPositionVector, forwardVector);
 
-    state.camera.position = [cameraPositionVector[0], cameraPositionVector[1], cameraPositionVector[2]];
-    state.camera.center = [cameraCenterVector[0], cameraCenterVector[1], cameraCenterVector[2]];
+    state.camera.position = [cameraPositionVector[0], state.camera.position[1], cameraPositionVector[2]];
 }
 
 function moveLeft(state) {
-    let forwardVector = vec3.fromValues(0, 0, 0), sidewaysVector = vec3.fromValues(0, 0, 0), cameraCenterVector = vec3.fromValues(0, 0, 0), cameraPositionVector = vec3.fromValues(0, 0, 0);
+    let forwardVector = vec3.fromValues(0, 0, 0), sidewaysVector = vec3.fromValues(0, 0, 0), camerafrontVector = vec3.fromValues(0, 0, 0), cameraPositionVector = vec3.fromValues(0, 0, 0);
 
     sidewaysVector = vec3.fromValues(0, 0, 0);
     forwardVector = vec3.fromValues(state.viewMatrix[2], state.viewMatrix[6], state.viewMatrix[10]);
@@ -161,18 +162,18 @@ function moveLeft(state) {
     vec3.normalize(sidewaysVector, sidewaysVector);
     vec3.scale(sidewaysVector, sidewaysVector, (state.deltaTime * moveSpeed));
 
-    cameraCenterVector = vec3.fromValues(state.camera.center[0], state.camera.center[1], state.camera.center[2]);
+    camerafrontVector = vec3.fromValues(state.camera.front[0], state.camera.front[1], state.camera.front[2]);
     cameraPositionVector = vec3.fromValues(state.camera.position[0], state.camera.position[1], state.camera.position[2]);
 
-    vec3.add(cameraCenterVector, cameraCenterVector, sidewaysVector);
+    vec3.add(camerafrontVector, camerafrontVector, sidewaysVector);
     vec3.add(cameraPositionVector, cameraPositionVector, sidewaysVector);
 
-    state.camera.center = [cameraCenterVector[0], cameraCenterVector[1], cameraCenterVector[2]];
-    state.camera.position = [cameraPositionVector[0], cameraPositionVector[1], cameraPositionVector[2]];
+    //state.camera.front = [camerafrontVector[0], camerafrontVector[1], camerafrontVector[2]];
+    state.camera.position = [cameraPositionVector[0], state.camera.position[1], cameraPositionVector[2]];
 }
 
 function moveRight(state) {
-    let forwardVector = vec3.fromValues(0, 0, 0), sidewaysVector = vec3.fromValues(0, 0, 0), cameraCenterVector = vec3.fromValues(0, 0, 0), cameraPositionVector = vec3.fromValues(0, 0, 0);
+    let forwardVector = vec3.fromValues(0, 0, 0), sidewaysVector = vec3.fromValues(0, 0, 0), camerafrontVector = vec3.fromValues(0, 0, 0), cameraPositionVector = vec3.fromValues(0, 0, 0);
 
     sidewaysVector = vec3.fromValues(0, 0, 0);
     forwardVector = vec3.fromValues(-state.viewMatrix[2], -state.viewMatrix[6], -state.viewMatrix[10]);
@@ -180,19 +181,18 @@ function moveRight(state) {
     vec3.normalize(sidewaysVector, sidewaysVector);
     vec3.scale(sidewaysVector, sidewaysVector, (state.deltaTime * moveSpeed));
 
-    cameraCenterVector = vec3.fromValues(state.camera.center[0], state.camera.center[1], state.camera.center[2]);
+    camerafrontVector = vec3.fromValues(state.camera.front[0], state.camera.front[1], state.camera.front[2]);
     cameraPositionVector = vec3.fromValues(state.camera.position[0], state.camera.position[1], state.camera.position[2]);
 
-    vec3.add(cameraCenterVector, cameraCenterVector, sidewaysVector);
+    vec3.add(camerafrontVector, camerafrontVector, sidewaysVector);
     vec3.add(cameraPositionVector, cameraPositionVector, sidewaysVector);
 
-    state.camera.center = [cameraCenterVector[0], cameraCenterVector[1], cameraCenterVector[2]];
-    state.camera.position = [cameraPositionVector[0], cameraPositionVector[1], cameraPositionVector[2]];
+    //state.camera.front = [camerafrontVector[0], camerafrontVector[1], camerafrontVector[2]];
+    state.camera.position = [cameraPositionVector[0], state.camera.position[1], cameraPositionVector[2]];
 }
 
 function moveTestCubeTestCollision(state, direction) {
     let testCube = getObject(state, "testCube0");
-    let wall0 = getObject(state, "wall0");
 
     if (direction === "left") {
         testCube.translate([0.25, 0, 0]);
@@ -203,11 +203,19 @@ function moveTestCubeTestCollision(state, direction) {
     } else if (direction === "backward") {
         testCube.translate([0, 0, -0.25]);
     }
-    
-    let collide = false;
 
+    let collide = false;
     state.objects.map((obj) => {
-        if (obj !== testCube && obj.type === "cube") {
+        if (obj.name !== "testCube0") {
+
+            if (obj.type === "plane") {
+                //console.log(obj.boundingBox)
+            }
+
+            if (obj.type === "mesh") {
+                //console.error(obj.boundingBox)
+            }
+
             collide = intersect(testCube.boundingBox, obj.boundingBox);
             if (collide) {
                 console.warn("Collided with", obj.name);

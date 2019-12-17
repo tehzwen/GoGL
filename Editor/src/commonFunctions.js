@@ -1,3 +1,4 @@
+var fs = require('fs');
 
 /**
  * @param  {} gl WebGL2 Context
@@ -392,6 +393,8 @@ function createSceneFile(state, filename) {
     state.objects.map((object) => {
         //console.log(object);
         if (object.type === "light") {
+
+            console.log(object.model.position);
             totalState[0].lights.push({
                 name: object.name ? object.name : null,
                 material: object.material ? object.material : null,
@@ -521,6 +524,10 @@ function getVertexRowN(vertices, n) {
 function getUVRowN(uvs, n) {
     let uv = vec2.fromValues(uvs[n * 2], uvs[(n * 2) + 1]);
     return uv;
+}
+
+function toRadians(angle) {
+    return angle * (Math.PI / 180);
 }
 
 function initTangentBuffer(gl, programInfo, tangents) {

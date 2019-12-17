@@ -1,3 +1,5 @@
+import UI from "../uiSetup.js";
+
 class Plane {
     constructor(glContext, object) {
         this.state = {};
@@ -6,7 +8,7 @@ class Plane {
         this.parent = object.parent;
         this.type = "plane";
         this.loaded = false;
-
+        this.initialTransform = { position: object.position, scale: object.scale };
         this.material = object.material;
         this.model = {
             vertices: [
@@ -80,7 +82,7 @@ class Plane {
                     this.vertShader = data.vertShader.join("\n");
                     shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
                     programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
-                    shaderValuesErrorCheck(programInfo);
+                    UI.shaderValuesErrorCheck(programInfo);
                     this.programInfo = programInfo;
                     this.initBuffers();
                 })
@@ -97,7 +99,7 @@ class Plane {
                     this.vertShader = data.vertShader.join("\n");
                     shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
                     programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
-                    shaderValuesErrorCheck(programInfo);
+                    UI.shaderValuesErrorCheck(programInfo);
                     this.programInfo = programInfo;
                     this.initBuffers();
                 })
@@ -114,7 +116,7 @@ class Plane {
                     this.vertShader = data.vertShader.join("\n");
                     shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
                     programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
-                    shaderValuesErrorCheck(programInfo);
+                    UI.shaderValuesErrorCheck(programInfo);
                     this.programInfo = programInfo;
                     this.initBuffers();
                 })
@@ -135,7 +137,7 @@ class Plane {
                     this.vertShader = data.vertShader.join("\n");
                     shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
                     programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
-                    shaderValuesErrorCheck(programInfo);
+                    UI.shaderValuesErrorCheck(programInfo);
                     this.programInfo = programInfo;
                     this.initBuffers();
                 })
@@ -190,5 +192,9 @@ class Plane {
         this.centroid = calculateCentroid(this.model.vertices.flat());
         this.boundingBox = getBoundingBox(this.model.vertices);
         this.lightingShader();
+        this.scale(this.initialTransform.scale);
+        this.translate(this.initialTransform.position);
     }
 }
+
+export default Plane;

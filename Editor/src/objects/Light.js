@@ -1,3 +1,5 @@
+import UI from "../uiSetup.js"
+
 class Light {
     constructor(glContext, object) {
         this.gl = glContext;
@@ -5,21 +7,20 @@ class Light {
         this.parent = object.parent;
         this.type = "light";
         this.loaded = false;
-
+        this.initialTransform = { position: object.position, scale: object.scale };
         this.material = object.material;
         this.model = {
             normals: null,
             vertices: null,
             uvs: null,
-            position: vec3.fromValues(0.0, 0.0, 0.0),
+            position: vec3.fromValues(0, 0, 0),
             rotation: mat4.create(),
-            scale: vec3.fromValues(1.0, 1.0, 1.0),
+            scale: vec3.fromValues(1, 1, 1),
         };
         this.modelMatrix = mat4.create();
         this.colour = vec3.fromValues(object.colour[0], object.colour[1], object.colour[2]);
         this.strength = object.strength;
         this.modelName = "./models/lightbulb.obj";
-
         this.lightingShader = this.lightingShader.bind(this);
     }
 
@@ -32,6 +33,7 @@ class Light {
         yVal *= scaleVec[1];
         zVal *= scaleVec[2];
 
+        this.boundingBox = scaleBoundingBox(this.boundingBox, scaleVec);
         this.model.scale = vec3.fromValues(xVal, yVal, zVal);
     }
 
@@ -40,6 +42,10 @@ class Light {
         parseOBJFileToJSON(this.modelName, this.lightingShader);
     }
 
+    translate(translateVec) {
+        vec3.add(this.model.position, this.model.position, vec3.fromValues(translateVec[0], translateVec[1], translateVec[2]));
+        this.boundingBox = translateBoundingBox(this.boundingBox, translateVec);
+    }
 
     initBuffers() {
         //create vertices, normal and indicies arrays
@@ -61,6 +67,9 @@ class Light {
             numVertices: positions.length
         }
 
+        
+        this.scale(this.initialTransform.scale);
+        this.translate(this.initialTransform.position);
         this.loaded = true;
         console.log(this.name + " loaded successfully!");
     }
@@ -83,7 +92,7 @@ class Light {
                     this.vertShader = data.vertShader.join("\n");
                     shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
                     programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
-                    shaderValuesErrorCheck(programInfo);
+                    UI.shaderValuesErrorCheck(programInfo);
                     this.programInfo = programInfo;
                     this.centroid = calculateCentroid(this.model.vertices);
                     this.boundingBox = getBoundingBox(this.model.vertices);
@@ -104,7 +113,7 @@ class Light {
                     this.vertShader = data.vertShader.join("\n");
                     shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
                     programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
-                    shaderValuesErrorCheck(programInfo);
+                    UI.shaderValuesErrorCheck(programInfo);
                     this.programInfo = programInfo;
                     this.centroid = calculateCentroid(this.model.vertices);
                     this.boundingBox = getBoundingBox(this.model.vertices);
@@ -123,7 +132,7 @@ class Light {
                     this.vertShader = data.vertShader.join("\n");
                     shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
                     programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
-                    shaderValuesErrorCheck(programInfo);
+                    UI.shaderValuesErrorCheck(programInfo);
                     this.programInfo = programInfo;
                     this.centroid = calculateCentroid(this.model.vertices);
                     this.boundingBox = getBoundingBox(this.model.vertices);
@@ -142,7 +151,7 @@ class Light {
                     this.vertShader = data.vertShader.join("\n");
                     shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
                     programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
-                    shaderValuesErrorCheck(programInfo);
+                    UI.shaderValuesErrorCheck(programInfo);
                     this.programInfo = programInfo;
                     this.centroid = calculateCentroid(this.model.vertices);
                     this.boundingBox = getBoundingBox(this.model.vertices);
@@ -154,3 +163,5 @@ class Light {
         }
     }
 }
+
+export default Light;

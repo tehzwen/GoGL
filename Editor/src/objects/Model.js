@@ -1,3 +1,5 @@
+import UI from "../uiSetup.js";
+
 class Model {
     constructor(glContext, object) {
         this.gl = glContext;
@@ -6,23 +8,21 @@ class Model {
         this.type = "mesh";
         this.loaded = false;
         this.modelName = object.model;
-
-
+        this.initialTransform = { position: object.position, scale: object.scale };
         this.material = object.material;
         this.model = {
             normals: null,
             vertices: null,
             uvs: null,
-            position: vec3.fromValues(object.position[0], object.position[1], object.position[2]),
+            position: vec3.fromValues(0, 0, 0),
             rotation: mat4.create(),
-            scale: vec3.fromValues(object.scale[0], object.scale[1], object.scale[2]),
+            scale: vec3.fromValues(1, 1, 1),
             texture: object.texture ? getTextures(glContext, object.texture) : null
         };
         this.modelMatrix = mat4.create();
-
         this.lightingShader = this.lightingShader.bind(this);
     }
-    
+
     translate(translateVec) {
         vec3.add(this.model.position, this.model.position, vec3.fromValues(translateVec[0], translateVec[1], translateVec[2]));
         this.boundingBox = translateBoundingBox(this.boundingBox, translateVec);
@@ -54,7 +54,6 @@ class Model {
         const textureCoords = new Float32Array(this.model.uvs);
 
         var vertexArrayObject = this.gl.createVertexArray();
-
         this.gl.bindVertexArray(vertexArrayObject);
 
         this.buffers = {
@@ -66,9 +65,9 @@ class Model {
             },
             numVertices: positions.length
         }
-
-        this.boundingBox = scaleBoundingBox(this.boundingBox, this.scale);
-        this.translate(this.model.position);
+        this.scale(this.initialTransform.scale);
+        this.translate(this.initialTransform.position);
+        
         this.loaded = true;
         console.log(this.name + " loaded successfully!");
     }
@@ -91,7 +90,7 @@ class Model {
                     this.vertShader = data.vertShader.join("\n");
                     shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
                     programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
-                    shaderValuesErrorCheck(programInfo);
+                    UI.shaderValuesErrorCheck(programInfo);
                     this.programInfo = programInfo;
                     this.centroid = calculateCentroid(this.model.vertices);
                     this.boundingBox = getBoundingBox(this.model.vertices);
@@ -112,7 +111,7 @@ class Model {
                     this.vertShader = data.vertShader.join("\n");
                     shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
                     programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
-                    shaderValuesErrorCheck(programInfo);
+                    UI.shaderValuesErrorCheck(programInfo);
                     this.programInfo = programInfo;
                     this.centroid = calculateCentroid(this.model.vertices);
                     this.boundingBox = getBoundingBox(this.model.vertices);
@@ -131,7 +130,7 @@ class Model {
                     this.vertShader = data.vertShader.join("\n");
                     shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
                     programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
-                    shaderValuesErrorCheck(programInfo);
+                    UI.shaderValuesErrorCheck(programInfo);
                     this.programInfo = programInfo;
                     this.centroid = calculateCentroid(this.model.vertices);
                     this.boundingBox = getBoundingBox(this.model.vertices);
@@ -150,7 +149,7 @@ class Model {
                     this.vertShader = data.vertShader.join("\n");
                     shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
                     programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
-                    shaderValuesErrorCheck(programInfo);
+                    UI.shaderValuesErrorCheck(programInfo);
                     this.programInfo = programInfo;
                     this.centroid = calculateCentroid(this.model.vertices);
                     this.boundingBox = getBoundingBox(this.model.vertices);
@@ -162,3 +161,5 @@ class Model {
         }
     }
 }
+
+export default Model;
