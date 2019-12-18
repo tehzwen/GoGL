@@ -1,5 +1,14 @@
+// function getObject(state, name) {
+//     return state.objects[state.objectTable[name]];
+// }
+
 function getObject(state, name) {
-    return state.objects[state.objectTable[name]];
+    for (let i = 0; i < state.objects.length; i++) {
+        if (state.objects[i].name === name) {
+            return state.objects[i];
+        }
+    }
+    return null;
 }
 
 function intersect(a, b) {

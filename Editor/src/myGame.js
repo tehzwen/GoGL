@@ -208,17 +208,17 @@ function moveTestCubeTestCollision(state, direction) {
     state.objects.map((obj) => {
         if (obj.name !== "testCube0") {
 
-            if (obj.type === "plane") {
-                //console.log(obj.boundingBox)
-            }
-
-            if (obj.type === "mesh") {
+            if (obj.type === "mesh" && obj.parent == null) {
                 //console.error(obj.boundingBox)
-            }
-
-            collide = intersect(testCube.boundingBox, obj.boundingBox);
-            if (collide) {
-                console.warn("Collided with", obj.name);
+                collide = intersect(testCube.boundingBox, obj.boundingBox);
+                if (collide) {
+                    console.warn("Collided with", obj.name);
+                }
+            } else {
+                collide = intersect(testCube.boundingBox, obj.boundingBox);
+                if (collide) {
+                    console.warn("Collided with", obj.name);
+                }
             }
         }
     })

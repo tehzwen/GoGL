@@ -1,7 +1,7 @@
 import UI from "../uiSetup.js";
 
 class Model {
-    constructor(glContext, object) {
+    constructor(glContext, object, meshDetails) {
         this.gl = glContext;
         this.name = object.name;
         this.parent = object.parent;
@@ -9,15 +9,15 @@ class Model {
         this.loaded = false;
         this.modelName = object.model;
         this.initialTransform = { position: object.position, scale: object.scale };
-        this.material = object.material;
+        this.material = object.mtl ? object.mtl : object.material;
         this.model = {
-            normals: null,
-            vertices: null,
-            uvs: null,
+            normals: meshDetails.normals,
+            vertices: meshDetails.vertices,
+            uvs: meshDetails.uvs,
             position: vec3.fromValues(0, 0, 0),
             rotation: mat4.create(),
             scale: vec3.fromValues(1, 1, 1),
-            texture: object.texture ? getTextures(glContext, object.texture) : null
+            texture: object.mtl && object.mtl.diffuseMap ? getTextures(glContext, "./models/" + object.mtl.diffuseMap) : null
         };
         this.modelMatrix = mat4.create();
         this.lightingShader = this.lightingShader.bind(this);
@@ -43,7 +43,7 @@ class Model {
 
     setup() {
         //this.centroid = calculateCentroid(this.model.vertices, this.lightingShader);
-        parseOBJFileToJSON(this.modelName, this.lightingShader);
+        this.lightingShader();
     }
 
 
@@ -67,15 +67,12 @@ class Model {
         }
         this.scale(this.initialTransform.scale);
         this.translate(this.initialTransform.position);
-        
         this.loaded = true;
         console.log(this.name + " loaded successfully!");
     }
 
-    lightingShader(mesh) {
-        this.model.vertices = mesh.vertices;
-        this.model.normals = mesh.normals;
-        this.model.uvs = mesh.uvs;
+    lightingShader() {
+        //iterate through the objects
         let shaderProgram;
         let programInfo;
 

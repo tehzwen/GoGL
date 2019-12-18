@@ -75,7 +75,7 @@ function calculateCentroid(vertices, cb) {
 
     if (cb) {
         cb();
-        
+
         return center;
     } else {
         return center;
@@ -330,7 +330,12 @@ function getTextures(gl, imgPath) {
     }
 }
 
-function parseOBJFileToJSON(objFileURL, cb) {
+function setMaterialForObject(object, material) {
+    console.log(material)
+    object.mtl = material;
+}
+
+function parseOBJFileToJSON(objFileURL, object, cb) {
     if (objFileURL) {
         fetch(objFileURL)
             .then((data) => {
@@ -338,7 +343,44 @@ function parseOBJFileToJSON(objFileURL, cb) {
             })
             .then((text) => {
                 let mesh = OBJLoader.prototype.parse(text);
-                cb(mesh);
+                console.log(mesh)
+
+                //iterate through objects
+                for (let j = 0; j < mesh.length; j++) {
+
+                    //iterate through the materials of the mesh
+                    for (let i = 0; i < mesh[j].materials.length; i++) {
+                        let vertices = mesh[j].geometry.vertices.slice(mesh[j].materials[i].groupStart * 3, mesh[j].materials[i].groupEnd * 3);
+                        let uvs = mesh[j].geometry.uvs.slice(mesh[j].materials[i].groupStart * 2, mesh[j].materials[i].groupEnd * 2);
+                        let normals = mesh[j].geometry.normals.slice(mesh[j].materials[i].groupStart * 3, mesh[j].materials[i].groupEnd * 3);
+                        let newObject = JSON.parse(JSON.stringify(object));
+
+                        if (j > 0) {
+                            newObject.name = object.name + i;
+                            newObject.parent = object.name;
+                        }
+
+                        if (i > 0) {
+                            newObject.name = newObject.name + i;
+                            newObject.parent = object.name;
+                            newObject.position = [0, 0, 0];
+                            newObject.scale = [1, 1, 1];
+                            newObject.type = "mesh";
+                            let geometry = {
+                                vertices,
+                                uvs,
+                                normals
+                            }
+                            parseMTL(mesh[j].materials[i].mtllib, mesh[j].materials[i].name, newObject, geometry, cb);
+                        }
+                        let geometry = {
+                            vertices,
+                            uvs,
+                            normals
+                        }
+                        parseMTL(mesh[j].materials[i].mtllib, mesh[j].materials[i].name, newObject, geometry, cb);
+                    }
+                }
             })
             .catch((err) => {
                 console.error(err);
@@ -392,34 +434,53 @@ function createSceneFile(state, filename) {
     //objects first
     state.objects.map((object) => {
         //console.log(object);
-        if (object.type === "light") {
 
-            console.log(object.model.position);
-            totalState[0].lights.push({
-                name: object.name ? object.name : null,
-                material: object.material ? object.material : null,
-                type: object.type ? object.type : null,
-                position: object.model.position ? [object.model.position[0], object.model.position[1], object.model.position[2]] : null, //change these to arrays
-                scale: object.model.scale ? [object.model.scale[0], object.model.scale[1], object.model.scale[2]] : null,
-                diffuseTexture: object.model.diffuseTexture ? object.model.diffuseTexture : null,
-                normalTexture: object.model.normalTexture ? object.model.normalTexture : null,
-                parent: object.parent ? object.parent : null,
-                model: object.modelName ? object.modelName : null,
-                colour: object.colour ? [object.colour[0], object.colour[1], object.colour[2]] : null,
-                strength: object.strength ? object.strength : null
-            })
+        if (object.type === "light") {
+            if (!object.parent) {
+                totalState[0].lights.push({
+                    name: object.name ? object.name : null,
+                    material: object.material ? object.material : null,
+                    type: object.type ? object.type : null,
+                    position: object.model.position ? [object.model.position[0], object.model.position[1], object.model.position[2]] : null, //change these to arrays
+                    scale: object.model.scale ? [object.model.scale[0], object.model.scale[1], object.model.scale[2]] : null,
+                    diffuseTexture: object.model.diffuseTexture ? object.model.diffuseTexture : null,
+                    normalTexture: object.model.normalTexture ? object.model.normalTexture : null,
+                    parent: object.parent ? object.parent : null,
+                    model: object.modelName ? object.modelName : null,
+                    colour: object.colour ? [object.colour[0], object.colour[1], object.colour[2]] : null,
+                    strength: object.strength ? object.strength : null
+                })
+            }
+
         } else {
-            totalState[0].objects.push({
-                name: object.name ? object.name : null,
-                material: object.material ? object.material : null,
-                type: object.type ? object.type : null, //might change this to be an int value for speed
-                position: object.model.position ? [object.model.position[0], object.model.position[1], object.model.position[2]] : null,
-                scale: object.model.scale ? [object.model.scale[0], object.model.scale[1], object.model.scale[2]] : null,
-                diffuseTexture: object.model.diffuseTexture ? object.model.diffuseTexture : null,
-                normalTexture: object.model.normalTexture ? object.model.normalTexture : null,
-                parent: object.parent ? object.parent : null,
-                model: object.modelName ? object.modelName : null
-            });
+            if (object.type === "mesh") {
+                if (!object.parent) {
+                    totalState[0].objects.push({
+                        name: object.name ? object.name : null,
+                        material: object.material ? object.material : null,
+                        type: object.type ? object.type : null, //might change this to be an int value for speed
+                        position: object.model.position ? [object.model.position[0], object.model.position[1], object.model.position[2]] : null,
+                        scale: object.model.scale ? [object.model.scale[0], object.model.scale[1], object.model.scale[2]] : null,
+                        diffuseTexture: object.model.diffuseTexture ? object.model.diffuseTexture : null,
+                        normalTexture: object.model.normalTexture ? object.model.normalTexture : null,
+                        parent: object.parent ? object.parent : null,
+                        model: object.modelName ? object.modelName : null
+                    });
+                }
+            } else {
+                totalState[0].objects.push({
+                    name: object.name ? object.name : null,
+                    material: object.material ? object.material : null,
+                    type: object.type ? object.type : null, //might change this to be an int value for speed
+                    position: object.model.position ? [object.model.position[0], object.model.position[1], object.model.position[2]] : null,
+                    scale: object.model.scale ? [object.model.scale[0], object.model.scale[1], object.model.scale[2]] : null,
+                    diffuseTexture: object.model.diffuseTexture ? object.model.diffuseTexture : null,
+                    normalTexture: object.model.normalTexture ? object.model.normalTexture : null,
+                    parent: object.parent ? object.parent : null,
+                    model: object.modelName ? object.modelName : null
+                });
+            }
+
         }
     });
     //write the savefile 

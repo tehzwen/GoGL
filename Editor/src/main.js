@@ -31,6 +31,18 @@ function addObject(type, url = null) {
     }
 }
 
+function createModalFromMesh(mesh, object) {
+    if (object.type === "mesh") {
+        let tempMesh = new Model(state.gl, object, mesh);
+        tempMesh.setup();
+        addObjectToScene(state, tempMesh);
+    } else {
+        let tempLight = new Light(state.gl, object, mesh);
+        tempLight.setup();
+        addObjectToScene(state, tempLight);
+    }
+}
+
 function main() {
     //document.body.appendChild( stats.dom );
     const canvas = document.querySelector("#glCanvas");
@@ -76,9 +88,7 @@ function main() {
     //iterate through the level's objects and add them
     state.level.objects.map((object) => {
         if (object.type === "mesh") {
-            let tempMesh = new Model(gl, object);
-            tempMesh.setup();
-            addObjectToScene(state, tempMesh);
+            parseOBJFileToJSON(object.model, object, createModalFromMesh);
         } else if (object.type === "cube") {
             let tempCube = new Cube(gl, object);
             tempCube.setup();
@@ -91,10 +101,7 @@ function main() {
     })
 
     state.level.lights.map((light) => {
-        //parseOBJFileToJSON(light.model, createMesh, light);
-        let tempLight = new Light(gl, light);
-        tempLight.setup();
-        addObjectToScene(state, tempLight);
+        parseOBJFileToJSON(light.model, light, createModalFromMesh);
     })
 
     //setup mouse click listener
@@ -222,9 +229,13 @@ function drawScene(gl, deltaTime, state) {
         }
         lightStrengthArray.push(light.strength);
     }
-
     state.objects.map((object) => {
         if (object.loaded) {
+
+            // if (object.type === "mesh") {
+            //     console.warn(object.name, object.material);
+            // }
+
             gl.useProgram(object.programInfo.program);
             {
                 var projectionMatrix = mat4.create();

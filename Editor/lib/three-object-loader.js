@@ -214,9 +214,7 @@ OBJLoader.prototype = {
                 // If a usemtl declaration is encountered while this new object is being parsed, it will
                 // overwrite the inherited material. Exception being that there was already face declarations
                 // to the inherited material, then it will be preserved for proper MultiMaterial continuation.
-
                 if (previousMaterial && previousMaterial.name && typeof previousMaterial.clone === "function") {
-
                     var declared = previousMaterial.clone(0);
                     declared.inherited = true;
                     this.object.materials.push(declared);
@@ -647,6 +645,8 @@ OBJLoader.prototype = {
 
         }
 
+        let returnValues = state.objects;
+
         state.finalize();
 
         //   var container = new THREE.Group();
@@ -752,16 +752,7 @@ OBJLoader.prototype = {
 
         //   return container;
 
-        return {
-            vertices: state.object.geometry.vertices,
-            uvs: state.object.geometry.uvs,
-            normals: state.object.geometry.normals,
-            sparse: {
-                vertices: state.vertices,
-                uvs: state.uvs,
-                normals: state.normals,
-            }
-        };
+        return returnValues;
     }
 
 };

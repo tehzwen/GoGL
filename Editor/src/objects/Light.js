@@ -1,7 +1,7 @@
 import UI from "../uiSetup.js"
 
 class Light {
-    constructor(glContext, object) {
+    constructor(glContext, object, meshDetails) {
         this.gl = glContext;
         this.name = object.name;
         this.parent = object.parent;
@@ -10,9 +10,9 @@ class Light {
         this.initialTransform = { position: object.position, scale: object.scale };
         this.material = object.material;
         this.model = {
-            normals: null,
-            vertices: null,
-            uvs: null,
+            normals: meshDetails.normals,
+            vertices: meshDetails.vertices,
+            uvs: meshDetails.uvs,
             position: vec3.fromValues(0, 0, 0),
             rotation: mat4.create(),
             scale: vec3.fromValues(1, 1, 1),
@@ -39,7 +39,7 @@ class Light {
 
     setup() {
         //this.centroid = calculateCentroid(this.model.vertices, this.lightingShader);
-        parseOBJFileToJSON(this.modelName, this.lightingShader);
+        this.lightingShader();
     }
 
     translate(translateVec) {
@@ -74,10 +74,7 @@ class Light {
         console.log(this.name + " loaded successfully!");
     }
 
-    lightingShader(mesh) {
-        this.model.vertices = mesh.vertices;
-        this.model.normals = mesh.normals;
-        this.model.uvs = mesh.uvs;
+    lightingShader() {
         let shaderProgram;
         let programInfo;
 
