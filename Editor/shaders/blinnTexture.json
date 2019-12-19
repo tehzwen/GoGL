@@ -97,7 +97,7 @@
         "            specular *= attenuation;",
         "        }",
         "\n",
-        "        //ambient *= attenuation; causes much darker scene",
+        "        ambient *= attenuation; //causes much darker scene",
         "        diffuse *= attenuation;",
         "    }",
         "\n",

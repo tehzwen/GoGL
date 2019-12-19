@@ -23,35 +23,64 @@ function createSceneGui(state) {
     sideNav.innerHTML = "";
 
     state.objects.map((object) => {
+
+        if (!object.parent) {
+            let objectElement = document.createElement("div");
+            let childrenDiv = document.createElement("div");
+            childrenDiv.id = object.name + "childDiv";
+            childrenDiv.className = "collapse";
+            let objectName = document.createElement("h5");
+            objectName.className = "object-link";
+            objectName.innerHTML = object.name;
+            objectName.addEventListener('click', () => {
+                //its not open yet
+                if (childrenDiv.className === "collapse") {
+                    childrenDiv.className = "collapse-active";
+                    objectName.className = "object-link"
+                    displayObjectValues(object);
+                } else {
+                    childrenDiv.className = "collapse";
+                    displayObjectValues(null);
+                }
+            });
+
+            objectElement.appendChild(objectName);
+            objectElement.appendChild(childrenDiv);
+            sideNav.appendChild(objectElement);
+        } else {
+            //find the parent's children div and throw some data in it
+            let parentChildrenDiv = document.getElementById(object.parent + "childDiv");
+            let objectName = document.createElement("h6");
+            objectName.className = "object-link";
+            objectName.innerHTML = `<i>${object.name}</i>`;
+
+            objectName.addEventListener('click', () => {
+                displayObjectValues(object);
+            });
+
+            parentChildrenDiv.appendChild(objectName);
+        }
+    });
+
+    //camera stuff here TODO
+    /*
+        let camera = state.camera;
         let objectElement = document.createElement("div");
         let objectName = document.createElement("h5");
         objectName.classList = "object-link";
-        objectName.innerHTML = object.name;
+        objectName.innerHTML = camera.name;
+    
         objectName.addEventListener('click', () => {
-            displayObjectValues(object);
+            let objectModel = {
+                model: { ...camera },
+                name: camera.name
+            }
+    
+            displayObjectValues(objectModel);
         });
-
+    
         objectElement.appendChild(objectName);
-        sideNav.appendChild(objectElement);
-    });
-
-    let camera = state.camera;
-    let objectElement = document.createElement("div");
-    let objectName = document.createElement("h5");
-    objectName.classList = "object-link";
-    objectName.innerHTML = camera.name;
-
-    objectName.addEventListener('click', () => {
-        let objectModel = {
-            model: { ...camera },
-            name: camera.name
-        }
-
-        displayObjectValues(objectModel);
-    });
-
-    objectElement.appendChild(objectName);
-    sideNav.appendChild(objectElement);
+        sideNav.appendChild(objectElement); */
 
     /*
     let addNav = document.getElementById("addObjectsNav");
@@ -110,6 +139,13 @@ function handleTypeSelectChange(event) {
  * @param {Game Object to manipulate} object 
  */
 function displayObjectValues(object) {
+
+    if (!object) {
+        let selectedObjectDiv = document.getElementById("selectedObject");
+        selectedObjectDiv.innerHTML = "";
+        return;
+    }
+
     let selectedObjectDiv = document.getElementById("selectedObject");
     selectedObjectDiv.innerHTML = "";
 

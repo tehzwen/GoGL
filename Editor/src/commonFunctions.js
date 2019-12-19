@@ -215,8 +215,6 @@ function initTextureCoords(gl, programInfo, textureCoords) {
                 programInfo.attribLocations.vertexUV);
         }
 
-        // TODO: Create and populate a buffer for the UV coordinates
-
         return textureCoordBuffer;
     }
 }
@@ -262,8 +260,6 @@ function initBitangentBuffer(gl, programInfo, bitangents) {
             gl.enableVertexAttribArray(
                 programInfo.attribLocations.vertexBitangent);
         }
-
-        // TODO: Create and populate a buffer for the UV coordinates
 
         return bitangentBuffer;
     }
@@ -330,11 +326,6 @@ function getTextures(gl, imgPath) {
     }
 }
 
-function setMaterialForObject(object, material) {
-    console.log(material)
-    object.mtl = material;
-}
-
 function parseOBJFileToJSON(objFileURL, object, cb) {
     if (objFileURL) {
         fetch(objFileURL)
@@ -343,11 +334,8 @@ function parseOBJFileToJSON(objFileURL, object, cb) {
             })
             .then((text) => {
                 let mesh = OBJLoader.prototype.parse(text);
-                console.log(mesh)
-
                 //iterate through objects
                 for (let j = 0; j < mesh.length; j++) {
-
                     //iterate through the materials of the mesh
                     for (let i = 0; i < mesh[j].materials.length; i++) {
                         let vertices = mesh[j].geometry.vertices.slice(mesh[j].materials[i].groupStart * 3, mesh[j].materials[i].groupEnd * 3);
@@ -372,13 +360,14 @@ function parseOBJFileToJSON(objFileURL, object, cb) {
                                 normals
                             }
                             parseMTL(mesh[j].materials[i].mtllib, mesh[j].materials[i].name, newObject, geometry, cb);
+                        } else {
+                            let geometry = {
+                                vertices,
+                                uvs,
+                                normals
+                            }
+                            parseMTL(mesh[j].materials[i].mtllib, mesh[j].materials[i].name, newObject, geometry, cb);
                         }
-                        let geometry = {
-                            vertices,
-                            uvs,
-                            normals
-                        }
-                        parseMTL(mesh[j].materials[i].mtllib, mesh[j].materials[i].name, newObject, geometry, cb);
                     }
                 }
             })

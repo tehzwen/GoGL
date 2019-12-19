@@ -77,7 +77,7 @@
         "            specular += specularVal * uLightColours[i] * spec;",
         "            specular *= attenuation;",
         "        }",
-        "        //ambient *= attenuation; causes much darker scene",
+        "        ambient *= attenuation; //causes much darker scene",
         "        diffuse *= attenuation;",
         "    }",
         "    fragColor = vec4(ambient + diffuse + specular, 1.0);",
