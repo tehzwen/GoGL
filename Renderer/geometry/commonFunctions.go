@@ -7,11 +7,27 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"../parser"
 
 	"github.com/go-gl/mathgl/mgl32"
 )
+
+type RenderObject struct {
+	ViewMatrix      mgl32.Mat4
+	ProjMatrix      mgl32.Mat4
+	ModelMatrix     mgl32.Mat4
+	CurrentBuffers  ObjectBuffers
+	CurrentModel    Model
+	CurrentMaterial Material
+	CurrentCentroid mgl32.Vec3
+	CurrentProgram  ProgramInfo
+	CameraPosition  []float32
+	CurrentVertices VertexValues
+	CurrentObject   Geometry
+}
 
 type SceneObject struct {
 	Name           string    `json:"name"`
@@ -110,6 +126,9 @@ func ScaleM4(a mgl32.Mat4, v mgl32.Vec3) mgl32.Mat4 {
 
 func addObjectToState(object Geometry, state *State, sceneObj SceneObject) {
 	err := object.SetShader(state.VertShader, state.FragShader)
+	if sceneObj.Parent != "" {
+		object.SetParent(sceneObj.Parent)
+	}
 
 	if err != nil {
 		fmt.Println(err)
@@ -121,6 +140,11 @@ func addObjectToState(object Geometry, state *State, sceneObj SceneObject) {
 			Scale:    mgl32.Vec3{sceneObj.Scale[0], sceneObj.Scale[1], sceneObj.Scale[2]},
 			Rotation: mgl32.Ident4(),
 		}
+
+		if sceneObj.DiffuseTexture != "" {
+			sceneObj.Material.DiffuseTexture = sceneObj.DiffuseTexture
+		}
+
 		object.Setup(
 			sceneObj.Material,
 			tempModel,
@@ -221,6 +245,7 @@ func ParseJsonFile(filePath string, state *State) {
 
 	if err != nil {
 		fmt.Println(err)
+		panic(err)
 	}
 
 	for i := 0; i < len(scene[0].Objects); i++ {
@@ -241,32 +266,53 @@ func ParseJsonFile(filePath string, state *State) {
 		} else if scene[0].Objects[i].ObjectType == "mesh" {
 			fmt.Println(scene[0].Objects[i].Name, " loading....")
 			meshPath := exPath + "/../Editor/" + scene[0].Objects[i].Model
-			tempMeshVals := parser.Parse(meshPath)
+			objects := parser.Parse(meshPath)
 
-			tempModelObject := ModelObject{}
+			//tempModelObject := ModelObject{}
 
-			err := tempModelObject.SetShader(state.VertShader, state.FragShader)
+			for x := 0; x < len(objects); x++ {
+				for j := 0; j < len(objects[x].Materials); j++ {
+					tempModelObject := ModelObject{}
+					err := tempModelObject.SetShader(state.VertShader, state.FragShader)
 
-			if err != nil {
-				fmt.Println(err)
-				panic(err)
-			} else {
-				tempModelObject.SetVertexValues(tempMeshVals.Vertices, tempMeshVals.Normals, tempMeshVals.UVs)
-				tempModel := Model{
-					Position: mgl32.Vec3{scene[0].Objects[i].Position[0], scene[0].Objects[i].Position[1], scene[0].Objects[i].Position[2]},
-					Scale:    mgl32.Vec3{scene[0].Objects[i].Scale[0], scene[0].Objects[i].Scale[1], scene[0].Objects[i].Scale[2]},
-					Rotation: mgl32.Ident4(),
+					if err != nil {
+						fmt.Println(err)
+						panic(err)
+					} else {
+						tempModelObject.SetVertexValues(objects[x].Geometry.Vertices[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
+							objects[x].Geometry.Normals[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
+							objects[x].Geometry.UVs[objects[x].Materials[j].Start*2:objects[x].Materials[j].End*2])
+
+						tempName := scene[0].Objects[i].Name
+
+						if x > 0 {
+							tempModelObject.SetParent(scene[0].Objects[i].Name)
+							tempName = strings.Join([]string{tempName, strconv.Itoa(j)}, "")
+						}
+
+						tempModel := Model{
+							Position: mgl32.Vec3{scene[0].Objects[i].Position[0], scene[0].Objects[i].Position[1], scene[0].Objects[i].Position[2]},
+							Scale:    mgl32.Vec3{scene[0].Objects[i].Scale[0], scene[0].Objects[i].Scale[1], scene[0].Objects[i].Scale[2]},
+							Rotation: mgl32.Ident4(),
+						}
+
+						if j > 0 {
+							tempName = strings.Join([]string{tempName, strconv.Itoa(j)}, "")
+							tempModelObject.SetParent(scene[0].Objects[i].Name)
+							tempModel.Position = mgl32.Vec3{0, 0, 0}
+							tempModel.Scale = mgl32.Vec3{1, 1, 1}
+						}
+
+						tempModelObject.Setup(
+							scene[0].Objects[i].Material,
+							tempModel,
+							tempName)
+
+						state.Objects = append(state.Objects, &tempModelObject)
+						state.LoadedObjects++
+						fmt.Println(tempModelObject.name, " loaded successfully!")
+					}
 				}
-
-				tempModelObject.Setup(
-					scene[0].Objects[i].Material,
-					tempModel,
-					scene[0].Objects[i].Name,
-				)
-
-				state.Objects = append(state.Objects, &tempModelObject)
-				state.LoadedObjects++
-				fmt.Println(scene[0].Objects[i].Name, " loaded successfully!")
 			}
 		}
 	}
@@ -279,4 +325,14 @@ func ParseJsonFile(filePath string, state *State) {
 		}
 		state.Lights = append(state.Lights, tempLight)
 	}
+}
+
+func GetSceneObject(name string, state State) Geometry {
+	for i := 0; i < len(state.Objects); i++ {
+		objName, _, _ := state.Objects[i].GetDetails()
+		if objName == name {
+			return state.Objects[i]
+		}
+	}
+	return nil
 }

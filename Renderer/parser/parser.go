@@ -2,12 +2,25 @@ package parser
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 )
+
+type MTLMaterial struct {
+	MTLLib string
+	Name   string
+	Start  int
+	End    int
+}
+
+type OBJObject struct {
+	Geometry  Mesh
+	Materials []MTLMaterial
+	Name      string
+	Smooth    bool
+}
 
 type Mesh struct {
 	Vertices []float32
@@ -47,7 +60,7 @@ func addFace(a *int, b *int, c *int, d *int, ua *int, ub *int, uc *int, ud *int,
 		ib := parseUVIndex((*ub), uvLen)
 		ic := parseUVIndex((*uc), uvLen)
 
-		if &d == nil {
+		if d == nil {
 			//add uv call
 			addUV(ia, ib, ic, mesh)
 		} else {
@@ -142,45 +155,51 @@ func parseVertexIndex(value int, len int) int {
 	return (int(value) + len/3) * 3
 }
 
-func Parse(filePath string) Mesh {
+func Parse(filePath string) []OBJObject {
 	objFile, err := os.Open(filePath)
 	if err != nil {
 		panic(err)
 	}
 
 	defer objFile.Close()
-	//count := 0
-	newMesh := Mesh{}
+	objectCount := 0
+	materialCount := 0
+
+	objects := []OBJObject{}
 
 	scanner := bufio.NewScanner(objFile)
 	for scanner.Scan() {
 		line := scanner.Text()
+
+		if line[0] == '#' {
+			continue
+		}
 
 		if line[0] == 'v' {
 			if line[1] == ' ' {
 				result := strings.Fields(line)
 				for i := 1; i < 4; i++ {
 					if s, err := strconv.ParseFloat(result[i], 32); err == nil {
-						newMesh.Sparse.Vertices = append(newMesh.Sparse.Vertices, float32(s))
+						objects[objectCount].Geometry.Sparse.Vertices = append(objects[objectCount].Geometry.Sparse.Vertices, float32(s))
 					}
 				}
 			} else if line[1] == 'n' {
 				result := strings.Fields(line)
 				for i := 1; i < 4; i++ {
 					if s, err := strconv.ParseFloat(result[i], 32); err == nil {
-						newMesh.Sparse.Normals = append(newMesh.Sparse.Normals, float32(s))
+						objects[objectCount].Geometry.Sparse.Normals = append(objects[objectCount].Geometry.Sparse.Normals, float32(s))
 					}
 				}
 			} else if line[1] == 't' {
 				result := strings.Fields(line)
 				for i := 1; i < 3; i++ {
 					if s, err := strconv.ParseFloat(result[i], 32); err == nil {
-						newMesh.Sparse.UVs = append(newMesh.Sparse.UVs, float32(s))
+						objects[objectCount].Geometry.Sparse.UVs = append(objects[objectCount].Geometry.Sparse.UVs, float32(s))
 					}
 				}
 			}
 		} else if line[0] == 'f' {
-			//means we have v/u/n
+			//means we have f vertex/uv/normal vertex/uv/normal vertex/uv/normal
 			if result, err := regexp.MatchString(`^f\s+(-?\d+)\/(-?\d+)\/(-?\d+)\s+(-?\d+)\/(-?\d+)\/(-?\d+)\s+(-?\d+)\/(-?\d+)\/(-?\d+)(?:\s+(-?\d+)\/(-?\d+)\/(-?\d+))?`, line); err == nil && result {
 				//split on whitespace first
 				whiteSpaceSplit := strings.Split(line, " ")
@@ -195,12 +214,23 @@ func Parse(filePath string) Mesh {
 						}
 					}
 				}
-				addFace(
-					&values[0], &values[3], &values[6], &values[9],
-					&values[1], &values[4], &values[7], &values[10],
-					&values[2], &values[5], &values[8], &values[11],
-					&newMesh)
 
+				//check if the last three values are nil
+				if len(values) == 9 {
+					addFace(
+						&values[0], &values[3], &values[6], nil,
+						&values[1], &values[4], &values[7], nil,
+						&values[2], &values[5], &values[8], nil,
+						&objects[objectCount].Geometry)
+
+				} else {
+					addFace(
+						&values[0], &values[3], &values[6], &values[9],
+						&values[1], &values[4], &values[7], &values[10],
+						&values[2], &values[5], &values[8], &values[11],
+						&objects[objectCount].Geometry)
+				}
+				//means we have f vertex/uv vertex/uv vertex/uv
 			} else if result, err := regexp.MatchString(`^f\s+(-?\d+)\/(-?\d+)\s+(-?\d+)\/(-?\d+)\s+(-?\d+)\/(-?\d+)(?:\s+(-?\d+)\/(-?\d+))?`, line); err == nil && result {
 				//split on whitespace first
 				whiteSpaceSplit := strings.Split(line, " ")
@@ -219,7 +249,9 @@ func Parse(filePath string) Mesh {
 					&values[0], &values[2], &values[4], &values[6],
 					&values[1], &values[3], &values[5], &values[7],
 					nil, nil, nil, nil,
-					&newMesh)
+					&objects[objectCount].Geometry)
+
+				//means we have f vertex//normal vertex//normal vertex//normal
 			} else if result, err := regexp.MatchString(`^f\s+(-?\d+)\/\/(-?\d+)\s+(-?\d+)\/\/(-?\d+)\s+(-?\d+)\/\/(-?\d+)(?:\s+(-?\d+)\/\/(-?\d+))?`, line); err == nil && result {
 				//split on whitespace first
 				whiteSpaceSplit := strings.Split(line, " ")
@@ -238,11 +270,74 @@ func Parse(filePath string) Mesh {
 					&values[0], &values[2], &values[4], nil,
 					nil, nil, nil, nil,
 					&values[1], &values[3], &values[5], nil,
-					&newMesh)
+					&objects[objectCount].Geometry)
+
+				//means we have f vertex vertex vertex
+			} else if result, err := regexp.MatchString(`^f\s+(-?\d+)\s+(-?\d+)\s+(-?\d+)(?:\s+(-?\d+))?`, line); err == nil && result {
+				whiteSpaceSplit := strings.Split(line, " ")
+				var values []int
+
+				for i := 1; i < len(whiteSpaceSplit); i++ {
+					if s, err := strconv.ParseInt(whiteSpaceSplit[i], 10, 32); err == nil {
+						values = append(values, int(s))
+					}
+				}
+				addFace(
+					&values[0], &values[1], &values[2], &values[3],
+					nil, nil, nil, nil,
+					&values[0], &values[1], &values[2], &values[3],
+					&objects[objectCount].Geometry)
+
+				//check for object
+			}
+		} else if result, err := regexp.MatchString(`^[og]\s*(.+)?`, line); err == nil && result {
+			whiteSpaceSplit := strings.Split(line, " ")
+
+			//check if this is the initial object or not
+			if len(objects) == 1 {
+				objects[objectCount].Name = whiteSpaceSplit[1]
+			} else {
+				//create a new object and increment counters
+				tempObject := OBJObject{}
+				tempObject.Name = whiteSpaceSplit[1]
+				tempObject.Geometry = Mesh{}
+				tempObject.Materials = []MTLMaterial{}
+				tempMaterial := MTLMaterial{}
+				tempObject.Materials = append(tempObject.Materials, tempMaterial)
+				objects = append(objects, tempObject)
+				objectCount++
+			}
+
+		} else if result, err := regexp.MatchString(`^mtllib `, line); err == nil && result {
+			whiteSpaceSplit := strings.Split(line, " ")
+			//mtllib shows up first so we will make an object here
+			tempObject := OBJObject{}
+			tempObject.Geometry = Mesh{}
+			tempObject.Materials = []MTLMaterial{}
+			tempMaterial := MTLMaterial{}
+			tempMaterial.MTLLib = whiteSpaceSplit[1]
+			tempObject.Materials = append(tempObject.Materials, tempMaterial)
+			objects = append(objects, tempObject)
+			objectCount = len(objects) - 1
+
+		} else if result, err := regexp.MatchString(`^usemtl `, line); err == nil && result {
+			whiteSpaceSplit := strings.Split(line, " ")
+			//check if the current object is on the first material
+			if materialCount == 0 {
+				objects[objectCount].Materials[materialCount].Name = whiteSpaceSplit[1]
+				objects[objectCount].Materials[materialCount].Start = 0
+				materialCount++
+			} else {
+				newMaterial := MTLMaterial{}
+				newMaterial.MTLLib = objects[objectCount].Materials[materialCount-1].MTLLib
+				objects[objectCount].Materials[materialCount-1].End = len(objects[objectCount].Geometry.Vertices) / 3
+				newMaterial.Start = len(objects[objectCount].Geometry.Vertices) / 3
+				newMaterial.Name = whiteSpaceSplit[1]
+				objects[objectCount].Materials = append(objects[objectCount].Materials, newMaterial)
 			}
 		}
 	}
 
-	fmt.Println("Vertices:", len(newMesh.Normals), "normals:", len(newMesh.Normals), "uvs:", len(newMesh.UVs))
-	return newMesh
+	objects[objectCount].Materials[materialCount].End = len(objects[objectCount].Geometry.Vertices) / 3
+	return objects
 }

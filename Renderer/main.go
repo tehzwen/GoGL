@@ -5,7 +5,6 @@ import (
 	"math"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"runtime"
 	"sync"
 	"syscall"
@@ -13,7 +12,6 @@ import (
 	"./game"
 	"./geometry"
 	"./mymath"
-	"./parser"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
@@ -24,28 +22,14 @@ var keys map[glfw.Key]bool
 var buttons map[glfw.MouseButton]bool
 var mouseMovement map[string]float64
 var mu sync.Mutex
-var objectsToRender chan RenderObject
-
-type RenderObject struct {
-	viewMatrix      mgl32.Mat4
-	projMatrix      mgl32.Mat4
-	modelMatrix     mgl32.Mat4
-	currentBuffers  geometry.ObjectBuffers
-	currentModel    geometry.Model
-	currentMaterial geometry.Material
-	currentCentroid mgl32.Vec3
-	currentProgram  geometry.ProgramInfo
-	cameraPosition  []float32
-	currentVertices geometry.VertexValues
-	currentObject   geometry.Geometry
-}
+var objectsToRender chan geometry.RenderObject
 
 const (
 	width  = 1400
 	height = 800
 
 	vertexShaderSource = `
-		#version 330
+		#version 300 es
 		//needed to add layout location for mac to work properly
 		layout (location = 0) in vec3 aPosition;
 		layout (location = 1) in vec3 aNormal;
@@ -68,7 +52,7 @@ const (
 	` + "\x00"
 
 	fragmentShaderSource = `
-		#version 330
+		#version 300 es
 		precision highp float;
 		#define MAX_LIGHTS 128
 
@@ -127,31 +111,6 @@ var angle = 0.0
 func main() {
 	runtime.LockOSThread()
 
-	//load our shaders in here
-	var shaderFiles []string
-
-	root := "../Editor/shaders/"
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if !info.IsDir() {
-			fmt.Printf("%s\n", path)
-			shaderFiles = append(shaderFiles, path)
-		}
-		return nil
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	err, shaders := parser.ParseShaderFiles(shaderFiles)
-
-	if err != nil {
-		panic(err)
-	}
-
-	for x := 0; x < len(shaders); x++ {
-		fmt.Printf("%s\n", shaders[x].VertShaderText)
-	}
-
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
@@ -163,7 +122,7 @@ func main() {
 	//get arguments
 	argsWithoutProgram := os.Args[1:]
 
-	objectsToRender = make(chan RenderObject, 10)
+	objectsToRender = make(chan geometry.RenderObject, 10)
 	keys = make(map[glfw.Key]bool)
 	buttons = make(map[glfw.MouseButton]bool)
 	mouseMovement = make(map[string]float64)
@@ -256,21 +215,21 @@ func draw(window *glfw.Window, state *geometry.State) {
 		tempObject := <-objectsToRender
 		renderObject(state, tempObject, lightPositionArray, lightColorArray, lightStrengthArray)
 	}
-	fmt.Println("Rendered ", state.RenderedObjects, " vs ", len(state.Objects))
+	//fmt.Println("Rendered ", state.RenderedObjects, " vs ", len(state.Objects))
 
 	window.SwapBuffers()
 }
 
-func renderObject(state *geometry.State, object RenderObject, lightPositionArray []float32, lightColorArray []float32, lightStrengthArray []float32) {
+func renderObject(state *geometry.State, object geometry.RenderObject, lightPositionArray []float32, lightColorArray []float32, lightStrengthArray []float32) {
 
-	currentProgramInfo := object.currentProgram
-	projection := object.projMatrix
-	viewMatrix := object.viewMatrix
-	camPosition := object.cameraPosition
-	modelMatrix := object.modelMatrix
-	currentMaterial := object.currentMaterial
-	currentBuffers := object.currentBuffers
-	currentVertices := object.currentVertices
+	currentProgramInfo := object.CurrentProgram
+	projection := object.ProjMatrix
+	viewMatrix := object.ViewMatrix
+	camPosition := object.CameraPosition
+	modelMatrix := object.ModelMatrix
+	currentMaterial := object.CurrentMaterial
+	currentBuffers := object.CurrentBuffers
+	currentVertices := object.CurrentVertices
 
 	gl.UseProgram(currentProgramInfo.Program)
 
@@ -279,17 +238,26 @@ func renderObject(state *geometry.State, object RenderObject, lightPositionArray
 	gl.Uniform3fv(currentProgramInfo.UniformLocations.CameraPosition, 1, &camPosition[0])
 	gl.UniformMatrix4fv(currentProgramInfo.UniformLocations.Model, 1, false, &modelMatrix[0])
 
-	model, err := object.currentObject.GetModel()
+	model, err := object.CurrentObject.GetModel()
 	if err != nil {
 		panic(err)
 	}
 
 	frustum := mymath.ConstructFrustrum(viewMatrix, projection)
-	testLen := object.currentObject.GetBoundingBox().Max.Len()
+	testLen := object.CurrentObject.GetBoundingBox().Max.Len()
 	result := frustum.SphereIntersection(model.Position, testLen)
 
 	if !result {
 		return
+	}
+	diffuseTexture := object.CurrentObject.GetDiffuseTexture()
+
+	if diffuseTexture != nil {
+		diffuseTexture.Bind(gl.TEXTURE0)
+		err := diffuseTexture.SetUniform(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("uDiffuseTexture\x00")))
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	state.RenderedObjects++
@@ -310,7 +278,7 @@ func renderObject(state *geometry.State, object RenderObject, lightPositionArray
 
 	state.ViewMatrix = viewMatrix
 	gl.BindVertexArray(currentBuffers.Vao)
-	if object.currentObject.GetType() != "mesh" {
+	if object.CurrentObject.GetType() != "mesh" {
 		gl.DrawElements(gl.TRIANGLES, int32(len(currentVertices.Vertices)), gl.UNSIGNED_INT, gl.Ptr(nil))
 	} else {
 		gl.DrawArrays(gl.TRIANGLES, 0, int32(len(currentVertices.Vertices)))
@@ -318,9 +286,13 @@ func renderObject(state *geometry.State, object RenderObject, lightPositionArray
 
 	gl.BindVertexArray(0)
 
+	if diffuseTexture != nil {
+		diffuseTexture.UnBind()
+	}
+
 }
 
-func doObjectMath(object geometry.Geometry, state geometry.State, objects chan<- RenderObject) {
+func doObjectMath(object geometry.Geometry, state geometry.State, objects chan<- geometry.RenderObject) {
 	currentProgramInfo, err := object.GetProgramInfo()
 
 	if err != nil {
@@ -335,6 +307,7 @@ func doObjectMath(object geometry.Geometry, state geometry.State, objects chan<-
 		fmt.Printf("ERROR getting model!")
 	}
 
+	_, _, parent := object.GetDetails()
 	currentCentroid := object.GetCentroid()
 	currentMaterial := object.GetMaterial()
 	currentBuffers := object.GetBuffers()
@@ -358,18 +331,24 @@ func doObjectMath(object geometry.Geometry, state geometry.State, objects chan<-
 	modelMatrix = modelMatrix.Mul4(negCent)
 	modelMatrix = geometry.ScaleM4(modelMatrix, currentModel.Scale)
 
-	result := RenderObject{
-		modelMatrix:     modelMatrix,
-		viewMatrix:      viewMatrix,
-		projMatrix:      projection,
-		cameraPosition:  camPosition,
-		currentBuffers:  currentBuffers,
-		currentCentroid: currentCentroid,
-		currentMaterial: currentMaterial,
-		currentModel:    currentModel,
-		currentProgram:  currentProgramInfo,
-		currentVertices: currentVertices,
-		currentObject:   object,
+	if parent != "" {
+		parentObj := geometry.GetSceneObject(parent, state)
+		modelMatrix = modelMatrix.Mul4(parentObj.GetModelMatrix())
+	}
+
+	object.SetModelMatrix(modelMatrix)
+	result := geometry.RenderObject{
+		ModelMatrix:     modelMatrix,
+		ViewMatrix:      viewMatrix,
+		ProjMatrix:      projection,
+		CameraPosition:  camPosition,
+		CurrentBuffers:  currentBuffers,
+		CurrentCentroid: currentCentroid,
+		CurrentMaterial: currentMaterial,
+		CurrentModel:    currentModel,
+		CurrentProgram:  currentProgramInfo,
+		CurrentVertices: currentVertices,
+		CurrentObject:   object,
 	}
 	objects <- result
 }

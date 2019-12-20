@@ -3,22 +3,28 @@ package geometry
 import (
 	"errors"
 
+	"../shader"
+	"../texture"
 	"github.com/go-gl/mathgl/mgl32"
 )
 
 // ModelObject : Primitive ModelObject geometry struct
 type ModelObject struct {
-	name         string
-	fragShader   string
-	vertShader   string
-	shaderType   string
-	boundingBox  BoundingBox
-	buffers      ObjectBuffers
-	programInfo  ProgramInfo
-	material     Material
-	Model        Model
-	centroid     mgl32.Vec3
-	vertexValues VertexValues
+	name           string
+	fragShader     string
+	vertShader     string
+	shaderType     string
+	parent         string
+	boundingBox    BoundingBox
+	buffers        ObjectBuffers
+	programInfo    ProgramInfo
+	material       Material
+	Model          Model
+	centroid       mgl32.Vec3
+	vertexValues   VertexValues
+	modelMatrix    mgl32.Mat4
+	shaderVal      shader.Shader
+	diffuseTexture *texture.Texture
 }
 
 // SetShader : helper function for applying frag/vert shader
@@ -34,6 +40,14 @@ func (m *ModelObject) SetShader(vertShader string, fragShader string) error {
 
 }
 
+func (m *ModelObject) SetModelMatrix(mm mgl32.Mat4) {
+	m.modelMatrix = mm
+}
+
+func (m ModelObject) GetModelMatrix() mgl32.Mat4 {
+	return m.modelMatrix
+}
+
 // GetProgramInfo : getter for programinfo
 func (m ModelObject) GetProgramInfo() (ProgramInfo, error) {
 	if (m.programInfo != ProgramInfo{}) {
@@ -47,8 +61,8 @@ func (m ModelObject) GetMaterial() Material {
 	return m.material
 }
 
-func (m ModelObject) GetDetails() (string, string) {
-	return m.name, m.shaderType
+func (m ModelObject) GetDetails() (string, string, string) {
+	return m.name, m.shaderType, m.parent
 }
 
 // GetVertices : getter for vertexValues
@@ -74,9 +88,25 @@ func (m ModelObject) GetType() string {
 	return "mesh"
 }
 
+func (m ModelObject) GetDiffuseTexture() *texture.Texture {
+	return m.diffuseTexture
+}
+
+func (m ModelObject) GetShaderVal() shader.Shader {
+	return m.shaderVal
+}
+
+func (m *ModelObject) SetShaderVal(s shader.Shader) {
+	m.shaderVal = s
+}
+
 // SetRotation : helper function for setting rotation of ModelObject to a mat4
 func (m *ModelObject) SetRotation(rot mgl32.Mat4) {
 	m.Model.Rotation = rot
+}
+
+func (m *ModelObject) SetParent(parent string) {
+	m.parent = parent
 }
 
 // GetModel : getter for ModelObject values
@@ -122,7 +152,7 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string) error {
 	m.boundingBox = TranslateBoundingBox(m.boundingBox, mod.Position)
 	m.Model.Rotation = mod.Rotation
 	m.centroid = CalculateCentroid(m.vertexValues.Vertices, m.Model.Scale)
-	m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, nil)
+	m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, m.vertexValues.uvs, nil)
 
 	return nil
 }

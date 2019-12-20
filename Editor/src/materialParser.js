@@ -38,16 +38,16 @@ function parseMTL(mtlFile, mtlName, object, geometry, cb) {
                         material.n = parseFloat(whiteSpaceSplit[1]);
                     } else if (firstChars === "Ka") {
                         let whiteSpaceSplit = lineArray[j].split(" ");
-                        material.ambient = [whiteSpaceSplit[1], whiteSpaceSplit[2], whiteSpaceSplit[3]];
+                        material.ambient = [parseFloat(whiteSpaceSplit[1]), parseFloat(whiteSpaceSplit[2]), parseFloat(whiteSpaceSplit[3])];
                     } else if (firstChars === "Kd") {
                         let whiteSpaceSplit = lineArray[j].split(" ");
-                        material.diffuse = [whiteSpaceSplit[1], whiteSpaceSplit[2], whiteSpaceSplit[3]];
+                        material.diffuse = [parseFloat(whiteSpaceSplit[1]), parseFloat(whiteSpaceSplit[2]), parseFloat(whiteSpaceSplit[3])];
                     } else if (firstChars === "Ks") {
                         let whiteSpaceSplit = lineArray[j].split(" ");
-                        material.specular = [whiteSpaceSplit[1], whiteSpaceSplit[2], whiteSpaceSplit[3]];
+                        material.specular = [parseFloat(whiteSpaceSplit[1]), parseFloat(whiteSpaceSplit[2]), parseFloat(whiteSpaceSplit[3])];
                     } else if (firstChars === "d ") {
                         let whiteSpaceSplit = lineArray[j].split(" ");
-                        material.alpha = whiteSpaceSplit[1];
+                        material.alpha = parseFloat(whiteSpaceSplit[1]);
                     } else if (lineArray[j].indexOf("map_Kd") !== -1) {
                         //now we have to split it on // for the file TODO: make sure this works on linux kekw
                         let fileSplit = lineArray[j].split(" ");

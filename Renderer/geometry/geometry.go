@@ -1,6 +1,8 @@
 package geometry
 
 import (
+	"../shader"
+	"../texture"
 	"github.com/go-gl/mathgl/mgl32"
 )
 
@@ -8,17 +10,23 @@ import (
 type Geometry interface {
 	Setup(Material, Model, string) error
 	SetShader(string, string) error
+	SetShaderVal(shader.Shader)
 	GetProgramInfo() (ProgramInfo, error)
 	GetModel() (Model, error)
 	GetType() string
 	GetCentroid() mgl32.Vec3
+	GetShaderVal() shader.Shader
+	GetDiffuseTexture() *texture.Texture
 	GetMaterial() Material
 	GetBuffers() ObjectBuffers
 	GetVertices() VertexValues
+	GetModelMatrix() mgl32.Mat4
 	SetRotation(mgl32.Mat4)
+	SetModelMatrix(mgl32.Mat4)
+	SetParent(string)
 	Scale(mgl32.Vec3)
 	Translate(mgl32.Vec3)
-	GetDetails() (string, string)
+	GetDetails() (string, string, string)
 	GetBoundingBox() BoundingBox
 }
 
@@ -29,6 +37,7 @@ type Attributes struct {
 	uv             uint32
 	vertexPosition int32
 	vertexNormal   int32
+	vertexUV       int32
 }
 
 // ObjectBuffers : holds references to vertex buffers
@@ -42,6 +51,7 @@ type ObjectBuffers struct {
 type VertexValues struct {
 	Vertices []float32
 	normals  []float32
+	uvs      []float32
 	faces    []uint32
 }
 
@@ -72,12 +82,13 @@ type ProgramInfo struct {
 
 // Material : struct for holding material info
 type Material struct {
-	Diffuse  []float32 `json:"diffuse"`
-	Ambient  []float32 `json:"ambient"`
-	Specular []float32 `json:"specular"`
-	N        float32   `json:"n"`
-	Texture  string
-	Alpha    float32
+	Diffuse        []float32 `json:"diffuse"`
+	Ambient        []float32 `json:"ambient"`
+	Specular       []float32 `json:"specular"`
+	N              float32   `json:"n"`
+	ShaderType     int       `json:"shaderType"`
+	Alpha          float32
+	DiffuseTexture string
 }
 
 // Model : struct for holding model info

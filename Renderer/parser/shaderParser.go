@@ -3,14 +3,13 @@ package parser
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-type Shader struct {
+type ParsedShader struct {
 	VertShaderSource []string `json:"vertShader"`
 	FragShaderSource []string `json:"fragShader"`
 	AttribsSource    []string `json:"attribs"`
@@ -20,17 +19,15 @@ type Shader struct {
 	ShaderName       string
 }
 
-func ParseShaderFiles(shaderFiles []string) (error, []Shader) {
+func ParseShaderFiles(shaderFiles []string) (error, []ParsedShader) {
 
-	var shaders []Shader
+	var shaders []ParsedShader
 
 	for i := 0; i < len(shaderFiles); i++ {
 
-		var tempShader Shader
+		var tempShader ParsedShader
 
 		jsonFile, err := os.Open(shaderFiles[i])
-
-		fmt.Printf("%v+\n", jsonFile)
 		if err != nil {
 			return errors.New("Error reading the shader file"), nil
 		}
@@ -52,5 +49,14 @@ func ParseShaderFiles(shaderFiles []string) (error, []Shader) {
 
 	}
 	return nil, shaders
+}
 
+func GetShaderByName(name string, shaders []ParsedShader) ParsedShader {
+	for i := 0; i < len(shaders); i++ {
+		if name == shaders[i].ShaderName {
+			return shaders[i]
+		}
+	}
+
+	return ParsedShader{}
 }

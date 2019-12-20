@@ -114,7 +114,7 @@ func CalculateCentroid(vertices []float32, currScale mgl32.Vec3) mgl32.Vec3 {
 }
 
 // CreateTriangleVAO : helper function for creating vertex buffer values
-func CreateTriangleVAO(programInfo *ProgramInfo, vertices []float32, normals []float32, indices []uint32) uint32 {
+func CreateTriangleVAO(programInfo *ProgramInfo, vertices []float32, normals []float32, uvs []float32, indices []uint32) uint32 {
 
 	var VAO uint32
 	gl.GenVertexArrays(1, &VAO)
@@ -150,6 +150,16 @@ func CreateTriangleVAO(programInfo *ProgramInfo, vertices []float32, normals []f
 
 		gl.VertexAttribPointer((*programInfo).attributes.normal, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
 		gl.EnableVertexAttribArray((*programInfo).attributes.normal)
+	}
+
+	if uvs != nil {
+		var uvBuffer uint32
+		gl.GenBuffers(1, &uvBuffer)
+
+		gl.BindBuffer(gl.ARRAY_BUFFER, uvBuffer)
+		gl.BufferData(gl.ARRAY_BUFFER, len(uvs)*4, gl.Ptr(uvs), gl.STATIC_DRAW)
+		gl.VertexAttribPointer((*programInfo).attributes.uv, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
+		gl.EnableVertexAttribArray((*programInfo).attributes.uv)
 	}
 
 	// unbind the VAO (safe practice so we don't accidentally (mis)configure it later)
