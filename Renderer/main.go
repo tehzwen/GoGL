@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 
@@ -25,8 +27,8 @@ var mu sync.Mutex
 var objectsToRender chan geometry.RenderObject
 
 const (
-	width  = 1400
-	height = 800
+	width  = 1280
+	height = 960
 
 	vertexShaderSource = `
 		#version 300 es
@@ -190,20 +192,6 @@ func draw(window *glfw.Window, state *geometry.State) {
 	gl.ClearDepth(1.0)
 	glfw.PollEvents()
 
-	//create light arrays
-	lightPositionArray := []float32{}
-	lightColorArray := []float32{}
-	lightStrengthArray := []float32{}
-
-	for t := 0; t < len(state.Lights); t++ {
-		//get all values in the arrays
-		for u := 0; u < len(state.Lights[t].Position); u++ {
-			lightPositionArray = append(lightPositionArray, state.Lights[t].Position[u])
-			lightColorArray = append(lightColorArray, state.Lights[t].Colour[u])
-		}
-		lightStrengthArray = append(lightStrengthArray, state.Lights[t].Strength)
-	}
-
 	//getting the math values for each object using go routines
 	for i := 0; i < len(state.Objects); i++ {
 		go doObjectMath(state.Objects[i], (*state), objectsToRender)
@@ -213,14 +201,14 @@ func draw(window *glfw.Window, state *geometry.State) {
 	state.RenderedObjects = 0
 	for x := 0; x < len(state.Objects); x++ {
 		tempObject := <-objectsToRender
-		renderObject(state, tempObject, lightPositionArray, lightColorArray, lightStrengthArray)
+		renderObject(state, tempObject)
 	}
 	//fmt.Println("Rendered ", state.RenderedObjects, " vs ", len(state.Objects))
 
 	window.SwapBuffers()
 }
 
-func renderObject(state *geometry.State, object geometry.RenderObject, lightPositionArray []float32, lightColorArray []float32, lightStrengthArray []float32) {
+func renderObject(state *geometry.State, object geometry.RenderObject) {
 
 	currentProgramInfo := object.CurrentProgram
 	projection := object.ProjMatrix
@@ -265,15 +253,18 @@ func renderObject(state *geometry.State, object geometry.RenderObject, lightPosi
 	gl.Uniform3fv(currentProgramInfo.UniformLocations.DiffuseVal, 1, &currentMaterial.Diffuse[0])
 	gl.Uniform3fv(currentProgramInfo.UniformLocations.AmbientVal, 1, &currentMaterial.Ambient[0])
 	gl.Uniform3fv(currentProgramInfo.UniformLocations.SpecularVal, 1, &currentMaterial.Specular[0])
-	gl.Uniform1f(currentProgramInfo.UniformLocations.NVal, currentMaterial.N)
+	gl.Uniform1fv(currentProgramInfo.UniformLocations.NVal, 1, &currentMaterial.N)
 
-	gl.Uniform1i(currentProgramInfo.UniformLocations.NumLights, int32(len(state.Lights)))
+	num := int32(len(state.Lights))
+	gl.Uniform1iv(currentProgramInfo.UniformLocations.NumLights, 1, &num)
 
-	//update lights
-	if len(lightPositionArray) > 0 && len(lightColorArray) > 0 && len(lightStrengthArray) > 0 {
-		gl.Uniform3fv(currentProgramInfo.UniformLocations.LightPositions, int32(len(lightPositionArray)/3), &lightPositionArray[0])
-		gl.Uniform3fv(currentProgramInfo.UniformLocations.LightColours, int32(len(lightColorArray)/3), &lightColorArray[0])
-		gl.Uniform1fv(currentProgramInfo.UniformLocations.LightStrengths, int32(len(lightStrengthArray)), &lightStrengthArray[0])
+	for i := 0; i < len(state.Lights); i++ {
+		gl.Uniform3fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].position\x00")), 1, &state.Lights[i].Position[0])
+		gl.Uniform3fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].color\x00")), 1, &state.Lights[i].Colour[0])
+		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].strength\x00")), 1, &state.Lights[i].Strength)
+		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].constant\x00")), 1, &state.Lights[i].Constant)
+		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].linear\x00")), 1, &state.Lights[i].Linear)
+		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].quadratic\x00")), 1, &state.Lights[i].Quadratic)
 	}
 
 	state.ViewMatrix = viewMatrix

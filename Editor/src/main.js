@@ -1,6 +1,6 @@
 import myMath from "./mymath/index.js";
 import UI from "./uiSetup.js";
-import { Cube, Light, Plane, Model } from "./objects/index.js";
+import { Cube, PointLight, Plane, Model } from "./objects/index.js";
 
 var currentlyRendered = 0;
 var state = {};
@@ -83,8 +83,6 @@ function main() {
         samplerNormExists: 0
     };
 
-    state.numLights = state.lights.length;
-
     //iterate through the level's objects and add them
     state.level.objects.map((object) => {
         if (object.type === "mesh") {
@@ -100,9 +98,14 @@ function main() {
         }
     })
 
-    state.level.lights.map((light) => {
-        parseOBJFileToJSON(light.model, light, createModalFromMesh);
+    let pointLightArray = [];
+
+    state.level.pointLights.map((light) => {
+        let tempPointLight = new PointLight(gl, light);
+        state.pointLights.push(tempPointLight);
     })
+
+    state.numLights = state.pointLights.length;
 
     //setup mouse click listener
     /*
@@ -219,16 +222,6 @@ function drawScene(gl, deltaTime, state) {
     gl.clearDepth(1.0); // Clear everything
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    let lightPositionArray = [], lightColourArray = [], lightStrengthArray = [];
-
-    for (let i = 0; i < state.lightIndices.length; i++) {
-        let light = state.objects[state.lightIndices[i]];
-        for (let j = 0; j < 3; j++) {
-            lightPositionArray.push(light.model.position[j]);
-            lightColourArray.push(light.colour[j]);
-        }
-        lightStrengthArray.push(light.strength);
-    }
     state.objects.map((object) => {
         if (object.loaded) {
 
@@ -301,12 +294,14 @@ function drawScene(gl, deltaTime, state) {
                 gl.uniform1f(object.programInfo.uniformLocations.nVal, object.material.n);
                 gl.uniform1i(object.programInfo.uniformLocations.numLights, state.numLights);
 
-                //use this check to wait until the light meshes are loaded properly
-                if (lightColourArray.length > 0 && lightPositionArray.length > 0 && lightStrengthArray.length > 0) {
-                    gl.uniform3fv(object.programInfo.uniformLocations.uLightPositions, lightPositionArray);
-                    gl.uniform3fv(object.programInfo.uniformLocations.uLightColours, lightColourArray);
-                    gl.uniform1fv(object.programInfo.uniformLocations.uLightStrengths, lightStrengthArray);
-                }
+                state.pointLights.forEach((pL, index) => {
+                    gl.uniform3fv(gl.getUniformLocation(object.programInfo.program, "pointLights[" + index + "].position"), pL.position);
+                    gl.uniform3fv(gl.getUniformLocation(object.programInfo.program, "pointLights[" + index + "].color"), pL.colour);
+                    gl.uniform1f(gl.getUniformLocation(object.programInfo.program, "pointLights[" + index + "].strength"), pL.strength);
+                    gl.uniform1f(gl.getUniformLocation(object.programInfo.program, "pointLights[" + index + "].constant"), pL.constant);
+                    gl.uniform1f(gl.getUniformLocation(object.programInfo.program, "pointLights[" + index + "].linear"), pL.linear);
+                    gl.uniform1f(gl.getUniformLocation(object.programInfo.program, "pointLights[" + index + "].quadratic"), pL.quadratic);
+                })
 
                 {
                     // Bind the buffer we want to draw

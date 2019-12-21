@@ -38,9 +38,18 @@ func (s *BlinnNoTexture) Setup() {
 ` + "\x00"
 
 	s.fragShader = `
-	#version 300 es
+	#version 410
 	precision highp float;
 	#define MAX_LIGHTS 128
+
+	struct PointLight {
+		vec3 position;
+		float strength;
+		float constant;
+		float linear;
+		float quadratic; 
+		vec3 color;
+	};
 
 	in vec3 oFragPosition;
 	in vec3 normalInterp;
@@ -52,42 +61,47 @@ func (s *BlinnNoTexture) Setup() {
 	uniform vec3 specularVal;
 	uniform float nVal;
 	uniform int numLights;
-	uniform vec3 lightPositions[MAX_LIGHTS];
-	uniform vec3 lightColours[MAX_LIGHTS];
-	uniform float lightStrengths[MAX_LIGHTS];
+	uniform PointLight pointLights[MAX_LIGHTS];
 
 	out vec4 frag_colour;
 
-	void main() {
+	vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir) 
+	{
+		vec3 lightDir = normalize(light.position - fragPos);
+		// diffuse shading
+		float diff = max(dot(normal, lightDir), 0.0);
+		// specular shading
+		vec3 reflectDir = reflect(-lightDir, normal);
+		float spec = pow(max(dot(viewDir, reflectDir), 0.0), nVal);
+		// attenuation
+		float distance    = length(light.position - fragPos);
+		float attenuation = 1.0 / (light.constant + light.linear * distance + 
+					light.quadratic * (distance * distance));    
+		// combine results
+		vec3 ambient  = light.color * ambientVal;
+		vec3 diffuse  = light.color  * diff * diffuseVal;
+		vec3 specular = vec3(0,0,0);
+
+		if (diff > 0.0f) {
+			specular = light.color * specularVal * spec;
+			specular *= attenuation;
+		}
 		
-		vec3 diffuse = vec3(0, 0, 0);
-		vec3 ambient = vec3(0, 0, 0);
-		vec3 specular = vec3(0, 0, 0);
+		ambient  *= attenuation;
+		diffuse  *= attenuation;
+		
+		return (ambient + diffuse + specular);
+	}
+
+	void main() {
 		vec3 normal = normalize(normalInterp);
+		vec3 result = vec3(0,0,0);
+		vec3 viewDir = normalize(cameraPosition - oFragPosition);
 
 		for (int i = 0; i < numLights; i++) {
-			vec3 nCameraPosition = normalize(cameraPosition); // Normalize the camera Position
-			vec3 V = normalize(nCameraPosition - oFragPosition);
-
-			vec3 lightDirection = normalize(lightPositions[i] - oFragPosition);
-			float diff = max(dot(normal, lightDirection), 0.0);
-			vec3 reflectDir = reflect(-lightDirection, normal);
-			float spec = pow(max(dot(V, reflectDir), 0.0), nVal);
-			float distance = length(lightPositions[i] - oFragPosition);
-			float attenuation = 1.0 / (distance * distance);
-			attenuation *= lightStrengths[i];
-
-			ambient += ambientVal * lightColours[i] * diffuseVal;
-			diffuse += diffuseVal * lightColours[i] * diff;
-
-			if (diff > 0.0f) {
-				specular += specularVal * lightColours[i] * spec;
-				specular *= attenuation;
-			}
-			ambient *= attenuation; //causes much darker scene
-			diffuse *= attenuation;
+			result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir);
 		}
-		frag_colour = vec4(diffuse + ambient + specular, 1.0); 
+		frag_colour = vec4(result, 1.0);
 	}
-` + "\x00"
+	` + "\x00"
 }

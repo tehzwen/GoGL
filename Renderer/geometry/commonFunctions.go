@@ -41,18 +41,15 @@ type SceneObject struct {
 	Model          string    `json:"model"`
 }
 
-type SceneLight struct {
-	Name           string    `json:"name"`
-	Material       Material  `json:"material"`
-	ObjectType     string    `json:"type"`
-	Position       []float32 `json:"position"`
-	Scale          []float32 `json:"scale"`
-	DiffuseTexture string    `json:"diffuseTexture"`
-	NormalTexture  string    `json:"normalTexture"`
-	Parent         string    `json:"parent"`
-	Model          string    `json:"model"`
-	Colour         []float32 `json:"colour"`
-	Strength       float32   `json:"strength"`
+type PointLight struct {
+	Name      string    `json:"name"`
+	Position  []float32 `json:"position"`
+	Parent    string    `json:"parent"`
+	Colour    []float32 `json:"colour"`
+	Strength  float32   `json:"strength"`
+	Quadratic float32   `json:"quadratic"`
+	Linear    float32   `json:"linear"`
+	Constant  float32   `json:"constant"`
 }
 
 type Settings struct {
@@ -60,7 +57,7 @@ type Settings struct {
 
 type Scene struct {
 	Objects  []SceneObject `json:"objects"`
-	Lights   []SceneLight  `json:"lights"`
+	Lights   []PointLight  `json:"pointLights"`
 	Settings Settings      `json:"settings"`
 }
 
@@ -272,6 +269,9 @@ func ParseJsonFile(filePath string, state *State) {
 
 			for x := 0; x < len(objects); x++ {
 				for j := 0; j < len(objects[x].Materials); j++ {
+
+					parsedMaterial := parser.ParseMTLFile(objects[x].Materials[j].MTLLib, objects[x].Materials[j].Name)
+
 					tempModelObject := ModelObject{}
 					err := tempModelObject.SetShader(state.VertShader, state.FragShader)
 
@@ -304,7 +304,14 @@ func ParseJsonFile(filePath string, state *State) {
 						}
 
 						tempModelObject.Setup(
-							scene[0].Objects[i].Material,
+							Material{
+								DiffuseTexture: parsedMaterial.MapKD,
+								Diffuse:        parsedMaterial.Kd,
+								Ambient:        parsedMaterial.Ka,
+								Specular:       parsedMaterial.Ks,
+								Alpha:          parsedMaterial.D,
+								N:              parsedMaterial.Ns,
+							},
 							tempModel,
 							tempName)
 
@@ -319,12 +326,17 @@ func ParseJsonFile(filePath string, state *State) {
 
 	for j := 0; j < len(scene[0].Lights); j++ {
 		tempLight := Light{
-			Colour:   scene[0].Lights[j].Colour,
-			Strength: scene[0].Lights[j].Strength,
-			Position: scene[0].Lights[j].Position,
+			Colour:    scene[0].Lights[j].Colour,
+			Strength:  scene[0].Lights[j].Strength,
+			Position:  scene[0].Lights[j].Position,
+			Quadratic: scene[0].Lights[j].Quadratic,
+			Linear:    scene[0].Lights[j].Linear,
+			Constant:  scene[0].Lights[j].Constant,
 		}
+		fmt.Println(tempLight)
 		state.Lights = append(state.Lights, tempLight)
 	}
+
 }
 
 func GetSceneObject(name string, state State) Geometry {

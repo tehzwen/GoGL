@@ -2,7 +2,6 @@ package game
 
 import (
 	"fmt"
-	"math"
 
 	"../geometry"
 	"github.com/go-gl/glfw/v3.1/glfw"
@@ -27,7 +26,7 @@ func Update(state *geometry.State, deltaTime float64) {
 	angle += 0.5 * deltaTime
 
 	//lightToMove.Strength += float32(math.Sin(angle))
-	lightToMove.Position[2] += float32(math.Sin(angle) * 0.5)
+	//lightToMove.Position[2] += float32(math.Sin(angle) * 0.5)
 	//angle += 0.5 * deltaTime
 	//fmt.Printf("position: %+v\n", lightToMove.Position)
 	speed := deltaTime * walkSpeed

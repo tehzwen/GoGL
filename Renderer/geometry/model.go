@@ -2,6 +2,7 @@ package geometry
 
 import (
 	"errors"
+	"fmt"
 
 	"../shader"
 	"../texture"
@@ -145,6 +146,8 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string) error {
 
 	m.boundingBox = GetBoundingBox(m.vertexValues.Vertices)
 	m.material = mat
+
+	fmt.Println(mat)
 	SetupAttributes(&m.programInfo)
 	m.Scale(mod.Scale)
 	m.boundingBox = ScaleBoundingBox(m.boundingBox, mod.Scale)

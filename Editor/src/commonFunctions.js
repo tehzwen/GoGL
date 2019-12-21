@@ -52,7 +52,7 @@ function loadShader(gl, type, source) {
         } else if (type === gl.FRAGMENT_SHADER) {
             typeStr = 'FRAGMENT';
         }
-        printError('An error occurred compiling the shader: ' + typeStr, gl.getShaderInfoLog(shader));
+        console.error('An error occurred compiling the shader: ' + typeStr, gl.getShaderInfoLog(shader));
         gl.deleteShader(shader);
         return null;
     }
@@ -392,7 +392,7 @@ function hexToRGB(hex) {
 }
 
 function parseSceneFile(file, state, cb) {
-    state.lights = [];
+    state.pointLights = [];
     state.objects = [];
     console.log(file)
 
@@ -402,7 +402,7 @@ function parseSceneFile(file, state, cb) {
         })
         .then((jData) => {
             state.level = jData[0];
-            state.numberOfObjectsToLoad = jData[0].objects.length + jData[0].lights.length;
+            state.numberOfObjectsToLoad = jData[0].objects.length;
             cb();
         })
         .catch((err) => {
@@ -414,49 +414,16 @@ function createSceneFile(state, filename) {
     let totalState = [
         {
             objects: [],
-            lights: [],
+            pointLights: [],
             settings: {
 
             }
         }];
 
     //objects first
-    state.objects.map((object) => {
-        //console.log(object);
-
-        if (object.type === "light") {
+    state.objects.forEach((object) => {
+        if (object.type === "mesh") {
             if (!object.parent) {
-                totalState[0].lights.push({
-                    name: object.name ? object.name : null,
-                    material: object.material ? object.material : null,
-                    type: object.type ? object.type : null,
-                    position: object.model.position ? [object.model.position[0], object.model.position[1], object.model.position[2]] : null, //change these to arrays
-                    scale: object.model.scale ? [object.model.scale[0], object.model.scale[1], object.model.scale[2]] : null,
-                    diffuseTexture: object.model.diffuseTexture ? object.model.diffuseTexture : null,
-                    normalTexture: object.model.normalTexture ? object.model.normalTexture : null,
-                    parent: object.parent ? object.parent : null,
-                    model: object.modelName ? object.modelName : null,
-                    colour: object.colour ? [object.colour[0], object.colour[1], object.colour[2]] : null,
-                    strength: object.strength ? object.strength : null
-                })
-            }
-
-        } else {
-            if (object.type === "mesh") {
-                if (!object.parent) {
-                    totalState[0].objects.push({
-                        name: object.name ? object.name : null,
-                        material: object.material ? object.material : null,
-                        type: object.type ? object.type : null, //might change this to be an int value for speed
-                        position: object.model.position ? [object.model.position[0], object.model.position[1], object.model.position[2]] : null,
-                        scale: object.model.scale ? [object.model.scale[0], object.model.scale[1], object.model.scale[2]] : null,
-                        diffuseTexture: object.model.diffuseTexture ? object.model.diffuseTexture : null,
-                        normalTexture: object.model.normalTexture ? object.model.normalTexture : null,
-                        parent: object.parent ? object.parent : null,
-                        model: object.modelName ? object.modelName : null
-                    });
-                }
-            } else {
                 totalState[0].objects.push({
                     name: object.name ? object.name : null,
                     material: object.material ? object.material : null,
@@ -469,9 +436,33 @@ function createSceneFile(state, filename) {
                     model: object.modelName ? object.modelName : null
                 });
             }
-
+        } else {
+            totalState[0].objects.push({
+                name: object.name ? object.name : null,
+                material: object.material ? object.material : null,
+                type: object.type ? object.type : null, //might change this to be an int value for speed
+                position: object.model.position ? [object.model.position[0], object.model.position[1], object.model.position[2]] : null,
+                scale: object.model.scale ? [object.model.scale[0], object.model.scale[1], object.model.scale[2]] : null,
+                diffuseTexture: object.model.diffuseTexture ? object.model.diffuseTexture : null,
+                normalTexture: object.model.normalTexture ? object.model.normalTexture : null,
+                parent: object.parent ? object.parent : null,
+                model: object.modelName ? object.modelName : null
+            });
         }
     });
+
+    console.log(state)
+
+    state.pointLights.forEach((light) => {
+        totalState[0].pointLights.push({
+            colour: [light.colour[0], light.colour[1],light.colour[2]],
+            position: light.position,
+            strength: light.strength,
+            quadratic: light.quadratic,
+            linear: light.linear,
+            constant: light.constant
+        })
+    })
     //write the savefile 
     fs.writeFile(filename, JSON.stringify(totalState), 'utf-8', () => {
         console.log("Writing complete!")

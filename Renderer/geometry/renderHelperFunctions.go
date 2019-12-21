@@ -58,6 +58,114 @@ func compileShader(source string, shaderType uint32) (uint32, error) {
 	return shader, nil
 }
 
+func SetupAttributesMap(p *ProgramInfo, m map[string]bool) {
+	//do checks to see what values need to be attributed
+	if m["aPosition"] {
+		(*p).attributes.vertexPosition = gl.GetAttribLocation((*p).Program, gl.Str("aPosition\x00"))
+		if (*p).attributes.vertexPosition == -1 {
+			fmt.Printf("ERROR: aPosition not found in shader\n")
+		}
+	}
+	if m["aNormal"] {
+		(*p).attributes.vertexNormal = gl.GetAttribLocation((*p).Program, gl.Str("aNormal\x00"))
+		if (*p).attributes.vertexNormal == -1 {
+			fmt.Printf("ERROR: aNormal not found in shader\n")
+		}
+	}
+	if m["aUV"] {
+		(*p).attributes.vertexUV = gl.GetAttribLocation((*p).Program, gl.Str("aUV\x00"))
+		if (*p).attributes.vertexUV == -1 {
+			fmt.Printf("ERROR: aUV not found in shader\n")
+		}
+	}
+	if m["diffuseVal"] {
+		(*p).UniformLocations.DiffuseVal = gl.GetUniformLocation((*p).Program, gl.Str("diffuseVal\x00"))
+		if (*p).UniformLocations.DiffuseVal == -1 {
+			fmt.Printf("ERROR: diffuseVal not found in shader\n")
+		}
+	}
+	if m["ambientVal"] {
+		(*p).UniformLocations.AmbientVal = gl.GetUniformLocation((*p).Program, gl.Str("ambientVal\x00"))
+		if (*p).UniformLocations.AmbientVal == -1 {
+			fmt.Printf("ERROR: ambientVal not found in shader\n")
+		}
+
+	}
+	if m["specularVal"] {
+		(*p).UniformLocations.SpecularVal = gl.GetUniformLocation((*p).Program, gl.Str("specularVal\x00"))
+		if (*p).UniformLocations.SpecularVal == -1 {
+			fmt.Printf("ERROR: specularVal not found in shader\n")
+		}
+	}
+	if m["nVal"] {
+		(*p).UniformLocations.NVal = gl.GetUniformLocation((*p).Program, gl.Str("nVal\x00"))
+		if (*p).UniformLocations.NVal == -1 {
+			fmt.Printf("ERROR: nVal not found in shader\n")
+		}
+	}
+	if m["uProjectionMatrix"] {
+		(*p).UniformLocations.Projection = gl.GetUniformLocation((*p).Program, gl.Str("uProjectionMatrix\x00"))
+		if (*p).UniformLocations.Projection == -1 {
+			fmt.Printf("ERROR: uProjectionMatrix not found in shader\n")
+		}
+	}
+	if m["uViewMatrix"] {
+		(*p).UniformLocations.View = gl.GetUniformLocation((*p).Program, gl.Str("uViewMatrix\x00"))
+		if (*p).UniformLocations.DiffuseVal == -1 {
+			fmt.Printf("ERROR: uViewMatrix not found in shader\n")
+		}
+	}
+	if m["uModelMatrix"] {
+		(*p).UniformLocations.Model = gl.GetUniformLocation((*p).Program, gl.Str("uModelMatrix\x00"))
+		if (*p).UniformLocations.Model == -1 {
+			fmt.Printf("ERROR: uModelMatrix not found in shader\n")
+		}
+	}
+	if m["lightPositions"] {
+		(*p).UniformLocations.LightPositions = gl.GetUniformLocation((*p).Program, gl.Str("lightPositions\x00"))
+		if (*p).UniformLocations.LightPositions == -1 {
+			fmt.Printf("ERROR: lightPositions not found in shader\n")
+		}
+	}
+	if m["lightColours"] {
+		(*p).UniformLocations.LightColours = gl.GetUniformLocation((*p).Program, gl.Str("lightColours\x00"))
+		if (*p).UniformLocations.LightColours == -1 {
+			fmt.Printf("ERROR: lightColours not found in shader\n")
+		}
+	}
+	if m["lightStrengths"] {
+		(*p).UniformLocations.LightStrengths = gl.GetUniformLocation((*p).Program, gl.Str("lightStrengths\x00"))
+		if (*p).UniformLocations.LightStrengths == -1 {
+			fmt.Printf("ERROR: lightStrengths not found in shader\n")
+		}
+	}
+	if m["numLights"] {
+		(*p).UniformLocations.NumLights = gl.GetUniformLocation((*p).Program, gl.Str("numLights\x00"))
+		if (*p).UniformLocations.NumLights == -1 {
+			fmt.Printf("ERROR: numLights not found in shader\n")
+		}
+	}
+	if m["cameraPosition"] {
+		(*p).UniformLocations.CameraPosition = gl.GetUniformLocation((*p).Program, gl.Str("cameraPosition\x00"))
+		if (*p).UniformLocations.CameraPosition == -1 {
+			fmt.Printf("ERROR: cameraPosition not found in shader\n")
+		}
+	}
+	if m["uDiffuseTexture"] {
+		(*p).UniformLocations.DiffuseTexture = gl.GetUniformLocation((*p).Program, gl.Str("uDiffuseTexture\x00"))
+		if (*p).UniformLocations.DiffuseTexture == -1 {
+			fmt.Printf("ERROR: uDiffuseTexture not found in shader\n")
+		}
+	}
+	// if m["pointLights"] {
+	// 	(*p).UniformLocations.PointLights = gl.GetUniformLocation((*p).Program, gl.Str("pointLights\x00"))
+	// 	if (*p).UniformLocations.PointLights == -1 {
+	// 		fmt.Printf("ERROR: pointLights not found in shader\n")
+	// 		fmt.Println(m)
+	// 	}
+	// }
+}
+
 // SetupAttributes : helper function for setting up attribute/uniforms
 func SetupAttributes(p *ProgramInfo) {
 	(*p).attributes.vertexPosition = gl.GetAttribLocation((*p).Program, gl.Str("aPosition\x00"))

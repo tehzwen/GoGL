@@ -2,7 +2,6 @@ package geometry
 
 import (
 	"errors"
-	"fmt"
 
 	"../shader"
 	"../texture"
@@ -252,7 +251,11 @@ func (c *Cube) Setup(mat Material, mod Model, name string) error {
 	c.programInfo = ProgramInfo{}
 	c.material = mat
 
+	var shaderVals map[string]bool
+	shaderVals = make(map[string]bool)
+
 	if mat.ShaderType == 0 {
+		shaderVals["aPosition"] = true
 		bS := &shader.BasicShader{}
 		bS.Setup()
 		c.shaderVal = bS
@@ -261,15 +264,25 @@ func (c *Cube) Setup(mat Material, mod Model, name string) error {
 			position: 0,
 			normal:   1,
 		}
-		c.programInfo.attributes.vertexPosition = gl.GetAttribLocation(c.programInfo.Program, gl.Str("vertexPosition\x00"))
 
-		if c.programInfo.attributes.vertexPosition == -1 {
-			fmt.Printf("ERROR: One or more of the uniforms or attributes cannot be found in the shader\n")
-		}
+		SetupAttributesMap(&c.programInfo, shaderVals)
 
 		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, nil, nil, c.vertexValues.faces)
 
 	} else if mat.ShaderType == 1 {
+		shaderVals["aPosition"] = true
+		shaderVals["aNormal"] = true
+		shaderVals["diffuseVal"] = true
+		shaderVals["ambientVal"] = true
+		shaderVals["specularVal"] = true
+		shaderVals["nVal"] = true
+		shaderVals["uProjectionMatrix"] = true
+		shaderVals["uViewMatrix"] = true
+		shaderVals["uModelMatrix"] = true
+		shaderVals["pointLights"] = true
+		shaderVals["numLights"] = true
+		shaderVals["cameraPosition"] = true
+
 		bS := &shader.BlinnNoTexture{}
 		bS.Setup()
 		c.shaderVal = bS
@@ -279,37 +292,7 @@ func (c *Cube) Setup(mat Material, mod Model, name string) error {
 			normal:   1,
 		}
 
-		c.programInfo.attributes.vertexPosition = gl.GetAttribLocation(c.programInfo.Program, gl.Str("aPosition\x00"))
-		c.programInfo.attributes.vertexNormal = gl.GetAttribLocation(c.programInfo.Program, gl.Str("aNormal\x00"))
-		c.programInfo.UniformLocations.DiffuseVal = gl.GetUniformLocation(c.programInfo.Program, gl.Str("diffuseVal\x00"))
-		c.programInfo.UniformLocations.AmbientVal = gl.GetUniformLocation(c.programInfo.Program, gl.Str("ambientVal\x00"))
-		c.programInfo.UniformLocations.SpecularVal = gl.GetUniformLocation(c.programInfo.Program, gl.Str("specularVal\x00"))
-		c.programInfo.UniformLocations.NVal = gl.GetUniformLocation(c.programInfo.Program, gl.Str("nVal\x00"))
-		c.programInfo.UniformLocations.Projection = gl.GetUniformLocation(c.programInfo.Program, gl.Str("uProjectionMatrix\x00"))
-		c.programInfo.UniformLocations.View = gl.GetUniformLocation(c.programInfo.Program, gl.Str("uViewMatrix\x00"))
-		c.programInfo.UniformLocations.Model = gl.GetUniformLocation(c.programInfo.Program, gl.Str("uModelMatrix\x00"))
-		c.programInfo.UniformLocations.LightPositions = gl.GetUniformLocation(c.programInfo.Program, gl.Str("lightPositions\x00"))
-		c.programInfo.UniformLocations.LightColours = gl.GetUniformLocation(c.programInfo.Program, gl.Str("lightColours\x00"))
-		c.programInfo.UniformLocations.LightStrengths = gl.GetUniformLocation(c.programInfo.Program, gl.Str("lightStrengths\x00"))
-		c.programInfo.UniformLocations.NumLights = gl.GetUniformLocation(c.programInfo.Program, gl.Str("numLights\x00"))
-		c.programInfo.UniformLocations.CameraPosition = gl.GetUniformLocation(c.programInfo.Program, gl.Str("cameraPosition\x00"))
-
-		if c.programInfo.attributes.vertexPosition == -1 ||
-			c.programInfo.attributes.vertexNormal == -1 ||
-			c.programInfo.UniformLocations.Projection == -1 ||
-			c.programInfo.UniformLocations.View == -1 ||
-			c.programInfo.UniformLocations.Model == -1 ||
-			c.programInfo.UniformLocations.CameraPosition == -1 ||
-			c.programInfo.UniformLocations.LightPositions == -1 ||
-			c.programInfo.UniformLocations.LightColours == -1 ||
-			c.programInfo.UniformLocations.LightStrengths == -1 ||
-			c.programInfo.UniformLocations.NumLights == -1 ||
-			c.programInfo.UniformLocations.DiffuseVal == -1 ||
-			c.programInfo.UniformLocations.AmbientVal == -1 ||
-			c.programInfo.UniformLocations.NVal == -1 ||
-			c.programInfo.UniformLocations.SpecularVal == -1 {
-			fmt.Printf("ERROR: One or more of the uniforms or attributes cannot be found in the shader\n")
-		}
+		SetupAttributesMap(&c.programInfo, shaderVals)
 
 		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, c.vertexValues.normals, nil, c.vertexValues.faces)
 
@@ -324,6 +307,21 @@ func (c *Cube) Setup(mat Material, mod Model, name string) error {
 		SetupAttributes(&c.programInfo)
 
 	} else if mat.ShaderType == 3 {
+		shaderVals["aPosition"] = true
+		shaderVals["aNormal"] = true
+		shaderVals["aUV"] = true
+		shaderVals["diffuseVal"] = true
+		shaderVals["ambientVal"] = true
+		shaderVals["specularVal"] = true
+		shaderVals["nVal"] = true
+		shaderVals["uProjectionMatrix"] = true
+		shaderVals["uViewMatrix"] = true
+		shaderVals["uModelMatrix"] = true
+		shaderVals["numLights"] = true
+		shaderVals["cameraPosition"] = true
+		shaderVals["uDiffuseTexture"] = true
+		shaderVals["pointLights"] = true
+
 		bS := &shader.BlinnDiffuseTexture{}
 		bS.Setup()
 		c.shaderVal = bS
@@ -334,49 +332,32 @@ func (c *Cube) Setup(mat Material, mod Model, name string) error {
 			uv:       2,
 		}
 		texture0, err := texture.NewTextureFromFile("../Editor/"+c.material.DiffuseTexture,
-			gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE)
+			gl.REPEAT, gl.REPEAT)
 
 		if err != nil {
 			panic(err)
 		}
 		c.diffuseTexture = texture0
 
-		c.programInfo.attributes.vertexPosition = gl.GetAttribLocation(c.programInfo.Program, gl.Str("aPosition\x00"))
-		c.programInfo.attributes.vertexNormal = gl.GetAttribLocation(c.programInfo.Program, gl.Str("aNormal\x00"))
-		c.programInfo.attributes.vertexUV = gl.GetAttribLocation(c.programInfo.Program, gl.Str("aUV\x00"))
-		c.programInfo.UniformLocations.DiffuseVal = gl.GetUniformLocation(c.programInfo.Program, gl.Str("diffuseVal\x00"))
-		c.programInfo.UniformLocations.AmbientVal = gl.GetUniformLocation(c.programInfo.Program, gl.Str("ambientVal\x00"))
-		c.programInfo.UniformLocations.SpecularVal = gl.GetUniformLocation(c.programInfo.Program, gl.Str("specularVal\x00"))
-		c.programInfo.UniformLocations.NVal = gl.GetUniformLocation(c.programInfo.Program, gl.Str("nVal\x00"))
-		c.programInfo.UniformLocations.Projection = gl.GetUniformLocation(c.programInfo.Program, gl.Str("uProjectionMatrix\x00"))
-		c.programInfo.UniformLocations.View = gl.GetUniformLocation(c.programInfo.Program, gl.Str("uViewMatrix\x00"))
-		c.programInfo.UniformLocations.Model = gl.GetUniformLocation(c.programInfo.Program, gl.Str("uModelMatrix\x00"))
-		c.programInfo.UniformLocations.LightPositions = gl.GetUniformLocation(c.programInfo.Program, gl.Str("lightPositions\x00"))
-		c.programInfo.UniformLocations.LightColours = gl.GetUniformLocation(c.programInfo.Program, gl.Str("lightColours\x00"))
-		c.programInfo.UniformLocations.LightStrengths = gl.GetUniformLocation(c.programInfo.Program, gl.Str("lightStrengths\x00"))
-		c.programInfo.UniformLocations.NumLights = gl.GetUniformLocation(c.programInfo.Program, gl.Str("numLights\x00"))
-		c.programInfo.UniformLocations.CameraPosition = gl.GetUniformLocation(c.programInfo.Program, gl.Str("cameraPosition\x00"))
-
-		if c.programInfo.attributes.vertexPosition == -1 ||
-			c.programInfo.attributes.vertexNormal == -1 ||
-			c.programInfo.attributes.vertexUV == -1 ||
-			c.programInfo.UniformLocations.Projection == -1 ||
-			c.programInfo.UniformLocations.View == -1 ||
-			c.programInfo.UniformLocations.Model == -1 ||
-			c.programInfo.UniformLocations.CameraPosition == -1 ||
-			c.programInfo.UniformLocations.LightPositions == -1 ||
-			c.programInfo.UniformLocations.LightColours == -1 ||
-			c.programInfo.UniformLocations.LightStrengths == -1 ||
-			c.programInfo.UniformLocations.NumLights == -1 ||
-			c.programInfo.UniformLocations.DiffuseVal == -1 ||
-			c.programInfo.UniformLocations.AmbientVal == -1 ||
-			c.programInfo.UniformLocations.NVal == -1 ||
-			c.programInfo.UniformLocations.SpecularVal == -1 {
-			fmt.Printf("ERROR: One or more of the uniforms or attributes cannot be found in the shader\n")
-		}
+		SetupAttributesMap(&c.programInfo, shaderVals)
 		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, c.vertexValues.normals, c.vertexValues.uvs, c.vertexValues.faces)
 
 	} else if mat.ShaderType == 4 {
+		shaderVals["aPosition"] = true
+		shaderVals["aNormal"] = true
+		shaderVals["aUV"] = true
+		shaderVals["diffuseVal"] = true
+		shaderVals["ambientVal"] = true
+		shaderVals["specularVal"] = true
+		shaderVals["nVal"] = true
+		shaderVals["uProjectionMatrix"] = true
+		shaderVals["uViewMatrix"] = true
+		shaderVals["uModelMatrix"] = true
+		shaderVals["numLights"] = true
+		shaderVals["pointLights"] = true
+		shaderVals["cameraPosition"] = true
+		shaderVals["uDiffuseTexture"] = true
+
 		bS := &shader.BlinnDiffuseTexture{}
 		bS.Setup()
 		c.shaderVal = bS
@@ -387,46 +368,14 @@ func (c *Cube) Setup(mat Material, mod Model, name string) error {
 			uv:       2,
 		}
 		texture0, err := texture.NewTextureFromFile("../Editor/"+c.material.DiffuseTexture,
-			gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE)
+			gl.REPEAT, gl.REPEAT)
 
 		if err != nil {
 			panic(err)
 		}
 		c.diffuseTexture = texture0
 
-		c.programInfo.attributes.vertexPosition = gl.GetAttribLocation(c.programInfo.Program, gl.Str("aPosition\x00"))
-		c.programInfo.attributes.vertexNormal = gl.GetAttribLocation(c.programInfo.Program, gl.Str("aNormal\x00"))
-		c.programInfo.attributes.vertexUV = gl.GetAttribLocation(c.programInfo.Program, gl.Str("aUV\x00"))
-		c.programInfo.UniformLocations.DiffuseVal = gl.GetUniformLocation(c.programInfo.Program, gl.Str("diffuseVal\x00"))
-		c.programInfo.UniformLocations.AmbientVal = gl.GetUniformLocation(c.programInfo.Program, gl.Str("ambientVal\x00"))
-		c.programInfo.UniformLocations.SpecularVal = gl.GetUniformLocation(c.programInfo.Program, gl.Str("specularVal\x00"))
-		c.programInfo.UniformLocations.NVal = gl.GetUniformLocation(c.programInfo.Program, gl.Str("nVal\x00"))
-		c.programInfo.UniformLocations.Projection = gl.GetUniformLocation(c.programInfo.Program, gl.Str("uProjectionMatrix\x00"))
-		c.programInfo.UniformLocations.View = gl.GetUniformLocation(c.programInfo.Program, gl.Str("uViewMatrix\x00"))
-		c.programInfo.UniformLocations.Model = gl.GetUniformLocation(c.programInfo.Program, gl.Str("uModelMatrix\x00"))
-		c.programInfo.UniformLocations.LightPositions = gl.GetUniformLocation(c.programInfo.Program, gl.Str("lightPositions\x00"))
-		c.programInfo.UniformLocations.LightColours = gl.GetUniformLocation(c.programInfo.Program, gl.Str("lightColours\x00"))
-		c.programInfo.UniformLocations.LightStrengths = gl.GetUniformLocation(c.programInfo.Program, gl.Str("lightStrengths\x00"))
-		c.programInfo.UniformLocations.NumLights = gl.GetUniformLocation(c.programInfo.Program, gl.Str("numLights\x00"))
-		c.programInfo.UniformLocations.CameraPosition = gl.GetUniformLocation(c.programInfo.Program, gl.Str("cameraPosition\x00"))
-
-		if c.programInfo.attributes.vertexPosition == -1 ||
-			c.programInfo.attributes.vertexNormal == -1 ||
-			c.programInfo.attributes.vertexUV == -1 ||
-			c.programInfo.UniformLocations.Projection == -1 ||
-			c.programInfo.UniformLocations.View == -1 ||
-			c.programInfo.UniformLocations.Model == -1 ||
-			c.programInfo.UniformLocations.CameraPosition == -1 ||
-			c.programInfo.UniformLocations.LightPositions == -1 ||
-			c.programInfo.UniformLocations.LightColours == -1 ||
-			c.programInfo.UniformLocations.LightStrengths == -1 ||
-			c.programInfo.UniformLocations.NumLights == -1 ||
-			c.programInfo.UniformLocations.DiffuseVal == -1 ||
-			c.programInfo.UniformLocations.AmbientVal == -1 ||
-			c.programInfo.UniformLocations.NVal == -1 ||
-			c.programInfo.UniformLocations.SpecularVal == -1 {
-			fmt.Printf("ERROR: One or more of the uniforms or attributes cannot be found in the shader\n")
-		}
+		SetupAttributesMap(&c.programInfo, shaderVals)
 		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, c.vertexValues.normals, c.vertexValues.uvs, c.vertexValues.faces)
 
 	}

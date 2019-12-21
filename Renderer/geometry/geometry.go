@@ -70,6 +70,8 @@ type Uniforms struct {
 	LightPositions int32
 	LightColours   int32
 	LightStrengths int32
+	DiffuseTexture int32
+	PointLights    int32
 }
 
 // ProgramInfo : struct for holding program info (program, uniforms, attributes)

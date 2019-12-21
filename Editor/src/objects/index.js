@@ -1,6 +1,6 @@
 import Cube from "./Cube.js";
-import Light from "./Light.js";
+import PointLight from "./PointLight.js";
 import Plane from "./Plane.js";
 import Model from "./Model.js";
 
-export {Cube, Light, Plane, Model}
+export {Cube, PointLight, Plane, Model}
