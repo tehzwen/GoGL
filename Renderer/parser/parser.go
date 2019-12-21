@@ -201,6 +201,7 @@ func Parse(filePath string) []OBJObject {
 		} else if line[0] == 'f' {
 			//means we have f vertex/uv/normal vertex/uv/normal vertex/uv/normal
 			if result, err := regexp.MatchString(`^f\s+(-?\d+)\/(-?\d+)\/(-?\d+)\s+(-?\d+)\/(-?\d+)\/(-?\d+)\s+(-?\d+)\/(-?\d+)\/(-?\d+)(?:\s+(-?\d+)\/(-?\d+)\/(-?\d+))?`, line); err == nil && result {
+
 				//split on whitespace first
 				whiteSpaceSplit := strings.Split(line, " ")
 				var values []int
@@ -232,6 +233,7 @@ func Parse(filePath string) []OBJObject {
 				}
 				//means we have f vertex/uv vertex/uv vertex/uv
 			} else if result, err := regexp.MatchString(`^f\s+(-?\d+)\/(-?\d+)\s+(-?\d+)\/(-?\d+)\s+(-?\d+)\/(-?\d+)(?:\s+(-?\d+)\/(-?\d+))?`, line); err == nil && result {
+
 				//split on whitespace first
 				whiteSpaceSplit := strings.Split(line, " ")
 				var values []int
@@ -253,6 +255,7 @@ func Parse(filePath string) []OBJObject {
 
 				//means we have f vertex//normal vertex//normal vertex//normal
 			} else if result, err := regexp.MatchString(`^f\s+(-?\d+)\/\/(-?\d+)\s+(-?\d+)\/\/(-?\d+)\s+(-?\d+)\/\/(-?\d+)(?:\s+(-?\d+)\/\/(-?\d+))?`, line); err == nil && result {
+
 				//split on whitespace first
 				whiteSpaceSplit := strings.Split(line, " ")
 				var values []int
@@ -274,6 +277,7 @@ func Parse(filePath string) []OBJObject {
 
 				//means we have f vertex vertex vertex
 			} else if result, err := regexp.MatchString(`^f\s+(-?\d+)\s+(-?\d+)\s+(-?\d+)(?:\s+(-?\d+))?`, line); err == nil && result {
+
 				whiteSpaceSplit := strings.Split(line, " ")
 				var values []int
 

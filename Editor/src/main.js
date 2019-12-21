@@ -5,12 +5,13 @@ import { Cube, PointLight, Plane, Model } from "./objects/index.js";
 var currentlyRendered = 0;
 var state = {};
 
-var renderedText = document.getElementById("renderedNumText");
-renderedText.style.color = "white";
-
-window.onload = () => {
-    var sceneFile = "testsave.json";
-    parseSceneFile("./statefiles/" + sceneFile, state, main);
+if (window.location.pathname.indexOf("main.html") !== -1) {
+    window.onload = () => {
+        state.renderedText = document.getElementById("renderedNumText");
+        state.renderedText.style.color = "white";
+        var sceneFile = "testsave.json";
+        parseSceneFile("./statefiles/" + sceneFile, state, main);
+    }
 }
 
 /**
@@ -195,7 +196,7 @@ function startRendering(gl, state) {
 
             // Draw our scene
             drawScene(gl, deltaTime, state);
-            renderedText.innerHTML = "Rendered: " + currentlyRendered;
+            state.renderedText.innerHTML = "Rendered: " + currentlyRendered;
             currentlyRendered = 0;
         }
         // Request another frame when this one is done

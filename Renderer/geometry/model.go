@@ -2,10 +2,10 @@ package geometry
 
 import (
 	"errors"
-	"fmt"
 
 	"../shader"
 	"../texture"
+	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 )
 
@@ -132,23 +132,132 @@ func (m *ModelObject) Translate(translateVec mgl32.Vec3) {
 func (m *ModelObject) SetVertexValues(vertices []float32, normals []float32, uvs []float32) {
 	m.vertexValues.Vertices = vertices
 	m.vertexValues.normals = normals
+	m.vertexValues.uvs = uvs
 }
 
 // Setup : function for initializing ModelObject
 func (m *ModelObject) Setup(mat Material, mod Model, name string) error {
 	m.name = name
+	m.material = mat
 	m.programInfo = ProgramInfo{}
-	m.programInfo.Program = InitOpenGL(m.vertShader, m.fragShader)
-	m.programInfo.attributes = Attributes{
-		position: 0,
-		normal:   1,
+
+	var shaderVals map[string]bool
+	shaderVals = make(map[string]bool)
+
+	if mat.ShaderType == 0 {
+		shaderVals["aPosition"] = true
+		bS := &shader.BasicShader{}
+		bS.Setup()
+		m.shaderVal = bS
+		m.programInfo.Program = InitOpenGL(m.shaderVal.GetVertShader(), m.shaderVal.GetFragShader())
+		m.programInfo.attributes = Attributes{
+			position: 0,
+			normal:   1,
+		}
+		SetupAttributesMap(&m.programInfo, shaderVals)
+		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, nil, nil, m.vertexValues.faces)
+	} else if mat.ShaderType == 1 {
+		shaderVals["aPosition"] = true
+		shaderVals["aNormal"] = true
+		shaderVals["diffuseVal"] = true
+		shaderVals["ambientVal"] = true
+		shaderVals["specularVal"] = true
+		shaderVals["nVal"] = true
+		shaderVals["uProjectionMatrix"] = true
+		shaderVals["uViewMatrix"] = true
+		shaderVals["uModelMatrix"] = true
+		shaderVals["pointLights"] = true
+		shaderVals["numLights"] = true
+		shaderVals["cameraPosition"] = true
+
+		bS := &shader.BlinnNoTexture{}
+		bS.Setup()
+		m.shaderVal = bS
+		m.programInfo.Program = InitOpenGL(m.shaderVal.GetVertShader(), m.shaderVal.GetFragShader())
+		m.programInfo.attributes = Attributes{
+			position: 0,
+			normal:   1,
+		}
+
+		SetupAttributesMap(&m.programInfo, shaderVals)
+
+		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, nil, m.vertexValues.faces)
+
+	} else if mat.ShaderType == 2 {
+		//not sure yet what TODO here
+	} else if mat.ShaderType == 3 {
+		shaderVals["aPosition"] = true
+		shaderVals["aNormal"] = true
+		shaderVals["aUV"] = true
+		shaderVals["diffuseVal"] = true
+		shaderVals["ambientVal"] = true
+		shaderVals["specularVal"] = true
+		shaderVals["nVal"] = true
+		shaderVals["uProjectionMatrix"] = true
+		shaderVals["uViewMatrix"] = true
+		shaderVals["uModelMatrix"] = true
+		shaderVals["numLights"] = true
+		shaderVals["cameraPosition"] = true
+		shaderVals["uDiffuseTexture"] = true
+		shaderVals["pointLights"] = true
+
+		bS := &shader.BlinnDiffuseTexture{}
+		bS.Setup()
+		m.shaderVal = bS
+		m.programInfo.Program = InitOpenGL(m.shaderVal.GetVertShader(), m.shaderVal.GetFragShader())
+		m.programInfo.attributes = Attributes{
+			position: 0,
+			normal:   1,
+			uv:       2,
+		}
+		texture0, err := texture.NewTextureFromFile("../Editor/models/"+m.material.DiffuseTexture,
+			gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE)
+
+		if err != nil {
+			panic(err)
+		}
+		m.diffuseTexture = texture0
+		SetupAttributesMap(&m.programInfo, shaderVals)
+		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, m.vertexValues.uvs, m.vertexValues.faces)
+
+	} else if mat.ShaderType == 4 {
+		shaderVals["aPosition"] = true
+		shaderVals["aNormal"] = true
+		shaderVals["aUV"] = true
+		shaderVals["diffuseVal"] = true
+		shaderVals["ambientVal"] = true
+		shaderVals["specularVal"] = true
+		shaderVals["nVal"] = true
+		shaderVals["uProjectionMatrix"] = true
+		shaderVals["uViewMatrix"] = true
+		shaderVals["uModelMatrix"] = true
+		shaderVals["numLights"] = true
+		shaderVals["pointLights"] = true
+		shaderVals["cameraPosition"] = true
+		shaderVals["uDiffuseTexture"] = true
+
+		bS := &shader.BlinnDiffuseTexture{}
+		bS.Setup()
+		m.shaderVal = bS
+		m.programInfo.Program = InitOpenGL(m.shaderVal.GetVertShader(), m.shaderVal.GetFragShader())
+		m.programInfo.attributes = Attributes{
+			position: 0,
+			normal:   1,
+			uv:       2,
+		}
+		texture0, err := texture.NewTextureFromFile("../Editor/models/"+m.material.DiffuseTexture,
+			gl.REPEAT, gl.REPEAT)
+
+		if err != nil {
+			panic(err)
+		}
+		m.diffuseTexture = texture0
+		SetupAttributesMap(&m.programInfo, shaderVals)
+		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, m.vertexValues.uvs, m.vertexValues.faces)
+
 	}
 
 	m.boundingBox = GetBoundingBox(m.vertexValues.Vertices)
-	m.material = mat
-
-	fmt.Println(mat)
-	SetupAttributes(&m.programInfo)
 	m.Scale(mod.Scale)
 	m.boundingBox = ScaleBoundingBox(m.boundingBox, mod.Scale)
 	m.Model.Position = mod.Position

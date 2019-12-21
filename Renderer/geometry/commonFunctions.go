@@ -122,33 +122,24 @@ func ScaleM4(a mgl32.Mat4, v mgl32.Vec3) mgl32.Mat4 {
 }
 
 func addObjectToState(object Geometry, state *State, sceneObj SceneObject) {
-	err := object.SetShader(state.VertShader, state.FragShader)
-	if sceneObj.Parent != "" {
-		object.SetParent(sceneObj.Parent)
+
+	//create model
+	tempModel := Model{
+		Position: mgl32.Vec3{sceneObj.Position[0], sceneObj.Position[1], sceneObj.Position[2]},
+		Scale:    mgl32.Vec3{sceneObj.Scale[0], sceneObj.Scale[1], sceneObj.Scale[2]},
+		Rotation: mgl32.Ident4(),
 	}
 
-	if err != nil {
-		fmt.Println(err)
-		panic(err)
-	} else {
-		//create model
-		tempModel := Model{
-			Position: mgl32.Vec3{sceneObj.Position[0], sceneObj.Position[1], sceneObj.Position[2]},
-			Scale:    mgl32.Vec3{sceneObj.Scale[0], sceneObj.Scale[1], sceneObj.Scale[2]},
-			Rotation: mgl32.Ident4(),
-		}
-
-		if sceneObj.DiffuseTexture != "" {
-			sceneObj.Material.DiffuseTexture = sceneObj.DiffuseTexture
-		}
-
-		object.Setup(
-			sceneObj.Material,
-			tempModel,
-			sceneObj.Name,
-		)
-		state.Objects = append(state.Objects, object)
+	if sceneObj.DiffuseTexture != "" {
+		sceneObj.Material.DiffuseTexture = sceneObj.DiffuseTexture
 	}
+
+	object.Setup(
+		sceneObj.Material,
+		tempModel,
+		sceneObj.Name,
+	)
+	state.Objects = append(state.Objects, object)
 }
 
 func GetBoundingBox(vertices []float32) BoundingBox {
@@ -273,52 +264,47 @@ func ParseJsonFile(filePath string, state *State) {
 					parsedMaterial := parser.ParseMTLFile(objects[x].Materials[j].MTLLib, objects[x].Materials[j].Name)
 
 					tempModelObject := ModelObject{}
-					err := tempModelObject.SetShader(state.VertShader, state.FragShader)
+					tempModelObject.SetVertexValues(objects[x].Geometry.Vertices[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
+						objects[x].Geometry.Normals[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
+						objects[x].Geometry.UVs[objects[x].Materials[j].Start*2:objects[x].Materials[j].End*2])
 
-					if err != nil {
-						fmt.Println(err)
-						panic(err)
-					} else {
-						tempModelObject.SetVertexValues(objects[x].Geometry.Vertices[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
-							objects[x].Geometry.Normals[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
-							objects[x].Geometry.UVs[objects[x].Materials[j].Start*2:objects[x].Materials[j].End*2])
+					tempName := scene[0].Objects[i].Name
 
-						tempName := scene[0].Objects[i].Name
-
-						if x > 0 {
-							tempModelObject.SetParent(scene[0].Objects[i].Name)
-							tempName = strings.Join([]string{tempName, strconv.Itoa(j)}, "")
-						}
-
-						tempModel := Model{
-							Position: mgl32.Vec3{scene[0].Objects[i].Position[0], scene[0].Objects[i].Position[1], scene[0].Objects[i].Position[2]},
-							Scale:    mgl32.Vec3{scene[0].Objects[i].Scale[0], scene[0].Objects[i].Scale[1], scene[0].Objects[i].Scale[2]},
-							Rotation: mgl32.Ident4(),
-						}
-
-						if j > 0 {
-							tempName = strings.Join([]string{tempName, strconv.Itoa(j)}, "")
-							tempModelObject.SetParent(scene[0].Objects[i].Name)
-							tempModel.Position = mgl32.Vec3{0, 0, 0}
-							tempModel.Scale = mgl32.Vec3{1, 1, 1}
-						}
-
-						tempModelObject.Setup(
-							Material{
-								DiffuseTexture: parsedMaterial.MapKD,
-								Diffuse:        parsedMaterial.Kd,
-								Ambient:        parsedMaterial.Ka,
-								Specular:       parsedMaterial.Ks,
-								Alpha:          parsedMaterial.D,
-								N:              parsedMaterial.Ns,
-							},
-							tempModel,
-							tempName)
-
-						state.Objects = append(state.Objects, &tempModelObject)
-						state.LoadedObjects++
-						fmt.Println(tempModelObject.name, " loaded successfully!")
+					if x > 0 {
+						tempModelObject.SetParent(scene[0].Objects[i].Name)
+						tempName = strings.Join([]string{tempName, strconv.Itoa(j)}, "")
 					}
+
+					tempModel := Model{
+						Position: mgl32.Vec3{scene[0].Objects[i].Position[0], scene[0].Objects[i].Position[1], scene[0].Objects[i].Position[2]},
+						Scale:    mgl32.Vec3{scene[0].Objects[i].Scale[0], scene[0].Objects[i].Scale[1], scene[0].Objects[i].Scale[2]},
+						Rotation: mgl32.Ident4(),
+					}
+
+					if j > 0 {
+						tempName = strings.Join([]string{tempName, strconv.Itoa(j)}, "")
+						tempModelObject.SetParent(scene[0].Objects[i].Name)
+						tempModel.Position = mgl32.Vec3{0, 0, 0}
+						tempModel.Scale = mgl32.Vec3{1, 1, 1}
+					}
+
+					tempModelObject.Setup(
+						Material{
+							DiffuseTexture: parsedMaterial.MapKD,
+							Diffuse:        parsedMaterial.Kd,
+							Ambient:        parsedMaterial.Ka,
+							Specular:       parsedMaterial.Ks,
+							Alpha:          parsedMaterial.D,
+							N:              parsedMaterial.Ns,
+							ShaderType:     scene[0].Objects[i].Material.ShaderType,
+						},
+						tempModel,
+						tempName)
+
+					state.Objects = append(state.Objects, &tempModelObject)
+					state.LoadedObjects++
+					fmt.Println(tempModelObject.name, " loaded successfully!")
+
 				}
 			}
 		}

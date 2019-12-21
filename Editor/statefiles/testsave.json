@@ -1,1 +1,346 @@
-[{"objects":[{"name":"wall0","material":{"diffuse":[0.596078431372549,0.596078431372549,0.596078431372549],"ambient":[0.1,0.1,0.1],"specular":[0.8,0.8,0.8],"n":10,"alpha":1,"shaderType":4},"type":"cube","position":[4,-1,-2],"scale":[1,4,10],"diffuseTexture":"./materials/plywood.jpg","normalTexture":"./materials/checkerNorm.jpg","parent":null,"model":null},{"name":"wall1","material":{"diffuse":[0.2,0.2,0.2],"ambient":[0.1,0.1,0.1],"specular":[0.8,0.8,0.8],"n":100,"alpha":1,"shaderType":3},"type":"cube","position":[-2,-1,-2],"scale":[1,4,10],"diffuseTexture":"./materials/plywood.jpg","normalTexture":null,"parent":null,"model":null},{"name":"testCube0","material":{"diffuse":[0,1,0.3803921568627451],"ambient":[0.1,0.1,0.1],"specular":[0.8,0.8,0.8],"n":10,"alpha":1,"shaderType":1},"type":"cube","position":[-0.5,-1,-2],"scale":[1,1,1],"diffuseTexture":null,"normalTexture":null,"parent":null,"model":null},{"name":"testCube1","material":{"diffuse":[0.2,0.6,0.8],"ambient":[0.1,0.1,0.1],"specular":[0.8,0.8,0.8],"n":10,"alpha":1,"shaderType":1},"type":"cube","position":[-1,0.20000000298023224,6],"scale":[1,1,1],"diffuseTexture":null,"normalTexture":null,"parent":null,"model":null},{"name":"testCube2","material":{"diffuse":[0.6,0.2,0.8],"ambient":[0.1,0.1,0.1],"specular":[0.8,0.8,0.8],"n":10,"alpha":1,"shaderType":1},"type":"cube","position":[1.5,0.10000000149011612,5],"scale":[1,1,1],"diffuseTexture":null,"normalTexture":null,"parent":"testCube1","model":null},{"name":"testCube3","material":{"diffuse":[0.6,0.2,0.8],"ambient":[0.1,0.1,0.1],"specular":[0.8,0.8,0.8],"n":10,"alpha":1,"shaderType":1},"type":"cube","position":[1.5,0.10000000149011612,5],"scale":[1,1,1],"diffuseTexture":null,"normalTexture":null,"parent":null,"model":null},{"name":"floorPlane","material":{"diffuse":[0.596078431372549,0.596078431372549,0.596078431372549],"ambient":[1,1,1],"specular":[0.1,0.1,0.1],"n":1,"alpha":1,"shaderType":4},"type":"plane","position":[-5,-1.5,-6],"scale":[50,1,50],"diffuseTexture":"./materials/default.png","normalTexture":"./materials/concreteBricks.jpg","parent":null,"model":null},{"name":"tree","material":{"diffuse":[0.5882,0.5882,0.5882],"ambient":[1,1,1],"specular":[0,0,0],"n":10.000002,"shaderType":3,"alpha":1,"diffuseMap":"Piney.jpg"},"type":"mesh","position":[-1,-1,1.5],"scale":[0.5,0.5,0.5],"diffuseTexture":null,"normalTexture":null,"parent":null,"model":"./models/scrubPine.obj"}],"pointLights":[{"colour":[1,1,1],"position":[7,0,0],"strength":0.05,"quadratic":0.035,"linear":0.09,"constant":1},{"colour":[1,0.5,1],"position":[-5,0,0],"strength":0.05,"quadratic":0.035,"linear":0.09,"constant":1}],"settings":{}}]
+[
+    {
+        "objects": [
+            {
+                "name": "wall0",
+                "material": {
+                    "diffuse": [
+                        0.596078431372549,
+                        0.596078431372549,
+                        0.596078431372549
+                    ],
+                    "ambient": [
+                        0.1,
+                        0.1,
+                        0.1
+                    ],
+                    "specular": [
+                        0.8,
+                        0.8,
+                        0.8
+                    ],
+                    "n": 10,
+                    "alpha": 1,
+                    "shaderType": 4
+                },
+                "type": "cube",
+                "position": [
+                    4,
+                    -1,
+                    -2
+                ],
+                "scale": [
+                    1,
+                    4,
+                    10
+                ],
+                "diffuseTexture": "./materials/plywood.jpg",
+                "normalTexture": "./materials/checkerNorm.jpg",
+                "parent": null,
+                "model": null
+            },
+            {
+                "name": "wall1",
+                "material": {
+                    "diffuse": [
+                        0.2,
+                        0.2,
+                        0.2
+                    ],
+                    "ambient": [
+                        0.1,
+                        0.1,
+                        0.1
+                    ],
+                    "specular": [
+                        0.8,
+                        0.8,
+                        0.8
+                    ],
+                    "n": 100,
+                    "alpha": 1,
+                    "shaderType": 3
+                },
+                "type": "cube",
+                "position": [
+                    -2,
+                    -1,
+                    -2
+                ],
+                "scale": [
+                    1,
+                    4,
+                    10
+                ],
+                "diffuseTexture": "./materials/plywood.jpg",
+                "normalTexture": null,
+                "parent": null,
+                "model": null
+            },
+            {
+                "name": "testCube0",
+                "material": {
+                    "diffuse": [
+                        0,
+                        1,
+                        0.3803921568627451
+                    ],
+                    "ambient": [
+                        0.1,
+                        0.1,
+                        0.1
+                    ],
+                    "specular": [
+                        0.8,
+                        0.8,
+                        0.8
+                    ],
+                    "n": 10,
+                    "alpha": 1,
+                    "shaderType": 1
+                },
+                "type": "cube",
+                "position": [
+                    -0.5,
+                    -1,
+                    -2
+                ],
+                "scale": [
+                    1,
+                    1,
+                    1
+                ],
+                "diffuseTexture": null,
+                "normalTexture": null,
+                "parent": null,
+                "model": null
+            },
+            {
+                "name": "testCube1",
+                "material": {
+                    "diffuse": [
+                        0.2,
+                        0.6,
+                        0.8
+                    ],
+                    "ambient": [
+                        0.1,
+                        0.1,
+                        0.1
+                    ],
+                    "specular": [
+                        0.8,
+                        0.8,
+                        0.8
+                    ],
+                    "n": 10,
+                    "alpha": 1,
+                    "shaderType": 1
+                },
+                "type": "cube",
+                "position": [
+                    -1,
+                    0.20000000298023224,
+                    6
+                ],
+                "scale": [
+                    1,
+                    1,
+                    1
+                ],
+                "diffuseTexture": null,
+                "normalTexture": null,
+                "parent": null,
+                "model": null
+            },
+            {
+                "name": "testCube2",
+                "material": {
+                    "diffuse": [
+                        0.6,
+                        0.2,
+                        0.8
+                    ],
+                    "ambient": [
+                        0.1,
+                        0.1,
+                        0.1
+                    ],
+                    "specular": [
+                        0.8,
+                        0.8,
+                        0.8
+                    ],
+                    "n": 10,
+                    "alpha": 1,
+                    "shaderType": 1
+                },
+                "type": "cube",
+                "position": [
+                    1.5,
+                    0.10000000149011612,
+                    5
+                ],
+                "scale": [
+                    1,
+                    1,
+                    1
+                ],
+                "diffuseTexture": null,
+                "normalTexture": null,
+                "parent": "testCube1",
+                "model": null
+            },
+            {
+                "name": "testCube3",
+                "material": {
+                    "diffuse": [
+                        0.6,
+                        0.2,
+                        0.8
+                    ],
+                    "ambient": [
+                        0.1,
+                        0.1,
+                        0.1
+                    ],
+                    "specular": [
+                        0.8,
+                        0.8,
+                        0.8
+                    ],
+                    "n": 10,
+                    "alpha": 1,
+                    "shaderType": 1
+                },
+                "type": "cube",
+                "position": [
+                    1.5,
+                    0.10000000149011612,
+                    5
+                ],
+                "scale": [
+                    1,
+                    1,
+                    1
+                ],
+                "diffuseTexture": null,
+                "normalTexture": null,
+                "parent": null,
+                "model": null
+            },
+            {
+                "name": "floorPlane",
+                "material": {
+                    "diffuse": [
+                        0.596078431372549,
+                        0.596078431372549,
+                        0.596078431372549
+                    ],
+                    "ambient": [
+                        1,
+                        1,
+                        1
+                    ],
+                    "specular": [
+                        0.1,
+                        0.1,
+                        0.1
+                    ],
+                    "n": 1,
+                    "alpha": 1,
+                    "shaderType": 4
+                },
+                "type": "plane",
+                "position": [
+                    -5,
+                    -1.5,
+                    -6
+                ],
+                "scale": [
+                    50,
+                    1,
+                    50
+                ],
+                "diffuseTexture": "./materials/default.png",
+                "normalTexture": "./materials/concreteBricks.jpg",
+                "parent": null,
+                "model": null
+            },
+            {
+                "name": "tree",
+                "material": {
+                    "diffuse": [
+                        0.5882,
+                        0.5882,
+                        0.5882
+                    ],
+                    "ambient": [
+                        1,
+                        1,
+                        1
+                    ],
+                    "specular": [
+                        0,
+                        0,
+                        0
+                    ],
+                    "n": 10.000002,
+                    "shaderType": 3,
+                    "alpha": 1,
+                    "diffuseMap": "Piney.jpg"
+                },
+                "type": "mesh",
+                "position": [
+                    8,
+                    -1,
+                    1.5
+                ],
+                "scale": [
+                    0.5,
+                    0.5,
+                    0.5
+                ],
+                "diffuseTexture": null,
+                "normalTexture": null,
+                "parent": null,
+                "model": "./models/scrubPine.obj"
+            }
+        ],
+        "pointLights": [
+            {
+                "colour": [
+                    1,
+                    1,
+                    1
+                ],
+                "position": [
+                    7,
+                    0,
+                    0
+                ],
+                "strength": 0.05,
+                "quadratic": 0.035,
+                "linear": 0.09,
+                "constant": 1
+            },
+            {
+                "colour": [
+                    1,
+                    0.5,
+                    1
+                ],
+                "position": [
+                    -5,
+                    0,
+                    0
+                ],
+                "strength": 0.05,
+                "quadratic": 0.035,
+                "linear": 0.09,
+                "constant": 1
+            }
+        ],
+        "settings": {}
+    }
+]
