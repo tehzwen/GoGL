@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"../parser"
+	"../assimp"
 
 	"github.com/go-gl/mathgl/mgl32"
 )
@@ -258,68 +258,146 @@ func ParseJsonFile(filePath string, state *State) {
 		} else if scene[0].Objects[i].ObjectType == "mesh" {
 			fmt.Println(scene[0].Objects[i].Name, " loading....")
 			meshPath := exPath + "/../Editor/" + scene[0].Objects[i].Model
-			objects := parser.Parse(meshPath)
+			meshes, err := assimp.ParseFile(meshPath)
+
+			if err != nil {
+				panic(err)
+			}
+
+			for j := 0; j < len(meshes); j++ {
+				// fmt.Println("Material: ", meshes[j].Material, "Num verts: ", len(meshes[j].Mesh.Vertices), "Num uvs: ", len(meshes[j].Mesh.UVChannels[0]))
+				// fmt.Println(len(meshes[j].Mesh.Faces))
+				//flatten the verts, normals and uvs
+				verts := []float32{}
+				norms := []float32{}
+				uvs := []float32{}
+				faces := []uint32{}
+
+				tempMaterial := Material{
+					DiffuseTexture: meshes[j].Material.DiffuseMap,
+					Diffuse:        meshes[j].Material.Diffuse,
+					Ambient:        meshes[j].Material.Ambient,
+					Specular:       meshes[j].Material.Specular,
+					Alpha:          1,
+					N:              meshes[j].Material.Shininess,
+					ShaderType:     scene[0].Objects[i].Material.ShaderType,
+				}
+
+				tempModelObject := ModelObject{}
+				tempName := scene[0].Objects[i].Name
+
+				for x := 0; x < len(meshes[j].Mesh.Vertices); x++ {
+					verts = append(verts, meshes[j].Mesh.Vertices[x][0])
+					verts = append(verts, meshes[j].Mesh.Vertices[x][1])
+					verts = append(verts, meshes[j].Mesh.Vertices[x][2])
+
+					norms = append(norms, meshes[j].Mesh.Normals[x][0])
+					norms = append(norms, meshes[j].Mesh.Normals[x][1])
+					norms = append(norms, meshes[j].Mesh.Normals[x][2])
+
+				}
+				for v := 0; v < len(meshes[j].Mesh.UVChannels[0]); v++ {
+					if len(meshes[j].Mesh.UVChannels[0]) > 0 {
+						uvs = append(uvs, meshes[j].Mesh.UVChannels[0][v][0])
+						uvs = append(uvs, meshes[j].Mesh.UVChannels[0][v][1])
+					}
+				}
+
+				for z := 0; z < len(meshes[j].Mesh.Faces); z++ {
+					faces = append(faces, meshes[j].Mesh.Faces[z][0])
+					faces = append(faces, meshes[j].Mesh.Faces[z][1])
+					faces = append(faces, meshes[j].Mesh.Faces[z][2])
+				}
+
+				tempModel := Model{
+					Position: mgl32.Vec3{scene[0].Objects[i].Position[0], scene[0].Objects[i].Position[1], scene[0].Objects[i].Position[2]},
+					Scale:    mgl32.Vec3{scene[0].Objects[i].Scale[0], scene[0].Objects[i].Scale[1], scene[0].Objects[i].Scale[2]},
+					Rotation: mgl32.Ident4(),
+				}
+
+				if j > 0 {
+					tempModelObject.SetParent(scene[0].Objects[i].Name)
+					tempName = strings.Join([]string{tempName, strconv.Itoa(j)}, "")
+					tempModelObject.SetParent(scene[0].Objects[i].Name)
+					tempModel.Position = mgl32.Vec3{0, 0, 0}
+					tempModel.Scale = mgl32.Vec3{1, 1, 1}
+				}
+
+				tempModelObject.SetVertexValues(verts, norms, uvs, faces)
+
+				tempModelObject.Setup(
+					tempMaterial,
+					tempModel,
+					tempName)
+
+				state.Objects = append(state.Objects, &tempModelObject)
+				state.LoadedObjects++
+				fmt.Println(tempModelObject.name, " loaded successfully!")
+
+				//fmt.Println(len(verts))
+			}
 
 			//tempModelObject := ModelObject{}
 
-			for x := 0; x < len(objects); x++ {
-				for j := 0; j < len(objects[x].Materials); j++ {
+			/*
+				for x := 0; x < len(objects); x++ {
+					for j := 0; j < len(objects[x].Materials); j++ {
 
-					fmt.Println("verts: ", len(objects[x].Geometry.Vertices), " normals: ", len(objects[x].Geometry.Normals), " uvs: ", len(objects[x].Geometry.UVs))
-					fmt.Println("Start: ", objects[x].Materials[j].Start, " End: ", objects[x].Materials[j].End)
+						fmt.Println("verts: ", len(objects[x].Geometry.Vertices), " normals: ", len(objects[x].Geometry.Normals), " uvs: ", len(objects[x].Geometry.UVs))
+						fmt.Println("Start: ", objects[x].Materials[j].Start, " End: ", objects[x].Materials[j].End)
 
-					parsedMaterial := parser.ParseMTLFile(objects[x].Materials[j].MTLLib, objects[x].Materials[j].Name)
-					tempModelObject := ModelObject{}
+						parsedMaterial := parser.ParseMTLFile(objects[x].Materials[j].MTLLib, objects[x].Materials[j].Name)
+						tempModelObject := ModelObject{}
 
-					if len(objects[x].Geometry.UVs) > 0 {
-						tempModelObject.SetVertexValues(objects[x].Geometry.Vertices[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
-							objects[x].Geometry.Normals[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
-							objects[x].Geometry.UVs[objects[x].Materials[j].Start*2:objects[x].Materials[j].End*2])
-					} else {
-						tempModelObject.SetVertexValues(objects[x].Geometry.Vertices[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
-							objects[x].Geometry.Normals[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
-							nil)
+						if len(objects[x].Geometry.UVs) > 0 {
+							tempModelObject.SetVertexValues(objects[x].Geometry.Vertices[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
+								objects[x].Geometry.Normals[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
+								objects[x].Geometry.UVs[objects[x].Materials[j].Start*2:objects[x].Materials[j].End*2])
+						} else {
+							tempModelObject.SetVertexValues(objects[x].Geometry.Vertices[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
+								objects[x].Geometry.Normals[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
+								nil)
+						}
+
+						tempName := scene[0].Objects[i].Name
+
+						if x > 0 {
+							tempModelObject.SetParent(scene[0].Objects[i].Name)
+							tempName = strings.Join([]string{tempName, strconv.Itoa(j)}, "")
+						}
+
+						tempModel := Model{
+							Position: mgl32.Vec3{scene[0].Objects[i].Position[0], scene[0].Objects[i].Position[1], scene[0].Objects[i].Position[2]},
+							Scale:    mgl32.Vec3{scene[0].Objects[i].Scale[0], scene[0].Objects[i].Scale[1], scene[0].Objects[i].Scale[2]},
+							Rotation: mgl32.Ident4(),
+						}
+
+						if j > 0 {
+							tempName = strings.Join([]string{tempName, strconv.Itoa(j)}, "")
+							tempModelObject.SetParent(scene[0].Objects[i].Name)
+							tempModel.Position = mgl32.Vec3{0, 0, 0}
+							tempModel.Scale = mgl32.Vec3{1, 1, 1}
+						}
+
+						tempModelObject.Setup(
+							Material{
+								DiffuseTexture: parsedMaterial.MapKD,
+								Diffuse:        parsedMaterial.Kd,
+								Ambient:        parsedMaterial.Ka,
+								Specular:       parsedMaterial.Ks,
+								Alpha:          parsedMaterial.D,
+								N:              parsedMaterial.Ns,
+								ShaderType:     scene[0].Objects[i].Material.ShaderType,
+							},
+							tempModel,
+							tempName)
+
+						state.Objects = append(state.Objects, &tempModelObject)
+						state.LoadedObjects++
+						fmt.Println(tempModelObject.name, " loaded successfully!")
+
 					}
-
-					tempName := scene[0].Objects[i].Name
-
-					if x > 0 {
-						tempModelObject.SetParent(scene[0].Objects[i].Name)
-						tempName = strings.Join([]string{tempName, strconv.Itoa(j)}, "")
-					}
-
-					tempModel := Model{
-						Position: mgl32.Vec3{scene[0].Objects[i].Position[0], scene[0].Objects[i].Position[1], scene[0].Objects[i].Position[2]},
-						Scale:    mgl32.Vec3{scene[0].Objects[i].Scale[0], scene[0].Objects[i].Scale[1], scene[0].Objects[i].Scale[2]},
-						Rotation: mgl32.Ident4(),
-					}
-
-					if j > 0 {
-						tempName = strings.Join([]string{tempName, strconv.Itoa(j)}, "")
-						tempModelObject.SetParent(scene[0].Objects[i].Name)
-						tempModel.Position = mgl32.Vec3{0, 0, 0}
-						tempModel.Scale = mgl32.Vec3{1, 1, 1}
-					}
-
-					tempModelObject.Setup(
-						Material{
-							DiffuseTexture: parsedMaterial.MapKD,
-							Diffuse:        parsedMaterial.Kd,
-							Ambient:        parsedMaterial.Ka,
-							Specular:       parsedMaterial.Ks,
-							Alpha:          parsedMaterial.D,
-							N:              parsedMaterial.Ns,
-							ShaderType:     scene[0].Objects[i].Material.ShaderType,
-						},
-						tempModel,
-						tempName)
-
-					state.Objects = append(state.Objects, &tempModelObject)
-					state.LoadedObjects++
-					fmt.Println(tempModelObject.name, " loaded successfully!")
-
-				}
-			}
+				}*/
 		}
 	}
 
@@ -332,7 +410,6 @@ func ParseJsonFile(filePath string, state *State) {
 			Linear:    scene[0].Lights[j].Linear,
 			Constant:  scene[0].Lights[j].Constant,
 		}
-		fmt.Println(tempLight)
 		state.Lights = append(state.Lights, tempLight)
 	}
 

@@ -42,6 +42,19 @@ func main() {
 		os.Exit(1)
 	}()
 
+	//test out assimps parser
+
+	// meshes, err := assimp.ParseFile("../Editor/models/scrubPine.obj")
+
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// fmt.Println("ASSIMP STUFF! ")
+	// for j := 0; j < len(meshes); j++ {
+	// 	fmt.Println("Material: ", meshes[j].Material, "Num verts: ", len(meshes[j].Mesh.Vertices))
+	// }
+
 	//get arguments
 	argsWithoutProgram := os.Args[1:]
 
@@ -196,11 +209,8 @@ func renderObject(state *geometry.State, object geometry.RenderObject) {
 
 	state.ViewMatrix = viewMatrix
 	gl.BindVertexArray(currentBuffers.Vao)
-	if object.CurrentObject.GetType() != "mesh" {
-		gl.DrawElements(gl.TRIANGLES, int32(len(currentVertices.Vertices)), gl.UNSIGNED_INT, gl.Ptr(nil))
-	} else {
-		gl.DrawArrays(gl.TRIANGLES, 0, int32(len(currentVertices.Vertices)))
-	}
+
+	gl.DrawElements(gl.TRIANGLES, int32(len(currentVertices.Vertices)), gl.UNSIGNED_INT, gl.Ptr(nil))
 
 	gl.BindVertexArray(0)
 
