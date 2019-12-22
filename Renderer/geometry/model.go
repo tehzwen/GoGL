@@ -2,6 +2,7 @@ package geometry
 
 import (
 	"errors"
+	"fmt"
 
 	"../shader"
 	"../texture"
@@ -26,6 +27,7 @@ type ModelObject struct {
 	modelMatrix    mgl32.Mat4
 	shaderVal      shader.Shader
 	diffuseTexture *texture.Texture
+	normalTexture  *texture.Texture
 }
 
 // SetShader : helper function for applying frag/vert shader
@@ -93,6 +95,10 @@ func (m ModelObject) GetDiffuseTexture() *texture.Texture {
 	return m.diffuseTexture
 }
 
+func (m ModelObject) GetNormalTexture() *texture.Texture {
+	return m.normalTexture
+}
+
 func (m ModelObject) GetShaderVal() shader.Shader {
 	return m.shaderVal
 }
@@ -155,7 +161,7 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string) error {
 			normal:   1,
 		}
 		SetupAttributesMap(&m.programInfo, shaderVals)
-		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, nil, nil, m.vertexValues.faces)
+		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, nil, nil, nil, nil, m.vertexValues.faces)
 	} else if mat.ShaderType == 1 {
 		shaderVals["aPosition"] = true
 		shaderVals["aNormal"] = true
@@ -180,8 +186,7 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string) error {
 		}
 
 		SetupAttributesMap(&m.programInfo, shaderVals)
-
-		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, nil, m.vertexValues.faces)
+		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, nil, nil, nil, m.vertexValues.faces)
 
 	} else if mat.ShaderType == 2 {
 		//not sure yet what TODO here
@@ -201,24 +206,39 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string) error {
 		shaderVals["uDiffuseTexture"] = true
 		shaderVals["pointLights"] = true
 
-		bS := &shader.BlinnDiffuseTexture{}
-		bS.Setup()
-		m.shaderVal = bS
-		m.programInfo.Program = InitOpenGL(m.shaderVal.GetVertShader(), m.shaderVal.GetFragShader())
-		m.programInfo.attributes = Attributes{
-			position: 0,
-			normal:   1,
-			uv:       2,
-		}
-		texture0, err := texture.NewTextureFromFile("../Editor/models/"+m.material.DiffuseTexture,
-			gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE)
+		fmt.Println("HWDAWD :", m.material.DiffuseTexture)
 
-		if err != nil {
-			panic(err)
+		if m.material.DiffuseTexture != "" {
+			bS := &shader.BlinnDiffuseTexture{}
+			bS.Setup()
+			m.shaderVal = bS
+			m.programInfo.Program = InitOpenGL(m.shaderVal.GetVertShader(), m.shaderVal.GetFragShader())
+			m.programInfo.attributes = Attributes{
+				position: 0,
+				normal:   1,
+				uv:       2,
+			}
+			texture0, err := texture.NewTextureFromFile("../Editor/models/"+m.material.DiffuseTexture,
+				gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE)
+
+			if err != nil {
+				panic(err)
+			}
+			m.diffuseTexture = texture0
+		} else {
+			bS := &shader.BlinnNoTexture{}
+			bS.Setup()
+			m.shaderVal = bS
+			m.programInfo.Program = InitOpenGL(m.shaderVal.GetVertShader(), m.shaderVal.GetFragShader())
+			m.programInfo.attributes = Attributes{
+				position: 0,
+				normal:   1,
+				uv:       2,
+			}
 		}
-		m.diffuseTexture = texture0
+
 		SetupAttributesMap(&m.programInfo, shaderVals)
-		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, m.vertexValues.uvs, m.vertexValues.faces)
+		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, m.vertexValues.uvs, nil, nil, nil)
 
 	} else if mat.ShaderType == 4 {
 		shaderVals["aPosition"] = true
@@ -253,7 +273,7 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string) error {
 		}
 		m.diffuseTexture = texture0
 		SetupAttributesMap(&m.programInfo, shaderVals)
-		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, m.vertexValues.uvs, m.vertexValues.faces)
+		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, m.vertexValues.uvs, nil, nil, m.vertexValues.faces)
 
 	}
 
@@ -264,7 +284,6 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string) error {
 	m.boundingBox = TranslateBoundingBox(m.boundingBox, mod.Position)
 	m.Model.Rotation = mod.Rotation
 	m.centroid = CalculateCentroid(m.vertexValues.Vertices, m.Model.Scale)
-	m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, m.vertexValues.uvs, nil)
 
 	return nil
 }

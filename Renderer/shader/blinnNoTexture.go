@@ -23,7 +23,9 @@ func (s *BlinnNoTexture) Setup() {
 	out vec3 oNormal;
 	out vec3 normalInterp;
 	out vec3 oFragPosition;
+	out vec3 oCamPosition;
 	
+	uniform vec3 cameraPosition;
 	uniform mat4 uProjectionMatrix;
 	uniform mat4 uViewMatrix;
 	uniform mat4 uModelMatrix;
@@ -33,6 +35,7 @@ func (s *BlinnNoTexture) Setup() {
 		oNormal = normalize((uModelMatrix * vec4(aNormal, 1.0)).xyz);
 		normalInterp = vec3(normalMatrix * vec4(aNormal, 0.0));
 		oFragPosition = (uModelMatrix * vec4(aPosition, 1.0)).xyz;
+		oCamPosition =  (uViewMatrix * vec4(cameraPosition, 1.0)).xyz;
 		gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0); 
 	}
 ` + "\x00"
@@ -54,8 +57,8 @@ func (s *BlinnNoTexture) Setup() {
 	in vec3 oFragPosition;
 	in vec3 normalInterp;
 	in vec3 oNormal;
-
-	uniform vec3 cameraPosition;
+	in vec3 oCamPosition;
+	
 	uniform vec3 diffuseVal;
 	uniform vec3 ambientVal;
 	uniform vec3 specularVal;
@@ -71,14 +74,14 @@ func (s *BlinnNoTexture) Setup() {
 		// diffuse shading
 		float diff = max(dot(normal, lightDir), 0.0);
 		// specular shading
-		vec3 reflectDir = reflect(-lightDir, normal);
+		vec3 reflectDir = reflect(lightDir, normal);
 		float spec = pow(max(dot(viewDir, reflectDir), 0.0), nVal);
 		// attenuation
 		float distance    = length(light.position - fragPos);
 		float attenuation = 1.0 / (light.constant + light.linear * distance + 
 					light.quadratic * (distance * distance));    
 		// combine results
-		vec3 ambient  = light.color * ambientVal;
+		vec3 ambient  = light.color * ambientVal * diffuseVal;
 		vec3 diffuse  = light.color  * diff * diffuseVal;
 		vec3 specular = vec3(0,0,0);
 
@@ -96,7 +99,7 @@ func (s *BlinnNoTexture) Setup() {
 	void main() {
 		vec3 normal = normalize(normalInterp);
 		vec3 result = vec3(0,0,0);
-		vec3 viewDir = normalize(cameraPosition - oFragPosition);
+		vec3 viewDir = normalize(oCamPosition - oFragPosition);
 
 		for (int i = 0; i < numLights; i++) {
 			result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir);

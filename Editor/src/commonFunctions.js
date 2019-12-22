@@ -550,15 +550,12 @@ function calculateBitangents(vertices, uvs) {
             tangents.push(tangent[1]);
             tangents.push(tangent[2]);
         }
-
-
     }
-
     return { tangents, bitangents };
 }
 
 function getVertexRowN(vertices, n) {
-    let vertex = vec3.fromValues(vertices[n * 3], vertices[(n * 3) + 1], vertices[(n * 3) + 1]);
+    let vertex = vec3.fromValues(vertices[n * 3], vertices[(n * 3) + 1], vertices[(n * 3) + 2]);
     return vertex;
 }
 

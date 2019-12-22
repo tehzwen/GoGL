@@ -26,6 +26,7 @@ type Plane struct {
 	modelMatrix    mgl32.Mat4
 	shaderVal      shader.Shader
 	diffuseTexture *texture.Texture
+	normalTexture  *texture.Texture
 }
 
 // SetShader : helper function for applying frag/vert shader
@@ -97,6 +98,10 @@ func (p *Plane) SetShaderVal(s shader.Shader) {
 
 func (p Plane) GetDiffuseTexture() *texture.Texture {
 	return p.diffuseTexture
+}
+
+func (p Plane) GetNormalTexture() *texture.Texture {
+	return p.normalTexture
 }
 
 // Scale : function used to scale the cube and recalculate the centroid
@@ -174,7 +179,7 @@ func (p *Plane) Setup(mat Material, mod Model, name string) error {
 
 		SetupAttributesMap(&p.programInfo, shaderVals)
 
-		p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, nil, nil, p.vertexValues.faces)
+		p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, nil, nil, nil, nil, p.vertexValues.faces)
 
 	} else if mat.ShaderType == 1 {
 		shaderVals["aPosition"] = true
@@ -201,7 +206,7 @@ func (p *Plane) Setup(mat Material, mod Model, name string) error {
 
 		SetupAttributesMap(&p.programInfo, shaderVals)
 
-		p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, p.vertexValues.normals, nil, p.vertexValues.faces)
+		p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, p.vertexValues.normals, nil, nil, nil, p.vertexValues.faces)
 
 	} else if mat.ShaderType == 2 {
 		p.programInfo.Program = InitOpenGL(p.vertShader, p.fragShader)
@@ -210,8 +215,6 @@ func (p *Plane) Setup(mat Material, mod Model, name string) error {
 			normal:   1,
 			uv:       2,
 		}
-
-		SetupAttributes(&p.programInfo)
 
 	} else if mat.ShaderType == 3 {
 		shaderVals["aPosition"] = true
@@ -247,7 +250,7 @@ func (p *Plane) Setup(mat Material, mod Model, name string) error {
 		p.diffuseTexture = texture0
 
 		SetupAttributesMap(&p.programInfo, shaderVals)
-		p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, p.vertexValues.normals, p.vertexValues.uvs, p.vertexValues.faces)
+		p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, p.vertexValues.normals, p.vertexValues.uvs, nil, nil, p.vertexValues.faces)
 
 	} else if mat.ShaderType == 4 {
 		shaderVals["aPosition"] = true
@@ -265,25 +268,40 @@ func (p *Plane) Setup(mat Material, mod Model, name string) error {
 		shaderVals["cameraPosition"] = true
 		shaderVals["uDiffuseTexture"] = true
 
-		bS := &shader.BlinnDiffuseTexture{}
+		//calculate tangents and bitangents
+		tangents, bitangents := CalculateBitangents(p.vertexValues.Vertices, p.vertexValues.uvs)
+
+		bS := &shader.BlinnDiffuseAndNormal{}
 		bS.Setup()
 		p.shaderVal = bS
 		p.programInfo.Program = InitOpenGL(p.shaderVal.GetVertShader(), p.shaderVal.GetFragShader())
 		p.programInfo.attributes = Attributes{
-			position: 0,
-			normal:   1,
-			uv:       2,
+			position:  0,
+			normal:    1,
+			uv:        2,
+			tangent:   3,
+			bitangent: 4,
 		}
+		//load diffuse texture
 		texture0, err := texture.NewTextureFromFile("../Editor/"+p.material.DiffuseTexture,
 			gl.REPEAT, gl.REPEAT)
 
 		if err != nil {
 			panic(err)
 		}
+		//load normal texture
+		texture1, err := texture.NewTextureFromFile("../Editor/"+p.material.NormalTexture,
+			gl.REPEAT, gl.REPEAT)
+
+		if err != nil {
+			panic(err)
+		}
+
 		p.diffuseTexture = texture0
+		p.normalTexture = texture1
 
 		SetupAttributesMap(&p.programInfo, shaderVals)
-		p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, p.vertexValues.normals, p.vertexValues.uvs, p.vertexValues.faces)
+		p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, p.vertexValues.normals, p.vertexValues.uvs, tangents, bitangents, p.vertexValues.faces)
 
 	}
 
@@ -294,9 +312,6 @@ func (p *Plane) Setup(mat Material, mod Model, name string) error {
 	p.boundingBox = TranslateBoundingBox(p.boundingBox, mod.Position)
 	p.model.Rotation = mod.Rotation
 	p.centroid = CalculateCentroid(p.vertexValues.Vertices, p.model.Scale)
-	p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, p.vertexValues.normals, p.vertexValues.uvs, p.vertexValues.faces)
 
-	// x := errors.New("Wrong")
-	// return x
 	return nil
 }

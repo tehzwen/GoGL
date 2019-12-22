@@ -166,41 +166,6 @@ func SetupAttributesMap(p *ProgramInfo, m map[string]bool) {
 	// }
 }
 
-// SetupAttributes : helper function for setting up attribute/uniforms
-func SetupAttributes(p *ProgramInfo) {
-	(*p).attributes.vertexPosition = gl.GetAttribLocation((*p).Program, gl.Str("aPosition\x00"))
-	(*p).attributes.vertexNormal = gl.GetAttribLocation((*p).Program, gl.Str("aNormal\x00"))
-	(*p).UniformLocations.DiffuseVal = gl.GetUniformLocation((*p).Program, gl.Str("diffuseVal\x00"))
-	(*p).UniformLocations.AmbientVal = gl.GetUniformLocation((*p).Program, gl.Str("ambientVal\x00"))
-	(*p).UniformLocations.SpecularVal = gl.GetUniformLocation((*p).Program, gl.Str("specularVal\x00"))
-	(*p).UniformLocations.NVal = gl.GetUniformLocation((*p).Program, gl.Str("nVal\x00"))
-	(*p).UniformLocations.Projection = gl.GetUniformLocation((*p).Program, gl.Str("uProjectionMatrix\x00"))
-	(*p).UniformLocations.View = gl.GetUniformLocation((*p).Program, gl.Str("uViewMatrix\x00"))
-	(*p).UniformLocations.Model = gl.GetUniformLocation((*p).Program, gl.Str("uModelMatrix\x00"))
-	(*p).UniformLocations.LightPositions = gl.GetUniformLocation((*p).Program, gl.Str("lightPositions\x00"))
-	(*p).UniformLocations.LightColours = gl.GetUniformLocation((*p).Program, gl.Str("lightColours\x00"))
-	(*p).UniformLocations.LightStrengths = gl.GetUniformLocation((*p).Program, gl.Str("lightStrengths\x00"))
-	(*p).UniformLocations.NumLights = gl.GetUniformLocation((*p).Program, gl.Str("numLights\x00"))
-	(*p).UniformLocations.CameraPosition = gl.GetUniformLocation((*p).Program, gl.Str("cameraPosition\x00"))
-
-	if (*p).attributes.vertexPosition == -1 ||
-		(*p).attributes.vertexNormal == -1 ||
-		(*p).UniformLocations.Projection == -1 ||
-		(*p).UniformLocations.View == -1 ||
-		(*p).UniformLocations.Model == -1 ||
-		(*p).UniformLocations.CameraPosition == -1 ||
-		(*p).UniformLocations.LightPositions == -1 ||
-		(*p).UniformLocations.LightColours == -1 ||
-		(*p).UniformLocations.LightStrengths == -1 ||
-		(*p).UniformLocations.NumLights == -1 ||
-		(*p).UniformLocations.DiffuseVal == -1 ||
-		(*p).UniformLocations.AmbientVal == -1 ||
-		(*p).UniformLocations.NVal == -1 ||
-		(*p).UniformLocations.SpecularVal == -1 {
-		fmt.Printf("ERROR: One or more of the uniforms or attributes cannot be found in the shader\n")
-	}
-}
-
 // CalculateCentroid : helper function for calculating the centroid of the geometry
 func CalculateCentroid(vertices []float32, currScale mgl32.Vec3) mgl32.Vec3 {
 	var xTotal = float32(0.0)
@@ -222,7 +187,7 @@ func CalculateCentroid(vertices []float32, currScale mgl32.Vec3) mgl32.Vec3 {
 }
 
 // CreateTriangleVAO : helper function for creating vertex buffer values
-func CreateTriangleVAO(programInfo *ProgramInfo, vertices []float32, normals []float32, uvs []float32, indices []uint32) uint32 {
+func CreateTriangleVAO(programInfo *ProgramInfo, vertices []float32, normals []float32, uvs []float32, tangents []float32, bitangents []float32, indices []uint32) uint32 {
 
 	var VAO uint32
 	gl.GenVertexArrays(1, &VAO)
@@ -268,6 +233,26 @@ func CreateTriangleVAO(programInfo *ProgramInfo, vertices []float32, normals []f
 		gl.BufferData(gl.ARRAY_BUFFER, len(uvs)*4, gl.Ptr(uvs), gl.STATIC_DRAW)
 		gl.VertexAttribPointer((*programInfo).attributes.uv, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
 		gl.EnableVertexAttribArray((*programInfo).attributes.uv)
+	}
+
+	if tangents != nil {
+		var tangentBuffer uint32
+		gl.GenBuffers(1, &tangentBuffer)
+
+		gl.BindBuffer(gl.ARRAY_BUFFER, tangentBuffer)
+		gl.BufferData(gl.ARRAY_BUFFER, len(tangents)*4, gl.Ptr(tangents), gl.STATIC_DRAW)
+		gl.VertexAttribPointer((*programInfo).attributes.tangent, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
+		gl.EnableVertexAttribArray((*programInfo).attributes.tangent)
+	}
+
+	if bitangents != nil {
+		var bitangentBuffer uint32
+		gl.GenBuffers(1, &bitangentBuffer)
+
+		gl.BindBuffer(gl.ARRAY_BUFFER, bitangentBuffer)
+		gl.BufferData(gl.ARRAY_BUFFER, len(bitangents)*4, gl.Ptr(bitangents), gl.STATIC_DRAW)
+		gl.VertexAttribPointer((*programInfo).attributes.bitangent, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
+		gl.EnableVertexAttribArray((*programInfo).attributes.bitangent)
 	}
 
 	// unbind the VAO (safe practice so we don't accidentally (mis)configure it later)

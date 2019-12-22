@@ -27,8 +27,8 @@ var mu sync.Mutex
 var objectsToRender chan geometry.RenderObject
 
 const (
-	width  = 800
-	height = 600
+	width  = 1280
+	height = 960
 )
 
 func main() {
@@ -157,10 +157,19 @@ func renderObject(state *geometry.State, object geometry.RenderObject) {
 		return
 	}
 	diffuseTexture := object.CurrentObject.GetDiffuseTexture()
+	normalTexture := object.CurrentObject.GetNormalTexture()
 
 	if diffuseTexture != nil {
 		diffuseTexture.Bind(gl.TEXTURE0)
 		err := diffuseTexture.SetUniform(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("uDiffuseTexture\x00")))
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	if normalTexture != nil {
+		normalTexture.Bind(gl.TEXTURE1)
+		err := normalTexture.SetUniform(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("uNormalTexture\x00")))
 		if err != nil {
 			panic(err)
 		}
@@ -197,6 +206,10 @@ func renderObject(state *geometry.State, object geometry.RenderObject) {
 
 	if diffuseTexture != nil {
 		diffuseTexture.UnBind()
+	}
+
+	if normalTexture != nil {
+		normalTexture.UnBind()
 	}
 
 }

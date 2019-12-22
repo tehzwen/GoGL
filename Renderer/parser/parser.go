@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"regexp"
 	"strconv"
@@ -100,6 +101,10 @@ func addFace(a *int, b *int, c *int, d *int, ua *int, ub *int, uc *int, ud *int,
 
 }
 
+func addLineGeometry(vertices []float32, uvs []float32) {
+
+}
+
 func addVertex(a int, b int, c int, mesh *Mesh) {
 	mesh.Vertices = append(mesh.Vertices, (*mesh).Sparse.Vertices[a+0])
 	mesh.Vertices = append(mesh.Vertices, (*mesh).Sparse.Vertices[a+1])
@@ -166,10 +171,15 @@ func Parse(filePath string) []OBJObject {
 	materialCount := 0
 
 	objects := []OBJObject{}
+	mtlLib := ""
 
 	scanner := bufio.NewScanner(objFile)
 	for scanner.Scan() {
 		line := scanner.Text()
+
+		if len(line) == 0 {
+			continue
+		}
 
 		if line[0] == '#' {
 			continue
@@ -298,50 +308,91 @@ func Parse(filePath string) []OBJObject {
 			whiteSpaceSplit := strings.Split(line, " ")
 
 			//check if this is the initial object or not
-			if len(objects) == 1 {
+			if len(objects) == 0 {
+				tempObject := OBJObject{}
+				tempObject.Geometry = Mesh{}
+				tempObject.Materials = []MTLMaterial{}
+				objects = append(objects, tempObject)
+				objectCount = len(objects) - 1
 				objects[objectCount].Name = whiteSpaceSplit[1]
 			} else {
+				if len(objects[objectCount].Materials) > 0 {
+					objects[objectCount].Materials[materialCount-1].End = len(objects[objectCount].Geometry.Vertices) / 3
+				}
+
+				materialCount = 0
 				//create a new object and increment counters
 				tempObject := OBJObject{}
 				tempObject.Name = whiteSpaceSplit[1]
-				tempObject.Geometry = Mesh{}
-				tempObject.Materials = []MTLMaterial{}
-				tempMaterial := MTLMaterial{}
-				tempObject.Materials = append(tempObject.Materials, tempMaterial)
+				tempObject.Geometry = Mesh{
+					Sparse: objects[objectCount].Geometry.Sparse,
+				}
 				objects = append(objects, tempObject)
-				objectCount++
+				objectCount = len(objects) - 1
 			}
 
 		} else if result, err := regexp.MatchString(`^mtllib `, line); err == nil && result {
 			whiteSpaceSplit := strings.Split(line, " ")
 			//mtllib shows up first so we will make an object here
-			tempObject := OBJObject{}
-			tempObject.Geometry = Mesh{}
-			tempObject.Materials = []MTLMaterial{}
-			tempMaterial := MTLMaterial{}
-			tempMaterial.MTLLib = whiteSpaceSplit[1]
-			tempObject.Materials = append(tempObject.Materials, tempMaterial)
-			objects = append(objects, tempObject)
-			objectCount = len(objects) - 1
+			mtlLib = whiteSpaceSplit[1]
 
 		} else if result, err := regexp.MatchString(`^usemtl `, line); err == nil && result {
 			whiteSpaceSplit := strings.Split(line, " ")
-			//check if the current object is on the first material
-			if materialCount == 0 {
-				objects[objectCount].Materials[materialCount].Name = whiteSpaceSplit[1]
-				objects[objectCount].Materials[materialCount].Start = 0
+
+			if objectCount == 0 && materialCount == 0 {
+				//create the first material
+				tempMaterial := MTLMaterial{
+					MTLLib: mtlLib,
+					Name:   whiteSpaceSplit[1],
+					Start:  0,
+				}
+				objects[objectCount].Materials = append(objects[objectCount].Materials, tempMaterial)
 				materialCount++
+
 			} else {
-				newMaterial := MTLMaterial{}
-				newMaterial.MTLLib = objects[objectCount].Materials[materialCount-1].MTLLib
-				objects[objectCount].Materials[materialCount-1].End = len(objects[objectCount].Geometry.Vertices) / 3
-				newMaterial.Start = len(objects[objectCount].Geometry.Vertices) / 3
-				newMaterial.Name = whiteSpaceSplit[1]
-				objects[objectCount].Materials = append(objects[objectCount].Materials, newMaterial)
+
+				tempMaterial := MTLMaterial{
+					MTLLib: mtlLib,
+					Name:   whiteSpaceSplit[1],
+					Start:  len(objects[objectCount].Geometry.Vertices) / 3,
+				}
+
+				objects[objectCount].Materials = append(objects[objectCount].Materials, tempMaterial)
+				if materialCount > 0 {
+					objects[objectCount].Materials[materialCount-1].End = len(objects[objectCount].Geometry.Vertices) / 3
+				}
+				materialCount++
 			}
+		} else if line[0] == 'l' {
+			whiteSpaceSplit := strings.Split(line, " ")
+			UVs := []float32{}
+			Vertices := []float32{}
+
+			if !strings.Contains(line, "/") {
+				//do some shit
+				//fmt.Println("slash not present?")
+				//fmt.Println(whiteSpaceSplit[1:len(whiteSpaceSplit)])
+
+				for i := 1; i < len(whiteSpaceSplit); i++ {
+					fmt.Println(whiteSpaceSplit[i])
+					val, err := strconv.ParseFloat(whiteSpaceSplit[i], 32)
+					if err != nil {
+						panic(err)
+					}
+
+					Vertices = append(Vertices, float32(val))
+				}
+
+				//addLineGeometry(whiteSpaceSplit[1:len(whiteSpaceSplit)], []float32{})
+			} else {
+				//TODO
+				fmt.Println("fuck you, ", whiteSpaceSplit[1], UVs)
+			}
+
+			addLineGeometry(Vertices, UVs)
 		}
 	}
+	objects[objectCount].Materials[materialCount-1].End = len(objects[objectCount].Geometry.Vertices) / 3
 
-	objects[objectCount].Materials[materialCount].End = len(objects[objectCount].Geometry.Vertices) / 3
 	return objects
 }

@@ -17,6 +17,7 @@ type Geometry interface {
 	GetCentroid() mgl32.Vec3
 	GetShaderVal() shader.Shader
 	GetDiffuseTexture() *texture.Texture
+	GetNormalTexture() *texture.Texture
 	GetMaterial() Material
 	GetBuffers() ObjectBuffers
 	GetVertices() VertexValues
@@ -32,12 +33,16 @@ type Geometry interface {
 
 // Attributes : struct for holding vertex attribute locations
 type Attributes struct {
-	position       uint32
-	normal         uint32
-	uv             uint32
-	vertexPosition int32
-	vertexNormal   int32
-	vertexUV       int32
+	position        uint32
+	normal          uint32
+	uv              uint32
+	tangent         uint32
+	bitangent       uint32
+	vertexPosition  int32
+	vertexNormal    int32
+	vertexUV        int32
+	vertexTangent   int32
+	vertexBitangent int32
 }
 
 // ObjectBuffers : holds references to vertex buffers
@@ -91,6 +96,7 @@ type Material struct {
 	ShaderType     int       `json:"shaderType"`
 	Alpha          float32
 	DiffuseTexture string
+	NormalTexture  string
 }
 
 // Model : struct for holding model info

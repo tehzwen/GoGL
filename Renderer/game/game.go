@@ -23,7 +23,6 @@ func Update(state *geometry.State, deltaTime float64) {
 	/*newRot := mgl32.HomogRotate3D(float32(angle), mgl32.Vec3{0, 1, 0})
 	state.Objects[0].SetRotation(newRot)
 	angle += 0.5 * deltaTime */
-	angle += 0.5 * deltaTime
 
 	//lightToMove.Strength += float32(math.Sin(angle))
 	//lightToMove.Position[2] += float32(math.Sin(angle) * 0.5)
@@ -36,7 +35,19 @@ func Update(state *geometry.State, deltaTime float64) {
 	}
 
 	if state.Keys[glfw.KeyQ] {
-		lightToMove.Strength += 0.5
+		//angle += 0.5 * deltaTime
+		lightToMove.Position[2] += 1.0
+	}
+
+	if state.Keys[glfw.KeyR] {
+		lightToMove.Position[2] -= 1.0
+	}
+
+	if state.Keys[glfw.KeyT] {
+		if lightToMove.Constant > 0 {
+			lightToMove.Constant -= 0.025
+		}
+
 	}
 
 	if state.Keys[glfw.KeyW] {

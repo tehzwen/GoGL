@@ -2,6 +2,7 @@ package geometry
 
 import (
 	"errors"
+	"fmt"
 
 	"../shader"
 	"../texture"
@@ -26,6 +27,7 @@ type Cube struct {
 	modelMatrix    mgl32.Mat4
 	shaderVal      shader.Shader
 	diffuseTexture *texture.Texture
+	normalTexture  *texture.Texture
 }
 
 // SetShader : helper function for applying frag/vert shader
@@ -86,6 +88,10 @@ func (c Cube) GetCentroid() mgl32.Vec3 {
 
 func (c Cube) GetDiffuseTexture() *texture.Texture {
 	return c.diffuseTexture
+}
+
+func (c Cube) GetNormalTexture() *texture.Texture {
+	return c.normalTexture
 }
 
 // GetBuffers : getter for buffers
@@ -267,7 +273,7 @@ func (c *Cube) Setup(mat Material, mod Model, name string) error {
 
 		SetupAttributesMap(&c.programInfo, shaderVals)
 
-		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, nil, nil, c.vertexValues.faces)
+		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, nil, nil, nil, nil, c.vertexValues.faces)
 
 	} else if mat.ShaderType == 1 {
 		shaderVals["aPosition"] = true
@@ -294,7 +300,7 @@ func (c *Cube) Setup(mat Material, mod Model, name string) error {
 
 		SetupAttributesMap(&c.programInfo, shaderVals)
 
-		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, c.vertexValues.normals, nil, c.vertexValues.faces)
+		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, c.vertexValues.normals, nil, nil, nil, c.vertexValues.faces)
 
 	} else if mat.ShaderType == 2 {
 		c.programInfo.Program = InitOpenGL(c.vertShader, c.fragShader)
@@ -303,8 +309,6 @@ func (c *Cube) Setup(mat Material, mod Model, name string) error {
 			normal:   1,
 			uv:       2,
 		}
-
-		SetupAttributes(&c.programInfo)
 
 	} else if mat.ShaderType == 3 {
 		shaderVals["aPosition"] = true
@@ -340,7 +344,7 @@ func (c *Cube) Setup(mat Material, mod Model, name string) error {
 		c.diffuseTexture = texture0
 
 		SetupAttributesMap(&c.programInfo, shaderVals)
-		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, c.vertexValues.normals, c.vertexValues.uvs, c.vertexValues.faces)
+		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, c.vertexValues.normals, c.vertexValues.uvs, nil, nil, c.vertexValues.faces)
 
 	} else if mat.ShaderType == 4 {
 		shaderVals["aPosition"] = true
@@ -358,25 +362,42 @@ func (c *Cube) Setup(mat Material, mod Model, name string) error {
 		shaderVals["cameraPosition"] = true
 		shaderVals["uDiffuseTexture"] = true
 
-		bS := &shader.BlinnDiffuseTexture{}
+		//calculate tangents and bitangents
+		tangents, bitangents := CalculateBitangents(c.vertexValues.Vertices, c.vertexValues.uvs)
+		fmt.Println("BITANGENTS: ", bitangents[20])
+
+		bS := &shader.BlinnDiffuseAndNormal{}
 		bS.Setup()
 		c.shaderVal = bS
 		c.programInfo.Program = InitOpenGL(c.shaderVal.GetVertShader(), c.shaderVal.GetFragShader())
 		c.programInfo.attributes = Attributes{
-			position: 0,
-			normal:   1,
-			uv:       2,
+			position:  0,
+			normal:    1,
+			uv:        2,
+			tangent:   3,
+			bitangent: 4,
 		}
+
+		//load diffuse texture
 		texture0, err := texture.NewTextureFromFile("../Editor/"+c.material.DiffuseTexture,
 			gl.REPEAT, gl.REPEAT)
 
 		if err != nil {
 			panic(err)
 		}
+		//load normal texture
+		texture1, err := texture.NewTextureFromFile("../Editor/"+c.material.NormalTexture,
+			gl.REPEAT, gl.REPEAT)
+
+		if err != nil {
+			panic(err)
+		}
+
 		c.diffuseTexture = texture0
+		c.normalTexture = texture1
 
 		SetupAttributesMap(&c.programInfo, shaderVals)
-		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, c.vertexValues.normals, c.vertexValues.uvs, c.vertexValues.faces)
+		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, c.vertexValues.normals, c.vertexValues.uvs, tangents, bitangents, c.vertexValues.faces)
 
 	}
 

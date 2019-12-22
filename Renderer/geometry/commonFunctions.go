@@ -134,6 +134,10 @@ func addObjectToState(object Geometry, state *State, sceneObj SceneObject) {
 		sceneObj.Material.DiffuseTexture = sceneObj.DiffuseTexture
 	}
 
+	if sceneObj.NormalTexture != "" {
+		sceneObj.Material.NormalTexture = sceneObj.NormalTexture
+	}
+
 	object.Setup(
 		sceneObj.Material,
 		tempModel,
@@ -261,12 +265,21 @@ func ParseJsonFile(filePath string, state *State) {
 			for x := 0; x < len(objects); x++ {
 				for j := 0; j < len(objects[x].Materials); j++ {
 
-					parsedMaterial := parser.ParseMTLFile(objects[x].Materials[j].MTLLib, objects[x].Materials[j].Name)
+					fmt.Println("verts: ", len(objects[x].Geometry.Vertices), " normals: ", len(objects[x].Geometry.Normals), " uvs: ", len(objects[x].Geometry.UVs))
+					fmt.Println("Start: ", objects[x].Materials[j].Start, " End: ", objects[x].Materials[j].End)
 
+					parsedMaterial := parser.ParseMTLFile(objects[x].Materials[j].MTLLib, objects[x].Materials[j].Name)
 					tempModelObject := ModelObject{}
-					tempModelObject.SetVertexValues(objects[x].Geometry.Vertices[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
-						objects[x].Geometry.Normals[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
-						objects[x].Geometry.UVs[objects[x].Materials[j].Start*2:objects[x].Materials[j].End*2])
+
+					if len(objects[x].Geometry.UVs) > 0 {
+						tempModelObject.SetVertexValues(objects[x].Geometry.Vertices[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
+							objects[x].Geometry.Normals[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
+							objects[x].Geometry.UVs[objects[x].Materials[j].Start*2:objects[x].Materials[j].End*2])
+					} else {
+						tempModelObject.SetVertexValues(objects[x].Geometry.Vertices[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
+							objects[x].Geometry.Normals[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
+							nil)
+					}
 
 					tempName := scene[0].Objects[i].Name
 
@@ -333,4 +346,58 @@ func GetSceneObject(name string, state State) Geometry {
 		}
 	}
 	return nil
+}
+
+func getVertexRowN(vertices []float32, n int) mgl32.Vec3 {
+	return mgl32.Vec3{vertices[n*3], vertices[(n*3)+1], vertices[(n*3)+2]}
+}
+
+func getUVRowN(uvs []float32, n int) mgl32.Vec2 {
+	return mgl32.Vec2{uvs[n*2], uvs[(n*2)+1]}
+}
+
+func CalculateBitangents(vertices []float32, uvs []float32) ([]float32, []float32) {
+	var tangents []float32
+	var bitangents []float32
+
+	for i := 0; i < (len(vertices)/3)-2; i += 3 {
+		v0 := getVertexRowN(vertices, i)
+		v1 := getVertexRowN(vertices, i+1)
+		v2 := getVertexRowN(vertices, i+2)
+
+		uv0 := getUVRowN(uvs, i)
+		uv1 := getUVRowN(uvs, i+1)
+		uv2 := getUVRowN(uvs, i+2)
+
+		deltaPos1 := v1.Sub(v0)
+		deltaPos2 := v2.Sub(v0)
+
+		deltaUV1 := uv1.Sub(uv0)
+		deltaUV2 := uv2.Sub(uv0)
+
+		r := 1.0 / (deltaUV1[0]*deltaUV2[1] - deltaUV1[1]*deltaUV2[0])
+
+		tempTangent1 := deltaPos1.Mul(deltaUV2[1])
+		tempTangent2 := deltaPos2.Mul(deltaUV1[1])
+
+		tangent := tempTangent1.Sub(tempTangent2)
+		tangent = tangent.Mul(r)
+
+		tempBitangent1 := deltaPos2.Mul(deltaUV1[0])
+		tempBitangent2 := deltaPos1.Mul(deltaUV2[0])
+
+		bitangent := tempBitangent1.Sub(tempBitangent2)
+		bitangent = bitangent.Mul(r)
+
+		for j := 0; j < 3; j++ {
+			bitangents = append(bitangents, bitangent[0])
+			bitangents = append(bitangents, bitangent[1])
+			bitangents = append(bitangents, bitangent[2])
+
+			tangents = append(tangents, tangent[0])
+			tangents = append(tangents, tangent[1])
+			tangents = append(tangents, tangent[2])
+		}
+	}
+	return tangents, bitangents
 }
