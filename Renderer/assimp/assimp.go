@@ -161,6 +161,7 @@ struct aiColor4D getDiffuseColor(struct aiMaterial** array, unsigned int index) 
 	if (success == aiReturn_SUCCESS) {
 		return mtlDiffuse;
 	} else {
+		fprintf(stderr, "Error reading diffuse values!\n");
 		exit(EXIT_FAILURE);
 	}
 }
@@ -171,6 +172,7 @@ struct aiColor4D getAmbientColor(struct aiMaterial** array, unsigned int index) 
 	if (success == aiReturn_SUCCESS) {
 		return mtlAmbient;
 	} else {
+		fprintf(stderr, "Error reading ambient values!\n");
 		exit(EXIT_FAILURE);
 	}
 }
@@ -181,7 +183,12 @@ struct aiColor4D getSpecularColor(struct aiMaterial** array, unsigned int index)
 	if (success == aiReturn_SUCCESS) {
 		return mtlSpecular;
 	} else {
-		exit(EXIT_FAILURE);
+		fprintf(stderr, "Error reading specular values!\n");
+		mtlSpecular.r = 0;
+		mtlSpecular.g = 0;
+		mtlSpecular.b = 0;
+		mtlSpecular.a = 0;
+		return mtlSpecular;
 	}
 }
 
@@ -196,6 +203,7 @@ struct aiString getDiffuseTextureMap(struct aiMaterial** array, unsigned int ind
 			return path;
 
 		} else {
+			fprintf(stderr, "Error reading diffuse map!\n");
 			exit(EXIT_FAILURE);
 		}
 
@@ -217,7 +225,9 @@ float getShininess(struct aiMaterial** array, unsigned int index) {
 	if (success == aiReturn_SUCCESS) {
 		return shininess[0];
 	} else {
-		exit(EXIT_FAILURE);
+		fprintf(stderr, "Error reading shininess!\n");
+		shininess[0] = 0;
+		return shininess[0];
 	}
 }
 
@@ -609,11 +619,14 @@ func ParseFile(modelFile string) (outMeshes []MyMesh, err error) {
 
 			} // aniIdx
 		}
+
 		tempMyMesh.Mesh = outMesh
 		resultMeshes = append(resultMeshes, tempMyMesh)
 		// add the new mesh to the slice
 		//outMeshes[i] = outMesh
 	}
+	fmt.Println("HERE")
+
 	// drop the scene now that we got our data
 	C.aiReleaseImport(cScene)
 

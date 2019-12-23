@@ -163,7 +163,7 @@ func renderObject(state *geometry.State, object geometry.RenderObject) {
 	}
 
 	frustum := mymath.ConstructFrustrum(viewMatrix, projection)
-	testLen := object.CurrentObject.GetBoundingBox().Max.Len()
+	testLen := object.CurrentObject.GetBoundingBox().Max.LenSqr()
 	result := frustum.SphereIntersection(model.Position, testLen)
 
 	if !result {

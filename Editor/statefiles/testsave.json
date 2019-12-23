@@ -271,9 +271,9 @@
                 "name": "tree",
                 "material": {
                     "diffuse": [
-                        0.5882,
-                        0.5882,
-                        0.5882
+                        0.533333,
+                        0.531373,
+                        0.533333
                     ],
                     "ambient": [
                         1,
@@ -281,20 +281,20 @@
                         1
                     ],
                     "specular": [
-                        0,
-                        0,
-                        0
+                        0.35,
+                        0.35,
+                        0.35
                     ],
-                    "n": 10.000002,
+                    "n": 31.999996,
                     "shaderType": 3,
                     "alpha": 1,
-                    "diffuseMap": "Piney.jpg"
+                    "diffuseMap": "metal_00.jpg"
                 },
                 "type": "mesh",
                 "position": [
-                    8,
-                    -1.0,
-                    1.5
+                    11,
+                    0,
+                    7
                 ],
                 "scale": [
                     0.5,
@@ -304,7 +304,7 @@
                 "diffuseTexture": null,
                 "normalTexture": null,
                 "parent": null,
-                "model": "./models/scrubPine.obj"
+                "model": "./models/Medieval-House.obj"
             }
         ],
         "pointLights": [
@@ -316,7 +316,7 @@
                 ],
                 "position": [
                     7,
-                    0,
+                    2,
                     0
                 ],
                 "strength": 0.05,

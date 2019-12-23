@@ -132,6 +132,7 @@ func (m *ModelObject) Scale(scaleVec mgl32.Vec3) {
 func (m *ModelObject) Translate(translateVec mgl32.Vec3) {
 	m.Model.Position = m.Model.Position.Add(translateVec)
 	m.centroid = m.centroid.Add(translateVec)
+	m.boundingBox = TranslateBoundingBox(m.boundingBox, translateVec)
 }
 
 func (m *ModelObject) SetVertexValues(vertices []float32, normals []float32, uvs []float32, faces []uint32) {
@@ -217,7 +218,7 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string) error {
 				uv:       2,
 			}
 			texture0, err := texture.NewTextureFromFile("../Editor/models/"+m.material.DiffuseTexture,
-				gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE)
+				gl.REPEAT, gl.REPEAT)
 
 			if err != nil {
 				panic(err)

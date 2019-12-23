@@ -133,6 +133,7 @@ func (c *Cube) Scale(scaleVec mgl32.Vec3) {
 func (c *Cube) Translate(translateVec mgl32.Vec3) {
 	c.model.Position = c.model.Position.Add(translateVec)
 	c.centroid = c.centroid.Add(translateVec)
+	c.boundingBox = TranslateBoundingBox(c.boundingBox, translateVec)
 }
 
 // Setup : function for initializing cube
