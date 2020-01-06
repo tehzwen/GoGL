@@ -22,7 +22,7 @@ function createSceneGui(state) {
     let sideNav = document.getElementById("objectsNav");
     sideNav.innerHTML = "";
 
-    state.objects.map((object) => {
+    state.objects.forEach((object) => {
 
         if (!object.parent) {
             let objectElement = document.createElement("div");
@@ -37,7 +37,7 @@ function createSceneGui(state) {
                 if (childrenDiv.className === "collapse") {
                     childrenDiv.className = "collapse-active";
                     objectName.className = "object-link"
-                    displayObjectValues(object);
+                    displayObjectValues(object, state);
                 } else {
                     childrenDiv.className = "collapse";
                     displayObjectValues(null);
@@ -55,12 +55,28 @@ function createSceneGui(state) {
             objectName.innerHTML = `<i>${object.name}</i>`;
 
             objectName.addEventListener('click', () => {
-                displayObjectValues(object);
+                displayObjectValues(object, state);
             });
 
             parentChildrenDiv.appendChild(objectName);
         }
     });
+
+    state.directionalLights.forEach((object) => {
+        let objectElement = document.createElement("div");
+        let childrenDiv = document.createElement("div");
+        let objectName = document.createElement("h5");
+        objectName.className = "object-link";
+        objectName.innerHTML = object.name;
+
+        objectName.addEventListener('click', () => {
+            displayObjectValues(object, state);
+        });
+
+        objectElement.appendChild(objectName);
+        objectElement.appendChild(childrenDiv);
+        sideNav.appendChild(objectElement);
+    })
 
     //camera stuff here TODO
     /*
@@ -138,7 +154,15 @@ function handleTypeSelectChange(event) {
  * does different actions depending on what object we select
  * @param {Game Object to manipulate} object 
  */
-function displayObjectValues(object) {
+function displayObjectValues(object, state) {
+    console.log(object)
+    let position;
+    if (object.type !== "directionalLight") {
+        position = object.model.position;
+    } else {
+        position = object.position;
+    }
+    
 
     if (!object) {
         let selectedObjectDiv = document.getElementById("selectedObject");
@@ -159,31 +183,34 @@ function displayObjectValues(object) {
     let objectPositionX = document.createElement("input");
     objectPositionX.type = "number";
     objectPositionX.addEventListener('input', (event) => {
-        object.translate([event.target.value - object.model.position[0], 0, 0]);
+        object.translate([event.target.value - position[0], 0, 0]);
+        state.render = true;
     })
     objectPositionX.id = object.name + "-positionX";
     objectPositionX.classList = "form-control";
-    objectPositionX.value = parseFloat(object.model.position[0]).toFixed(1);
+    objectPositionX.value = parseFloat(position[0]).toFixed(1);
 
     //Y move input handler
     let objectPositionY = document.createElement("input");
     objectPositionY.type = "number";
     objectPositionY.addEventListener('input', (event) => {
-        object.translate([0, event.target.value - object.model.position[1], 0]);
+        object.translate([0, event.target.value - position[1], 0]);
+        state.render = true;
     })
     objectPositionY.id = object.name + "-positionY";
     objectPositionY.classList = "form-control";
-    objectPositionY.value = parseFloat(object.model.position[1]).toFixed(1);
+    objectPositionY.value = parseFloat(position[1]).toFixed(1);
 
     //Z move input handler
     let objectPositionZ = document.createElement("input");
     objectPositionZ.type = "number";
     objectPositionZ.addEventListener('input', (event) => {
-        object.translate([0, 0, event.target.value - object.model.position[2]])
+        object.translate([0, 0, event.target.value - position[2]])
+        state.render = true;
     })
     objectPositionZ.id = object.name + "-positionZ";
     objectPositionZ.classList = "form-control";
-    objectPositionZ.value = parseFloat(object.model.position[2]).toFixed(1);
+    objectPositionZ.value = parseFloat(position[2]).toFixed(1);
 
     prependDivX.innerHTML = `
         <span class="input-group-text">X</span>
@@ -207,6 +234,7 @@ function displayObjectValues(object) {
     diffuseColorPicker.addEventListener('change', (event) => {
         let newColor = hexToRGB(event.target.value);
         object.material.diffuse = newColor;
+        state.render = true;
     });
 
     //add all the elements in
@@ -270,7 +298,7 @@ function printError(tag, errorStr) {
     errorTag.innerHTML = '<strong>' + tag + '</strong><p>' + errorStr + '</p>';
 
     // Insert the tag into the HMTL document
-    document.getElementById('webglError').appendChild(errorTag);
+    document.getElementById('webglError').innerHTML = errorTag;
 
     // Print to the console as well
     console.error(tag + ": " + errorStr);

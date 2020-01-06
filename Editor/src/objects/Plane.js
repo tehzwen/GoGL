@@ -64,8 +64,22 @@ class Plane {
         yVal *= scaleVec[1];
         zVal *= scaleVec[2];
 
+        this.model.uvs = this.scaleUVs(this.model.uvs, scaleVec);
         this.boundingBox = scaleBoundingBox(this.boundingBox, scaleVec);
         this.model.scale = vec3.fromValues(xVal, yVal, zVal);
+    }
+
+    scaleUVs(uvs, scaleVec) {
+        let newUVs = [];
+
+        for (let i = 0; i < uvs.length; i++) {
+            if (i % 2 === 0) {
+                newUVs.push(uvs[i] * (scaleVec[0] / vec3.len(scaleVec)));
+            } else {
+                newUVs.push(uvs[i] * (scaleVec[2] / vec3.len(scaleVec)));
+            }
+        }
+        return newUVs;
     }
 
     lightingShader() {
@@ -91,6 +105,23 @@ class Plane {
                 })
         } else if (this.material.shaderType === 1) {
             fetch('./shaders/blinnNoTexture.json')
+                .then((res) => {
+                    return res.json();
+                })
+                .then((data) => {
+                    this.fragShader = data.fragShader.join("\n");
+                    this.vertShader = data.vertShader.join("\n");
+                    shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
+                    programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
+                    UI.shaderValuesErrorCheck(programInfo);
+                    this.programInfo = programInfo;
+                    this.initBuffers();
+                })
+                .catch((err) => {
+                    console.error(err);
+                })
+        } else if (this.material.shaderType === 2) {
+            fetch('./shaders/basicDepthShader.json')
                 .then((res) => {
                     return res.json();
                 })
@@ -172,6 +203,18 @@ class Plane {
                 indicies: initIndexBuffer(this.gl, indices),
                 numVertices: indices.length
             }
+        } else if (this.material.shaderType === 2) {
+            this.buffers = {
+                vao: vertexArrayObject,
+                attributes: {
+                    position: initPositionAttribute(this.gl, this.programInfo, positions),
+                    uv: initTextureCoords(this.gl, this.programInfo, textureCoords),
+                },
+                indicies: initIndexBuffer(this.gl, indices),
+                numVertices: indices.length
+            }
+
+            this.loaded = true;
         } else if (this.material.shaderType === 4) {
             this.buffers = {
                 vao: vertexArrayObject,

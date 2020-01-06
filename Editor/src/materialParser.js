@@ -25,12 +25,12 @@ function parseMTL(mtlFile, mtlName, object, geometry, cb) {
             }
 
             //now loop the array starting at that index until a blank line is found and we ought to have our info
-            for (let j = foundIndex; j < lineArray.length; j++) {
-                if (lineArray[j] === "") {
+            for (let j = foundIndex + 1; j < lineArray.length; j++) {
+                if (lineArray[j].indexOf("newmtl") !== -1) {
                     break;
                 } else {
                     //check for n value
-                    let firstChars = lineArray[j].slice(0, 2);
+                    let firstChars = lineArray[j].trim().slice(0, 2);
 
                     if (firstChars === "Ns") {
                         //split on white space to get value
@@ -54,6 +54,7 @@ function parseMTL(mtlFile, mtlName, object, geometry, cb) {
                         material.diffuseMap = fileSplit[fileSplit.length - 1]
                     }
                 }
+                //console.warn(material)
             }
 
             if (material.diffuseMap) {
@@ -61,7 +62,7 @@ function parseMTL(mtlFile, mtlName, object, geometry, cb) {
             } else {
                 material.shaderType = 1;
             }
-            
+
             object.mtl = material;
             cb(geometry, object);
         })

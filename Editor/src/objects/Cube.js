@@ -188,6 +188,23 @@ class Cube {
                 .catch((err) => {
                     console.error(err);
                 })
+        } else if (this.material.shaderType === 2) {
+            fetch('./shaders/basicDepthShader.json')
+                .then((res) => {
+                    return res.json();
+                })
+                .then((data) => {
+                    this.fragShader = data.fragShader.join("\n");
+                    this.vertShader = data.vertShader.join("\n");
+                    shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
+                    programInfo = initShaderUniforms(this.gl, shaderProgram, data.uniforms, data.attribs);
+                    UI.shaderValuesErrorCheck(programInfo);
+                    this.programInfo = programInfo;
+                    this.initBuffers();
+                })
+                .catch((err) => {
+                    console.error(err);
+                })
         } else if (this.material.shaderType === 3) {
             fetch('./shaders/blinnTexture.json')
                 .then((res) => {

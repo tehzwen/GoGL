@@ -8,6 +8,7 @@ class Model {
         this.type = "mesh";
         this.loaded = false;
         this.modelName = object.model;
+        this.parentTransform = object.parentTransform ? object.parentTransform : null;
         this.initialTransform = { position: object.position, scale: object.scale };
         this.material = object.mtl ? object.mtl : object.material;
         this.model = {
@@ -42,12 +43,13 @@ class Model {
     }
 
     setup() {
-        //this.centroid = calculateCentroid(this.model.vertices, this.lightingShader);
-        this.lightingShader();
+        return new Promise((res, rej) => {
+            this.lightingShader(res);
+        })
     }
 
 
-    initBuffers() {
+    initBuffers(resp) {
         //create vertices, normal and indicies arrays
         const positions = new Float32Array(this.model.vertices);
         const normals = new Float32Array(this.model.normals);
@@ -65,13 +67,23 @@ class Model {
             },
             numVertices: positions.length
         }
-        this.scale(this.initialTransform.scale);
-        this.translate(this.initialTransform.position);
+
+        if (this.parent) {
+            //transform the bounding box to the parents location/scale
+            this.boundingBox = translateBoundingBox(this.boundingBox, this.parentTransform);
+        } else {
+            this.scale(this.initialTransform.scale);
+            this.translate(this.initialTransform.position);
+        }
+
+
         this.loaded = true;
         console.log(this.name + " loaded successfully!");
+
+        resp(this);
     }
 
-    lightingShader() {
+    lightingShader(res) {
         //iterate through the objects
         let shaderProgram;
         let programInfo;
@@ -91,7 +103,10 @@ class Model {
                     this.programInfo = programInfo;
                     this.centroid = calculateCentroid(this.model.vertices);
                     this.boundingBox = getBoundingBox(this.model.vertices);
-                    this.initBuffers();
+                    this.initBuffers(res);
+                    return new Promise((res, rej) => {
+                        res({ shaderLoad: true })
+                    });
                 })
                 .catch((err) => {
                     console.error(err);
@@ -112,7 +127,7 @@ class Model {
                     this.programInfo = programInfo;
                     this.centroid = calculateCentroid(this.model.vertices);
                     this.boundingBox = getBoundingBox(this.model.vertices);
-                    this.initBuffers();
+                    this.initBuffers(res);
                 })
                 .catch((err) => {
                     console.error(err);
@@ -131,7 +146,7 @@ class Model {
                     this.programInfo = programInfo;
                     this.centroid = calculateCentroid(this.model.vertices);
                     this.boundingBox = getBoundingBox(this.model.vertices);
-                    this.initBuffers();
+                    this.initBuffers(res);
                 })
                 .catch((err) => {
                     console.error(err);
@@ -150,7 +165,7 @@ class Model {
                     this.programInfo = programInfo;
                     this.centroid = calculateCentroid(this.model.vertices);
                     this.boundingBox = getBoundingBox(this.model.vertices);
-                    this.initBuffers();
+                    this.initBuffers(res);
                 })
                 .catch((err) => {
                     console.error(err);

@@ -99,7 +99,7 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 		vec3 diffuse  = light.color  * diff * diffuseVal * vec3(texture(uDiffuseTexture, oUV));
 		vec3 specular = vec3(0,0,0);
 
-		if (diff > 0.0f) {
+		if (diff < 0.0f) {
 			specular = light.color * specularVal * spec * vec3(texture(uDiffuseTexture, oUV));
 			specular *= attenuation;
 		}

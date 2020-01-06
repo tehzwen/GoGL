@@ -334,6 +334,7 @@ function parseOBJFileToJSON(objFileURL, object, cb) {
             })
             .then((text) => {
                 let mesh = OBJLoader.prototype.parse(text);
+                let parentObj;
                 //iterate through objects
                 for (let j = 0; j < mesh.length; j++) {
                     //iterate through the materials of the mesh
@@ -346,6 +347,7 @@ function parseOBJFileToJSON(objFileURL, object, cb) {
                         if (j > 0) {
                             newObject.name = object.name + i;
                             newObject.parent = object.name;
+                            newObject.parentTransform = object.position;
                         }
 
                         if (i > 0) {
@@ -353,6 +355,9 @@ function parseOBJFileToJSON(objFileURL, object, cb) {
                             newObject.parent = object.name;
                             newObject.position = [0, 0, 0];
                             newObject.scale = [1, 1, 1];
+
+                            newObject.parentTransform = parentObj.position;
+
                             newObject.type = "mesh";
                             let geometry = {
                                 vertices,
@@ -361,6 +366,7 @@ function parseOBJFileToJSON(objFileURL, object, cb) {
                             }
                             parseMTL(mesh[j].materials[i].mtllib, mesh[j].materials[i].name, newObject, geometry, cb);
                         } else {
+                            parentObj = newObject;
                             let geometry = {
                                 vertices,
                                 uvs,
@@ -394,7 +400,7 @@ function hexToRGB(hex) {
 function parseSceneFile(file, state, cb) {
     state.pointLights = [];
     state.objects = [];
-    console.log(file)
+    state.directionalLights = [];
 
     fetch(file)
         .then((data) => {
@@ -415,6 +421,7 @@ function createSceneFile(state, filename) {
         {
             objects: [],
             pointLights: [],
+            directionalLights: [],
             settings: {
 
             }
@@ -455,12 +462,20 @@ function createSceneFile(state, filename) {
 
     state.pointLights.forEach((light) => {
         totalState[0].pointLights.push({
-            colour: [light.colour[0], light.colour[1],light.colour[2]],
+            colour: [light.colour[0], light.colour[1], light.colour[2]],
             position: light.position,
             strength: light.strength,
             quadratic: light.quadratic,
             linear: light.linear,
             constant: light.constant
+        })
+    })
+
+    state.directionalLights.forEach((light) => {
+        totalState[0].directionalLights.push({
+            colour: [light.colour[0], light.colour[1], light.colour[2]],
+            position: light.position,
+            direction: light.direction
         })
     })
     //write the savefile 
@@ -566,6 +581,36 @@ function getUVRowN(uvs, n) {
 
 function toRadians(angle) {
     return angle * (Math.PI / 180);
+}
+
+function initDepthMap(gl, width, height) {
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(
+        gl.TEXTURE_2D,      // target
+        0,                  // mip level
+        gl.DEPTH_COMPONENT, // internal format
+        width,   // width
+        height,   // height
+        0,                  // border
+        gl.DEPTH_COMPONENT, // format
+        gl.UNSIGNED_INT,    // type
+        null);              // data
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    const depthMapFBO = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, depthMapFBO);
+    gl.framebufferTexture2D(
+        gl.FRAMEBUFFER,       // target
+        gl.DEPTH_ATTACHMENT,  // attachment point
+        gl.TEXTURE_2D,        // texture target
+        texture,         // texture
+        0);                   // mip level
+
+    return { depthMapFBO, texture };
 }
 
 function initTangentBuffer(gl, programInfo, tangents) {

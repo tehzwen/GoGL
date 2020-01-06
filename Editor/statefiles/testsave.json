@@ -271,9 +271,9 @@
                 "name": "tree",
                 "material": {
                     "diffuse": [
-                        0.533333,
-                        0.531373,
-                        0.533333
+                        0.161521,
+                        0.111614,
+                        0.052047
                     ],
                     "ambient": [
                         1,
@@ -281,19 +281,19 @@
                         1
                     ],
                     "specular": [
-                        0.35,
-                        0.35,
-                        0.35
+                        0.5,
+                        0.5,
+                        0.5
                     ],
-                    "n": 31.999996,
-                    "shaderType": 3,
+                    "n": 96.078431,
+                    "shaderType": 1,
                     "alpha": 1,
-                    "diffuseMap": "metal_00.jpg"
+                    "diffuseMap": null
                 },
                 "type": "mesh",
                 "position": [
                     11,
-                    0,
+                    -1,
                     7
                 ],
                 "scale": [
@@ -304,7 +304,7 @@
                 "diffuseTexture": null,
                 "normalTexture": null,
                 "parent": null,
-                "model": "./models/Medieval-House.obj"
+                "model": "./models/fir_tree.obj"
             }
         ],
         "pointLights": [
@@ -341,6 +341,7 @@
                 "constant": 1
             }
         ],
+        "directionalLights": [],
         "settings": {}
     }
 ]

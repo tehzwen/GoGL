@@ -1,0 +1,41 @@
+{
+    "vertShader": [
+        "#version 300 es",
+        "layout (location = 0) in vec3 vertexPosition;",
+        "layout (location = 1) in vec2 vertexUV;",
+        "out vec2 TexCoords;",
+        "void main() {",
+        "    TexCoords = vertexUV;",
+        "    gl_Position = vec4(vertexPosition, 1.0);",
+        "}"
+    ],
+    "attribs": [
+        "vertexPosition",
+        "vertexUV"
+    ],
+    "uniforms": [
+        "depthMap"
+    ],
+    "fragShader": [
+        "#version 300 es",
+        "precision highp float;",
+        "uniform float near_plane;",
+        "uniform float far_plane;",
+        "uniform sampler2D depthMap;",
+        "in vec2 TexCoords;",
+        "out vec4 fragColor;",
+        "\n",
+        "float LinearizeDepth(float depth)",
+        "{",
+        "   float z = depth * 2.0 - 1.0;",
+        "   return (2.0 * near_plane * far_plane) / (far_plane + near_plane - z * (far_plane - near_plane));",
+        "}",
+        "\n",
+        "void main() {",
+        "    float depthValue = texture(depthMap, TexCoords).r;",
+        "    //fragColor = vec4(vec3(LinearizeDepth(depthValue) / far_plane), 1.0); // perspective",
+        "    //fragColor = vec4(vec3(depthValue), 1.0); // orthographic",
+        "   fragColor = vec4(1, 0, 0, 1.0);",
+        "}"
+    ]
+}
