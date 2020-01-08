@@ -420,3 +420,7 @@ func CalculateBitangents(vertices []float32, uvs []float32) ([]float32, []float3
 	}
 	return tangents, bitangents
 }
+
+func ToRadians(deg float32) float64 {
+	return float64(deg * (math.Pi / 180))
+}

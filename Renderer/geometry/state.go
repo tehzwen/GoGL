@@ -23,6 +23,10 @@ type Camera struct {
 	Up       mgl32.Vec3
 	Center   mgl32.Vec3
 	Position mgl32.Vec3
+	Front    mgl32.Vec3
+	Pitch    float32
+	Yaw      float32
+	Roll     float32
 }
 
 // Light : struct for lights in the scene

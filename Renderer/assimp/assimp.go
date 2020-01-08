@@ -244,7 +244,7 @@ struct aiMaterial getMaterialAtIndex(struct aiMaterial** array, unsigned int ind
 	//struct aiString *tempString;
 	//aiGetMaterialString(array[index], AI_MATKEY_COLOR_DIFFUSE, tempString);
 
-	printf("INDEX : %d %d %s\n", index, array[index]->mNumProperties);
+	printf("INDEX : %d %d\n", index, array[index]->mNumProperties);
 	struct aiMaterial temp;
 
 	return temp;

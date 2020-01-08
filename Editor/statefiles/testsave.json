@@ -271,9 +271,9 @@
                 "name": "tree",
                 "material": {
                     "diffuse": [
-                        0.161521,
-                        0.111614,
-                        0.052047
+                        0.784314,
+                        0.784314,
+                        0.784314
                     ],
                     "ambient": [
                         1,
@@ -281,19 +281,19 @@
                         1
                     ],
                     "specular": [
-                        0.5,
-                        0.5,
-                        0.5
+                        0,
+                        0,
+                        0
                     ],
-                    "n": 96.078431,
-                    "shaderType": 1,
+                    "n": 7.999999,
+                    "shaderType": 3,
                     "alpha": 1,
                     "diffuseMap": null
                 },
                 "type": "mesh",
                 "position": [
                     11,
-                    -1,
+                    6.699999809265137,
                     7
                 ],
                 "scale": [
@@ -304,7 +304,7 @@
                 "diffuseTexture": null,
                 "normalTexture": null,
                 "parent": null,
-                "model": "./models/fir_tree.obj"
+                "model": "./models/sibenik.obj"
             }
         ],
         "pointLights": [

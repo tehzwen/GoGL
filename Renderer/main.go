@@ -63,11 +63,16 @@ func main() {
 	buttons = make(map[glfw.MouseButton]bool)
 	mouseMovement = make(map[string]float64)
 
+	mouseMovement["sensitivity"] = 1.2
+
 	state := geometry.State{
 		Camera: geometry.Camera{
-			Position: mgl32.Vec3{0.5, 0.0, -2.5},
-			Center:   mgl32.Vec3{0.5, 0.0, 0.0},
+			Position: mgl32.Vec3{6, 0.0, 0},
+			Front:    mgl32.Vec3{0, 0, 1.0},
 			Up:       mgl32.Vec3{0.0, 1.0, 0.0},
+			Pitch:    0,
+			Yaw:      90,
+			Roll:     0,
 		},
 		Lights:        []geometry.Light{},
 		Objects:       []geometry.Geometry{},
@@ -103,14 +108,34 @@ func main() {
 			state.Keys = keys
 
 			if mouseMovement["move"] == 1 && buttons[glfw.MouseButton2] {
-				Rotation := geometry.RotateY(state.Camera.Center, state.Camera.Position, -(2 * deltaTime * mouseMovement["Xmove"]))
-				state.Camera.Center = Rotation
+				front := mgl32.Vec3{0, 0, 0}
+				state.Camera.Yaw += float32(mouseMovement["Xmove"] * mouseMovement["sensitivity"])
+				state.Camera.Pitch += float32(mouseMovement["Ymove"] * mouseMovement["sensitivity"])
+
+				if state.Camera.Pitch > 89 {
+					state.Camera.Pitch = 89
+				}
+				if state.Camera.Pitch < -89 {
+					state.Camera.Pitch = -89
+				}
+
+				front[0] = float32(math.Cos(geometry.ToRadians(state.Camera.Yaw)) * math.Cos(geometry.ToRadians(state.Camera.Pitch)))
+				front[1] = float32(math.Sin(geometry.ToRadians(-state.Camera.Pitch)))
+				front[2] = float32(math.Sin(geometry.ToRadians(state.Camera.Yaw)) * math.Cos(geometry.ToRadians(state.Camera.Pitch)))
+
+				front = front.Normalize()
+
+				state.Camera.Front = front
+
+				//Rotation := geometry.RotateY(state.Camera.Center, state.Camera.Position, -(2 * deltaTime * mouseMovement["Xmove"]))
+				//fmt.Println(mouseMovement["Ymove"])
+				//state.Camera.Center = Rotation
 			}
 			mouseMovement["move"] = 0
 			draw(window, &state)
 		}
 	}
-	fmt.Println("Program ended succesfully!")
+	fmt.Println("Program ended successfully!")
 }
 
 func draw(window *glfw.Window, state *geometry.State) {
@@ -251,7 +276,9 @@ func doObjectMath(object geometry.Geometry, state geometry.State, objects chan<-
 	var far = float32(100.0)
 
 	projection := mgl32.Perspective(fovy, aspect, near, far)
-	viewMatrix := mgl32.LookAtV(state.Camera.Position, state.Camera.Center, state.Camera.Up)
+	//create a camfront value
+	camFront := state.Camera.Position.Add(state.Camera.Front)
+	viewMatrix := mgl32.LookAtV(state.Camera.Position, camFront, state.Camera.Up)
 	camPosition := []float32{state.Camera.Position[0], state.Camera.Position[1], state.Camera.Position[2]}
 	modelMatrix := mgl32.Ident4()
 	positionMat := mgl32.Translate3D(currentModel.Position[0], currentModel.Position[1], currentModel.Position[2])
