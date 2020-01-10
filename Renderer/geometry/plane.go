@@ -44,8 +44,11 @@ func (p *Plane) SetModelMatrix(mm mgl32.Mat4) {
 	p.modelMatrix = mm
 }
 
-func (p Plane) GetModelMatrix() mgl32.Mat4 {
-	return p.modelMatrix
+func (p Plane) GetModelMatrix() (mgl32.Mat4, error) {
+	if (p.modelMatrix != mgl32.Mat4{}) {
+		return p.modelMatrix, nil
+	}
+	return mgl32.Mat4{}, errors.New("No matrix yet")
 }
 
 // GetProgramInfo : getter for programinfo

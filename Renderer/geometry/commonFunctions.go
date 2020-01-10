@@ -10,23 +10,24 @@ import (
 	"strconv"
 	"strings"
 
-	"../assimp"
+	"../parser"
 
 	"github.com/go-gl/mathgl/mgl32"
 )
 
 type RenderObject struct {
-	ViewMatrix      mgl32.Mat4
-	ProjMatrix      mgl32.Mat4
-	ModelMatrix     mgl32.Mat4
-	CurrentBuffers  ObjectBuffers
-	CurrentModel    Model
-	CurrentMaterial Material
-	CurrentCentroid mgl32.Vec3
-	CurrentProgram  ProgramInfo
-	CameraPosition  []float32
-	CurrentVertices VertexValues
-	CurrentObject   Geometry
+	ViewMatrix       mgl32.Mat4
+	ProjMatrix       mgl32.Mat4
+	ModelMatrix      mgl32.Mat4
+	CurrentBuffers   ObjectBuffers
+	CurrentModel     Model
+	CurrentMaterial  Material
+	CurrentCentroid  mgl32.Vec3
+	CurrentProgram   ProgramInfo
+	CameraPosition   []float32
+	CurrentVertices  VertexValues
+	CurrentObject    Geometry
+	DistanceToCamera float32
 }
 
 type SceneObject struct {
@@ -258,7 +259,72 @@ func ParseJsonFile(filePath string, state *State) {
 		} else if scene[0].Objects[i].ObjectType == "mesh" {
 			fmt.Println(scene[0].Objects[i].Name, " loading....")
 			meshPath := exPath + "/../Editor/" + scene[0].Objects[i].Model
-			meshes, err := assimp.ParseFile(meshPath)
+
+			objects := parser.Parse(meshPath)
+
+			//tempModelObject := ModelObject{}
+
+			for x := 0; x < len(objects); x++ {
+				for j := 0; j < len(objects[x].Materials); j++ {
+
+					fmt.Println("verts: ", len(objects[x].Geometry.Vertices), " normals: ", len(objects[x].Geometry.Normals), " uvs: ", len(objects[x].Geometry.UVs))
+					fmt.Println("Start: ", objects[x].Materials[j].Start, " End: ", objects[x].Materials[j].End)
+
+					parsedMaterial := parser.ParseMTLFile(objects[x].Materials[j].MTLLib, objects[x].Materials[j].Name)
+					tempModelObject := ModelObject{}
+
+					if len(objects[x].Geometry.UVs) > 0 {
+						tempModelObject.SetVertexValues(objects[x].Geometry.Vertices[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
+							objects[x].Geometry.Normals[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
+							objects[x].Geometry.UVs[objects[x].Materials[j].Start*2:objects[x].Materials[j].End*2], nil)
+					} else {
+						tempModelObject.SetVertexValues(objects[x].Geometry.Vertices[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
+							objects[x].Geometry.Normals[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
+							nil, nil)
+					}
+
+					tempName := scene[0].Objects[i].Name
+
+					if x > 1 {
+						tempModelObject.SetParent(scene[0].Objects[i].Name)
+						tempName = strings.Join([]string{tempName, strconv.Itoa(j)}, "")
+					} else {
+
+					}
+
+					tempModel := Model{
+						Position: mgl32.Vec3{scene[0].Objects[i].Position[0], scene[0].Objects[i].Position[1], scene[0].Objects[i].Position[2]},
+						Scale:    mgl32.Vec3{scene[0].Objects[i].Scale[0], scene[0].Objects[i].Scale[1], scene[0].Objects[i].Scale[2]},
+						Rotation: mgl32.Ident4(),
+					}
+
+					if j > 1 {
+						tempName = strings.Join([]string{tempName, strconv.Itoa(j)}, "")
+						tempModelObject.SetParent(scene[0].Objects[i].Name)
+						tempModel.Position = mgl32.Vec3{0, 0, 0}
+						tempModel.Scale = mgl32.Vec3{1, 1, 1}
+					}
+
+					tempModelObject.Setup(
+						Material{
+							DiffuseTexture: parsedMaterial.MapKD,
+							Diffuse:        parsedMaterial.Kd,
+							Ambient:        parsedMaterial.Ka,
+							Specular:       parsedMaterial.Ks,
+							Alpha:          parsedMaterial.D,
+							N:              parsedMaterial.Ns,
+							ShaderType:     scene[0].Objects[i].Material.ShaderType,
+						},
+						tempModel,
+						tempName)
+
+					state.Objects = append(state.Objects, &tempModelObject)
+					state.LoadedObjects++
+					fmt.Println(tempModelObject.name, " loaded successfully!")
+
+				}
+			}
+			/*meshes, err := assimp.ParseFile(meshPath)
 
 			if err != nil {
 				panic(err)
@@ -278,7 +344,7 @@ func ParseJsonFile(filePath string, state *State) {
 					Diffuse:        meshes[j].Material.Diffuse,
 					Ambient:        meshes[j].Material.Ambient,
 					Specular:       meshes[j].Material.Specular,
-					Alpha:          1,
+					Alpha:          meshes[j].Material.Alpha,
 					N:              meshes[j].Material.Shininess,
 					ShaderType:     scene[0].Objects[i].Material.ShaderType,
 				}
@@ -339,7 +405,7 @@ func ParseJsonFile(filePath string, state *State) {
 				state.LoadedObjects++
 				fmt.Println(tempModelObject.name, " loaded successfully!")
 
-			}
+			} */
 		}
 	}
 
@@ -423,4 +489,13 @@ func CalculateBitangents(vertices []float32, uvs []float32) ([]float32, []float3
 
 func ToRadians(deg float32) float64 {
 	return float64(deg * (math.Pi / 180))
+}
+
+func VectorDistance(a, b mgl32.Vec3) float32 {
+	//fmt.Println(a)
+	xDiff := math.Pow(float64(a[0]-b[0]), 2)
+	yDiff := math.Pow(float64(a[1]-b[1]), 2)
+	zDiff := math.Pow(float64(a[2]-b[2]), 2)
+
+	return float32(math.Sqrt(xDiff + yDiff + zDiff))
 }

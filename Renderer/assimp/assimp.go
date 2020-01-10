@@ -218,6 +218,30 @@ struct aiString getDiffuseTextureMap(struct aiMaterial** array, unsigned int ind
 
 }
 
+float getOpacity(struct aiMaterial** array, unsigned int index) {
+	float opacity = 1.0f;
+	int max;
+		int success = aiGetMaterialFloatArray(array[index], AI_MATKEY_OPACITY, &opacity, NULL);
+	if (success == aiReturn_SUCCESS) {
+		return opacity;
+	} else {
+		fprintf(stderr, "Error reading shininess!\n");
+		return opacity;
+	}
+}
+
+float getTransparency(struct aiMaterial** array, unsigned int index) {
+	float opacity[10];
+	int max;
+		int success = aiGetMaterialFloatArray(array[index], AI_MATKEY_COLOR_TRANSPARENT, opacity, &max);
+	if (success == aiReturn_SUCCESS) {
+		return opacity[0];
+	} else {
+		fprintf(stderr, "Error reading shininess!\n");
+		return opacity[0];
+	}
+}
+
 float getShininess(struct aiMaterial** array, unsigned int index) {
 	float shininess[10];
 	int max;
@@ -299,6 +323,7 @@ type MyMaterial struct {
 	Ambient    []float32
 	Specular   []float32
 	Shininess  float32
+	Alpha      float32
 	DiffuseMap string
 }
 
@@ -361,6 +386,21 @@ func ParseFile(modelFile string) (outMeshes []MyMesh, err error) {
 		tempMaterial.Specular = []float32{float32(specularColor.r), float32(specularColor.g), float32(specularColor.b), float32(specularColor.a)}
 		shininess := C.getShininess(cScene.mMaterials, cMesh.mMaterialIndex)
 		tempMaterial.Shininess = float32(shininess)
+		opacity := C.getOpacity(cScene.mMaterials, cMesh.mMaterialIndex)
+		transparency := C.getTransparency(cScene.mMaterials, cMesh.mMaterialIndex)
+
+		fmt.Println("Opacity: ", float32(opacity), " transparency: ", float32(transparency))
+		//check for transparency && opacity for alpha value
+		if opacity == 1.0 && transparency == 1.0 {
+			tempMaterial.Alpha = float32(opacity)
+		} else if opacity == 1.0 && transparency != 1.0 {
+			tempMaterial.Alpha = float32(transparency)
+		} else {
+			tempMaterial.Alpha = float32(opacity)
+		}
+
+		tempMaterial.Alpha = 1.0
+
 		path := C.getDiffuseTextureMap(cScene.mMaterials, cMesh.mMaterialIndex)
 
 		//create a normal string
@@ -625,7 +665,6 @@ func ParseFile(modelFile string) (outMeshes []MyMesh, err error) {
 		// add the new mesh to the slice
 		//outMeshes[i] = outMesh
 	}
-	fmt.Println("HERE")
 
 	// drop the scene now that we got our data
 	C.aiReleaseImport(cScene)

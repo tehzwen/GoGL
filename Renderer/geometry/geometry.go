@@ -21,7 +21,7 @@ type Geometry interface {
 	GetMaterial() Material
 	GetBuffers() ObjectBuffers
 	GetVertices() VertexValues
-	GetModelMatrix() mgl32.Mat4
+	GetModelMatrix() (mgl32.Mat4, error)
 	SetRotation(mgl32.Mat4)
 	SetModelMatrix(mgl32.Mat4)
 	SetParent(string)
@@ -70,6 +70,7 @@ type Uniforms struct {
 	AmbientVal     int32
 	SpecularVal    int32
 	NVal           int32
+	Alpha          int32
 	CameraPosition int32
 	NumLights      int32
 	LightPositions int32

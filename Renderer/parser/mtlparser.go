@@ -38,7 +38,7 @@ func ParseMTLFile(filename string, materialName string) ParsedMaterial {
 	scanner := bufio.NewScanner(mtlFile)
 	for scanner.Scan() {
 		line := scanner.Text()
-
+		line = strings.TrimSpace(line) //trim up the string to remove any leading or trailing whitespace
 		whiteSpaceSplit := strings.Split(line, " ")
 
 		if whiteSpaceSplit[0] == "newmtl" && whiteSpaceSplit[1] != materialName {

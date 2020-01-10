@@ -660,3 +660,11 @@ function initTangentBuffer(gl, programInfo, tangents) {
         return tangentBuffer;
     }
 }
+
+function vectorDistance(vec1, vec2) {
+    let xDiff = vec2[0] - vec1[0];
+    let yDiff = vec2[1] - vec1[1];
+    let zDiff = vec2[2] - vec1[2];
+
+    return Math.sqrt(xDiff + yDiff + zDiff);
+}

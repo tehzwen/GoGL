@@ -226,7 +226,7 @@ function startRendering(gl, state) {
         state.deltaTime = deltaTime;
 
         //wait until the scene is completely loaded to render it
-        
+
 
         if (state.numberOfObjectsToLoad <= state.objects.length) {
             //console.log(state.numberOfObjectsToLoad, state.objects.length);
@@ -308,6 +308,7 @@ function drawScene(gl, deltaTime, state) {
     gl.enable(gl.DEPTH_TEST); // Enable depth testing
     gl.depthFunc(gl.LEQUAL); // Near things obscure far things
     gl.enable(gl.CULL_FACE);
+    
     let lightProjectionMatrix = mat4.create();
     let lightWorldMatrix = mat4.create();
     var lightSpaceMatrix = mat4.create();
@@ -383,7 +384,7 @@ function drawScene(gl, deltaTime, state) {
                 }
             }
         })
-        
+
     }
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -393,11 +394,27 @@ function drawScene(gl, deltaTime, state) {
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    //console.warn(state.objects.length)
-    state.objects.forEach((object) => {
+    var sortedObjects = state.objects.slice().sort((a, b) => {
+        return vec3.distance(state.camera.position, a.model.position) >= vec3.distance(state.camera.position, b.model.position) ? -1 : 1;
+    });
+
+    sortedObjects.forEach((object) => {
         if (object.loaded) {
             gl.useProgram(object.programInfo.program);
             {
+
+                if (object.material.alpha < 1.0) {
+                    gl.enable(gl.BLEND);
+                    gl.disable(gl.DEPTH_TEST);
+                    gl.blendFunc(gl.ONE_MINUS_CONSTANT_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+                    gl.clearDepth(object.material.alpha);
+                } else {
+                    gl.disable(gl.BLEND);
+                    gl.depthMask(true);
+                    gl.enable(gl.DEPTH_TEST);
+                    gl.depthFunc(gl.LEQUAL); // Near things obscure far things
+                    gl.clearDepth(1.0);
+                }
 
                 //let textureMatrix = mat4.create();
                 //mat4.identity(textureMatrix);
@@ -464,7 +481,10 @@ function drawScene(gl, deltaTime, state) {
 
                 if (object.parent) {
                     let parent = getObject(state, object.parent);
-                    mat4.mul(modelMatrix, parent.modelMatrix, modelMatrix);
+                    if (parent.modelMatrix) {
+                        mat4.mul(modelMatrix, parent.modelMatrix, modelMatrix);
+                    }
+                    //console.log(object)
                 }
 
                 object.modelMatrix = modelMatrix;
@@ -478,6 +498,7 @@ function drawScene(gl, deltaTime, state) {
                 gl.uniform3fv(object.programInfo.uniformLocations.diffuseVal, object.material.diffuse);
                 gl.uniform3fv(object.programInfo.uniformLocations.ambientVal, object.material.ambient);
                 gl.uniform3fv(object.programInfo.uniformLocations.specularVal, object.material.specular);
+                gl.uniform1f(object.programInfo.uniformLocations.alpha, object.material.alpha);
                 gl.uniform1f(object.programInfo.uniformLocations.nVal, object.material.n);
                 gl.uniform1i(object.programInfo.uniformLocations.numPointLights, state.pointLights.length);
                 gl.uniform1i(object.programInfo.uniformLocations.numDirLights, state.directionalLights.length);

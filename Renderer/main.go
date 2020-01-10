@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -41,19 +42,6 @@ func main() {
 		fmt.Println("Terminated successfully!")
 		os.Exit(1)
 	}()
-
-	//test out assimps parser
-
-	// meshes, err := assimp.ParseFile("../Editor/models/scrubPine.obj")
-
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// fmt.Println("ASSIMP STUFF! ")
-	// for j := 0; j < len(meshes); j++ {
-	// 	fmt.Println("Material: ", meshes[j].Material, "Num verts: ", len(meshes[j].Mesh.Vertices))
-	// }
 
 	//get arguments
 	argsWithoutProgram := os.Args[1:]
@@ -132,6 +120,7 @@ func main() {
 				//state.Camera.Center = Rotation
 			}
 			mouseMovement["move"] = 0
+
 			draw(window, &state)
 		}
 	}
@@ -139,13 +128,7 @@ func main() {
 }
 
 func draw(window *glfw.Window, state *geometry.State) {
-	gl.ClearColor(0.0, 0.0, 0.0, 1.0)
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	gl.Enable(gl.CULL_FACE)
-	gl.CullFace(gl.BACK)
-	gl.FrontFace(gl.CCW)
-	gl.Enable(gl.DEPTH_TEST)
-	gl.ClearDepth(1.0)
+
 	glfw.PollEvents()
 
 	//getting the math values for each object using go routines
@@ -153,19 +136,49 @@ func draw(window *glfw.Window, state *geometry.State) {
 		go doObjectMath(state.Objects[i], (*state), objectsToRender)
 	}
 
+	// fmt.Println(state.Objects)
+
+	// fmt.Println("SORTED: ", state.Objects)
+
 	//render sequentially using channel values
 	state.RenderedObjects = 0
+	gl.ClearColor(0.0, 0.0, 0.0, 1.0)
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	gl.Enable(gl.CULL_FACE)
+	gl.CullFace(gl.BACK)
+	gl.FrontFace(gl.CCW)
+
+	tempList := []geometry.RenderObject{}
+
 	for x := 0; x < len(state.Objects); x++ {
-		tempObject := <-objectsToRender
-		renderObject(state, tempObject)
+		tempList = append(tempList, <-objectsToRender)
 	}
-	//fmt.Println("Rendered ", state.RenderedObjects, " vs ", len(state.Objects))
+
+	//sort for transparency
+	sort.Slice(tempList, func(a, b int) bool {
+		//get model info
+		nameA, _, _ := tempList[a].CurrentObject.GetDetails()
+		nameB, _, _ := tempList[b].CurrentObject.GetDetails()
+		distA := tempList[a].DistanceToCamera
+		distB := tempList[b].DistanceToCamera
+
+		if distA > distB {
+			return true
+		} else if distB > distA {
+			return false
+		} else {
+			return nameA > nameB
+		}
+	})
+
+	for x := 0; x < len(tempList); x++ {
+		renderObject(state, tempList[x])
+	}
 
 	window.SwapBuffers()
 }
 
 func renderObject(state *geometry.State, object geometry.RenderObject) {
-
 	currentProgramInfo := object.CurrentProgram
 	projection := object.ProjMatrix
 	viewMatrix := object.ViewMatrix
@@ -219,6 +232,22 @@ func renderObject(state *geometry.State, object geometry.RenderObject) {
 	gl.Uniform3fv(currentProgramInfo.UniformLocations.AmbientVal, 1, &currentMaterial.Ambient[0])
 	gl.Uniform3fv(currentProgramInfo.UniformLocations.SpecularVal, 1, &currentMaterial.Specular[0])
 	gl.Uniform1fv(currentProgramInfo.UniformLocations.NVal, 1, &currentMaterial.N)
+	gl.Uniform1fv(currentProgramInfo.UniformLocations.Alpha, 1, &currentMaterial.Alpha)
+
+	if currentMaterial.Alpha < 1.0 {
+		//name, _, _ := object.CurrentObject.GetDetails()
+		//fmt.Println("here: ", name)
+		gl.Enable(gl.BLEND)
+		gl.Disable(gl.DEPTH_TEST)
+		gl.BlendFunc(gl.ONE_MINUS_CONSTANT_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+		gl.ClearDepth(float64(currentMaterial.Alpha))
+	} else {
+		gl.Enable(gl.DEPTH_TEST)
+		gl.DepthMask(true)
+		gl.Disable(gl.BLEND)
+		gl.ClearDepth(1.0)
+		gl.DepthFunc(gl.LEQUAL)
+	}
 
 	num := int32(len(state.Lights))
 	gl.Uniform1iv(currentProgramInfo.UniformLocations.NumLights, 1, &num)
@@ -235,7 +264,11 @@ func renderObject(state *geometry.State, object geometry.RenderObject) {
 	state.ViewMatrix = viewMatrix
 	gl.BindVertexArray(currentBuffers.Vao)
 
-	gl.DrawElements(gl.TRIANGLES, int32(len(currentVertices.Vertices)), gl.UNSIGNED_INT, gl.Ptr(nil))
+	if object.CurrentObject.GetType() != "mesh" {
+		gl.DrawElements(gl.TRIANGLES, int32(len(currentVertices.Vertices)), gl.UNSIGNED_INT, gl.Ptr(nil))
+	} else {
+		gl.DrawArrays(gl.TRIANGLES, 0, int32(len(currentVertices.Vertices)))
+	}
 
 	gl.BindVertexArray(0)
 
@@ -289,25 +322,34 @@ func doObjectMath(object geometry.Geometry, state geometry.State, objects chan<-
 	negCent := mgl32.Translate3D(-currentCentroid[0], -currentCentroid[1], -currentCentroid[2])
 	modelMatrix = modelMatrix.Mul4(negCent)
 	modelMatrix = geometry.ScaleM4(modelMatrix, currentModel.Scale)
+	camDist := geometry.VectorDistance(state.Camera.Position, currentModel.Position.Add(currentCentroid)) //calculate this for transparency
 
 	if parent != "" {
 		parentObj := geometry.GetSceneObject(parent, state)
-		modelMatrix = modelMatrix.Mul4(parentObj.GetModelMatrix())
+		if parentObj != nil {
+			parentMMatrix, err := parentObj.GetModelMatrix()
+			if err == nil {
+				modelMatrix = modelMatrix.Mul4(parentMMatrix)
+			}
+		} else {
+			fmt.Println("ERROR GETTING PARENT OBJECT")
+		}
 	}
 
 	object.SetModelMatrix(modelMatrix)
 	result := geometry.RenderObject{
-		ModelMatrix:     modelMatrix,
-		ViewMatrix:      viewMatrix,
-		ProjMatrix:      projection,
-		CameraPosition:  camPosition,
-		CurrentBuffers:  currentBuffers,
-		CurrentCentroid: currentCentroid,
-		CurrentMaterial: currentMaterial,
-		CurrentModel:    currentModel,
-		CurrentProgram:  currentProgramInfo,
-		CurrentVertices: currentVertices,
-		CurrentObject:   object,
+		ModelMatrix:      modelMatrix,
+		ViewMatrix:       viewMatrix,
+		ProjMatrix:       projection,
+		CameraPosition:   camPosition,
+		CurrentBuffers:   currentBuffers,
+		CurrentCentroid:  currentCentroid,
+		CurrentMaterial:  currentMaterial,
+		CurrentModel:     currentModel,
+		CurrentProgram:   currentProgramInfo,
+		CurrentVertices:  currentVertices,
+		CurrentObject:    object,
+		DistanceToCamera: camDist,
 	}
 	objects <- result
 }

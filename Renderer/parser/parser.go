@@ -101,7 +101,11 @@ func addFace(a *int, b *int, c *int, d *int, ua *int, ub *int, uc *int, ud *int,
 
 }
 
-func addLineGeometry(vertices []float32, uvs []float32) {
+func addLineGeometry(vertices []float32, uvs []float32, mesh *Mesh) {
+	vLen := len(mesh.Sparse.Vertices)
+	uvLen := len(mesh.Sparse.UVs)
+
+	fmt.Println("LINE GEOMETRY! ", vLen, " ", uvLen)
 
 }
 
@@ -120,6 +124,7 @@ func addVertex(a int, b int, c int, mesh *Mesh) {
 }
 
 func addNormal(a int, b int, c int, mesh *Mesh) {
+	//fmt.Println(a, b, c, len((*mesh).Sparse.Normals))
 	mesh.Normals = append(mesh.Normals, (*mesh).Sparse.Normals[a+0])
 	mesh.Normals = append(mesh.Normals, (*mesh).Sparse.Normals[a+1])
 	mesh.Normals = append(mesh.Normals, (*mesh).Sparse.Normals[a+2])
@@ -171,6 +176,7 @@ func Parse(filePath string) []OBJObject {
 	materialCount := 0
 
 	objects := []OBJObject{}
+	objects = append(objects, OBJObject{})
 	mtlLib := ""
 
 	scanner := bufio.NewScanner(objFile)
@@ -190,6 +196,7 @@ func Parse(filePath string) []OBJObject {
 				result := strings.Fields(line)
 				for i := 1; i < 4; i++ {
 					if s, err := strconv.ParseFloat(result[i], 32); err == nil {
+						//fmt.Println(len(objects), objectCount)
 						objects[objectCount].Geometry.Sparse.Vertices = append(objects[objectCount].Geometry.Sparse.Vertices, float32(s))
 					}
 				}
@@ -389,7 +396,7 @@ func Parse(filePath string) []OBJObject {
 				fmt.Println("fuck you, ", whiteSpaceSplit[1], UVs)
 			}
 
-			addLineGeometry(Vertices, UVs)
+			addLineGeometry(Vertices, UVs, &objects[objectCount].Geometry)
 		}
 	}
 	objects[objectCount].Materials[materialCount-1].End = len(objects[objectCount].Geometry.Vertices) / 3

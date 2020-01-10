@@ -63,6 +63,7 @@ func (s *BlinnNoTexture) Setup() {
 	uniform vec3 ambientVal;
 	uniform vec3 specularVal;
 	uniform float nVal;
+	uniform float Alpha;
 	uniform int numLights;
 	uniform PointLight pointLights[MAX_LIGHTS];
 
@@ -104,7 +105,13 @@ func (s *BlinnNoTexture) Setup() {
 		for (int i = 0; i < numLights; i++) {
 			result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir);
 		}
-		frag_colour = vec4(result, 1.0);
+
+		if (Alpha < 1.0) {
+			frag_colour = vec4(vec3(Alpha), Alpha);
+		} else {
+			frag_colour = vec4(result, Alpha);
+		}
+		
 	}
 	` + "\x00"
 }

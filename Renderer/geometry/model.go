@@ -46,8 +46,11 @@ func (m *ModelObject) SetModelMatrix(mm mgl32.Mat4) {
 	m.modelMatrix = mm
 }
 
-func (m ModelObject) GetModelMatrix() mgl32.Mat4 {
-	return m.modelMatrix
+func (m ModelObject) GetModelMatrix() (mgl32.Mat4, error) {
+	if (m.modelMatrix != mgl32.Mat4{}) {
+		return m.modelMatrix, nil
+	}
+	return mgl32.Mat4{}, errors.New("No matrix yet")
 }
 
 // GetProgramInfo : getter for programinfo
@@ -170,6 +173,7 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string) error {
 		shaderVals["ambientVal"] = true
 		shaderVals["specularVal"] = true
 		shaderVals["nVal"] = true
+		shaderVals["Alpha"] = true
 		shaderVals["uProjectionMatrix"] = true
 		shaderVals["uViewMatrix"] = true
 		shaderVals["uModelMatrix"] = true
@@ -195,6 +199,7 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string) error {
 		shaderVals["aPosition"] = true
 		shaderVals["aNormal"] = true
 		shaderVals["aUV"] = true
+		shaderVals["Alpha"] = true
 		shaderVals["diffuseVal"] = true
 		shaderVals["ambientVal"] = true
 		shaderVals["specularVal"] = true
@@ -252,6 +257,7 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string) error {
 		shaderVals["diffuseVal"] = true
 		shaderVals["ambientVal"] = true
 		shaderVals["specularVal"] = true
+		shaderVals["Alpha"] = true
 		shaderVals["nVal"] = true
 		shaderVals["uProjectionMatrix"] = true
 		shaderVals["uViewMatrix"] = true

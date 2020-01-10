@@ -47,8 +47,11 @@ func (c *Cube) SetModelMatrix(mm mgl32.Mat4) {
 	c.modelMatrix = mm
 }
 
-func (c Cube) GetModelMatrix() mgl32.Mat4 {
-	return c.modelMatrix
+func (c Cube) GetModelMatrix() (mgl32.Mat4, error) {
+	if (c.modelMatrix != mgl32.Mat4{}) {
+		return c.modelMatrix, nil
+	}
+	return mgl32.Mat4{}, errors.New("No matrix yet")
 }
 
 // GetProgramInfo : getter for programinfo

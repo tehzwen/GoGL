@@ -39,6 +39,7 @@
         "diffuseVal",
         "ambientVal",
         "specularVal",
+        "alpha",
         "nVal"
     ],
     "fragShader": [
@@ -74,6 +75,7 @@
         "uniform sampler2D projectedTexture;",
         "uniform vec3 specularVal;",
         "uniform float nVal;",
+        "uniform float alpha;",
         "uniform PointLight pointLights[MAX_POINT_LIGHTS];",
         "uniform DirectionalLight directionalLights[MAX_DIR_LIGHTS];",
         "\n",
@@ -136,14 +138,8 @@
         "   for (int j = 0; j < numDirLights; j++) {",
         "       result += CalcDirLight(directionalLights[j], normal, viewDir);",
         "   }",
-        "    vec3 projTexcoord = projectedTexCoord.xyz / projectedTexCoord.w;",
-        "    float currentDepth = projTexcoord.z + bias;",
-        "    bool inRange = projTexcoord.x >= 0.0 && projTexcoord.x <= 1.0 && projTexcoord.y >= 0.0 && projTexcoord.y <= 1.0;",
-        "    float projectedDepth = texture(projectedTexture, projTexcoord.xy).r;",
-        "    float shadowLight = (inRange && projectedDepth <= currentDepth) ? 0.0 : 1.0;",
-        "    vec4 texColor = texture(projectedTexture, projTexcoord.xy);",
         
-        "    fragColor = vec4(result, 1.0);",
+        "   fragColor = vec4(result, alpha);",
         "    //fragColor = vec4(vec3(depthValue), 1.0);",
         "    //fragColor = vec4(projTexcoord, 1.0);",
         "}"

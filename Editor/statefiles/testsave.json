@@ -286,15 +286,15 @@
                         0
                     ],
                     "n": 7.999999,
-                    "shaderType": 3,
+                    "shaderType": 1,
                     "alpha": 1,
                     "diffuseMap": null
                 },
                 "type": "mesh",
                 "position": [
                     11,
-                    6.699999809265137,
-                    7
+                    0,
+                    -5
                 ],
                 "scale": [
                     0.5,
@@ -304,7 +304,46 @@
                 "diffuseTexture": null,
                 "normalTexture": null,
                 "parent": null,
-                "model": "./models/sibenik.obj"
+                "model": "./models/alien.obj"
+            },
+            {
+                "name": "sponza",
+                "material": {
+                    "diffuse": [
+                        0.784314,
+                        0.784314,
+                        0.784314
+                    ],
+                    "ambient": [
+                        1,
+                        1,
+                        1
+                    ],
+                    "specular": [
+                        0,
+                        0,
+                        0
+                    ],
+                    "n": 7.999999,
+                    "shaderType": 3,
+                    "alpha": 1,
+                    "diffuseMap": null
+                },
+                "type": "mesh",
+                "position": [
+                    11,
+                    0,
+                    7
+                ],
+                "scale": [
+                    0.005,
+                    0.005,
+                    0.005
+                ],
+                "diffuseTexture": null,
+                "normalTexture": null,
+                "parent": null,
+                "model": "./models/sponza.obj"
             }
         ],
         "pointLights": [

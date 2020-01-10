@@ -67,6 +67,7 @@ func (s *BlinnDiffuseTexture) Setup() {
 	uniform vec3 ambientVal;
 	uniform vec3 specularVal;
 	uniform float nVal;
+	uniform float Alpha;
 	uniform int numLights;
 	uniform sampler2D uDiffuseTexture;
 	uniform PointLight pointLights[MAX_LIGHTS];
@@ -109,7 +110,14 @@ func (s *BlinnDiffuseTexture) Setup() {
 		for (int i = 0; i < numLights; i++) {
 			result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir);
 		}
-		frag_colour = vec4(result, 1.0);
+
+		vec4 texColor = texture(uDiffuseTexture, oUV);
+
+		if (texColor.w < 0.1) {
+			discard;
+		}
+
+		frag_colour = vec4(result, Alpha);
 	}
 ` + "\x00"
 }

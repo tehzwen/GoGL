@@ -44,6 +44,7 @@
         "numDirLights",
         "specularVal",
         "nVal",
+        "alpha",
         "uTexture"
     ],
     "fragShader": [
@@ -78,6 +79,7 @@
         "uniform int numDirLights;",
         "uniform vec3 specularVal;",
         "uniform float nVal;",
+        "uniform float alpha;",
         "uniform sampler2D uTexture;",
         "uniform sampler2D projectedTexture;",
         "uniform PointLight pointLights[MAX_POINT_LIGHTS];",
@@ -140,7 +142,7 @@
         "       discard;",
         "   }",
         "\n",
-        "   fragColor = vec4(result, 1.0);",
+        "   fragColor = vec4(result, alpha);",
         "\n",
         "}"
     ]
