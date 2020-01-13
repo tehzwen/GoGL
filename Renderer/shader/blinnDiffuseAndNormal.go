@@ -15,7 +15,7 @@ func (s BlinnDiffuseAndNormal) GetVertShader() string {
 
 func (s *BlinnDiffuseAndNormal) Setup() {
 	s.vertShader = `
-	#version 330 core
+	#version 410
 	//needed to add layout location for mac to work properly
 	layout (location = 0) in vec3 aPosition;
 	layout (location = 1) in vec3 aNormal;
