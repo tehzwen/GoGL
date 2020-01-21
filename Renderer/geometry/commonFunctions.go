@@ -305,16 +305,27 @@ func ParseJsonFile(filePath string, state *State) {
 						tempModel.Scale = mgl32.Vec3{1, 1, 1}
 					}
 
+					tempMaterial := Material{
+						Diffuse:  parsedMaterial.Kd,
+						Ambient:  parsedMaterial.Ka,
+						Specular: parsedMaterial.Ks,
+						Alpha:    parsedMaterial.D,
+						N:        parsedMaterial.Ns,
+					}
+					//create temp material, checking for values
+					if parsedMaterial.MapKD != "" && parsedMaterial.MapBump != "" {
+						tempMaterial.DiffuseTexture = parsedMaterial.MapKD
+						tempMaterial.NormalTexture = parsedMaterial.MapBump
+						tempMaterial.ShaderType = 4
+					} else if parsedMaterial.MapKD != "" && parsedMaterial.MapBump == "" {
+						tempMaterial.DiffuseTexture = parsedMaterial.MapKD
+						tempMaterial.ShaderType = 3
+					} else {
+						tempMaterial.ShaderType = 1
+					}
+
 					tempModelObject.Setup(
-						Material{
-							DiffuseTexture: parsedMaterial.MapKD,
-							Diffuse:        parsedMaterial.Kd,
-							Ambient:        parsedMaterial.Ka,
-							Specular:       parsedMaterial.Ks,
-							Alpha:          parsedMaterial.D,
-							N:              parsedMaterial.Ns,
-							ShaderType:     scene[0].Objects[i].Material.ShaderType,
-						},
+						tempMaterial,
 						tempModel,
 						tempName)
 

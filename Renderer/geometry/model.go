@@ -266,25 +266,40 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string) error {
 		shaderVals["pointLights"] = true
 		shaderVals["cameraPosition"] = true
 		shaderVals["uDiffuseTexture"] = true
+		shaderVals["uNormalTexture"] = true
 
-		bS := &shader.BlinnDiffuseTexture{}
+		tangents, bitangents := CalculateBitangents(m.vertexValues.Vertices, m.vertexValues.uvs)
+
+		bS := &shader.BlinnDiffuseAndNormal{}
 		bS.Setup()
 		m.shaderVal = bS
 		m.programInfo.Program = InitOpenGL(m.shaderVal.GetVertShader(), m.shaderVal.GetFragShader())
 		m.programInfo.attributes = Attributes{
-			position: 0,
-			normal:   1,
-			uv:       2,
+			position:  0,
+			normal:    1,
+			uv:        2,
+			tangent:   3,
+			bitangent: 4,
 		}
+		//load diffuse texture
 		texture0, err := texture.NewTextureFromFile("../Editor/models/"+m.material.DiffuseTexture,
 			gl.REPEAT, gl.REPEAT)
 
 		if err != nil {
 			panic(err)
 		}
+		//load normal texture
+		texture1, err := texture.NewTextureFromFile("../Editor/models/"+m.material.NormalTexture,
+			gl.REPEAT, gl.REPEAT)
+
+		if err != nil {
+			panic(err)
+		}
+
 		m.diffuseTexture = texture0
+		m.normalTexture = texture1
 		SetupAttributesMap(&m.programInfo, shaderVals)
-		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, m.vertexValues.uvs, nil, nil, m.vertexValues.faces)
+		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, m.vertexValues.uvs, tangents, bitangents, m.vertexValues.faces)
 
 	}
 

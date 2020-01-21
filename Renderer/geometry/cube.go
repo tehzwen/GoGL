@@ -2,7 +2,6 @@ package geometry
 
 import (
 	"errors"
-	"fmt"
 
 	"../shader"
 	"../texture"
@@ -365,10 +364,10 @@ func (c *Cube) Setup(mat Material, mod Model, name string) error {
 		shaderVals["pointLights"] = true
 		shaderVals["cameraPosition"] = true
 		shaderVals["uDiffuseTexture"] = true
+		shaderVals["uNormalTexture"] = true
 
 		//calculate tangents and bitangents
 		tangents, bitangents := CalculateBitangents(c.vertexValues.Vertices, c.vertexValues.uvs)
-		fmt.Println("BITANGENTS: ", bitangents[20])
 
 		bS := &shader.BlinnDiffuseAndNormal{}
 		bS.Setup()

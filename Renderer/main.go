@@ -147,6 +147,7 @@ func draw(window *glfw.Window, state *geometry.State) {
 	gl.Enable(gl.CULL_FACE)
 	gl.CullFace(gl.BACK)
 	gl.FrontFace(gl.CCW)
+	gl.Enable(gl.MULTISAMPLE)
 
 	tempList := []geometry.RenderObject{}
 
@@ -359,6 +360,7 @@ func initGlfw() *glfw.Window {
 	if err := glfw.Init(); err != nil {
 		panic(err)
 	}
+	glfw.WindowHint(glfw.Samples, 4)
 	glfw.WindowHint(glfw.Resizable, glfw.False)
 	glfw.WindowHint(glfw.ContextVersionMajor, 4)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)

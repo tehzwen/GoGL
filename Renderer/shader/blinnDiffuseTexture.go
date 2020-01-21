@@ -37,7 +37,7 @@ func (s *BlinnDiffuseTexture) Setup() {
 		oNormal = normalize((uModelMatrix * vec4(aNormal, 1.0)).xyz);
 		normalInterp = vec3(normalMatrix * vec4(aNormal, 0.0));
 		oFragPosition = (uModelMatrix * vec4(aPosition, 1.0)).xyz;
-		oUV = aUV;
+		oUV = -aUV;
 		oCamPosition =  (uViewMatrix * vec4(cameraPosition, 1.0)).xyz;
 		gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0); 
 	}
@@ -74,7 +74,7 @@ func (s *BlinnDiffuseTexture) Setup() {
 
 	out vec4 frag_colour;
 
-	vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir) 
+	vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 textureVal) 
 	{
 		vec3 lightDir = normalize(light.position - fragPos);
 		// diffuse shading
@@ -87,12 +87,12 @@ func (s *BlinnDiffuseTexture) Setup() {
 		float attenuation = 1.0 / (light.constant + light.linear * distance + 
 					   light.quadratic * (distance * distance));    
 		// combine results
-		vec3 ambient  = light.color * ambientVal * diffuseVal * vec3(texture(uDiffuseTexture, oUV));
-		vec3 diffuse  = light.color  * diff * diffuseVal * vec3(texture(uDiffuseTexture, oUV));
+		vec3 ambient  = light.color * ambientVal * diffuseVal * textureVal;
+		vec3 diffuse  = light.color  * diff * diffuseVal * textureVal;
 		vec3 specular = vec3(0,0,0);
 
 		if (diff < 0.0f) {
-			specular = light.color * specularVal * spec * vec3(texture(uDiffuseTexture, oUV));
+			specular = light.color * specularVal * spec * textureVal;
 			specular *= attenuation;
 		}
 		
@@ -107,11 +107,11 @@ func (s *BlinnDiffuseTexture) Setup() {
 		vec3 result = vec3(0,0,0);
 		vec3 viewDir = normalize(oCamPosition - oFragPosition);
 
-		for (int i = 0; i < numLights; i++) {
-			result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir);
-		}
-
 		vec4 texColor = texture(uDiffuseTexture, oUV);
+
+		for (int i = 0; i < numLights; i++) {
+			result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir, texColor.xyz);
+		}
 
 		if (texColor.w < 0.1) {
 			discard;

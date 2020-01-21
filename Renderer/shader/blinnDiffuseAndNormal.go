@@ -41,7 +41,7 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 		oNormal = normalize((uModelMatrix * vec4(aNormal, 1.0)).xyz);
 		normalInterp = vec3(normalMatrix * vec4(aNormal, 0.0));
 		oFragPosition = (uModelMatrix * vec4(aPosition, 1.0)).xyz;
-		oUV = aUV;
+		oUV = -aUV;
 		oCamPosition =  (uViewMatrix * vec4(cameraPosition, 1.0)).xyz;
 		oBitangent = aBitangent;
 		oTangent = aTangent;
@@ -76,13 +76,14 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 	uniform vec3 specularVal;
 	uniform float nVal;
 	uniform int numLights;
+	uniform float Alpha;
 	uniform sampler2D uDiffuseTexture;
 	uniform sampler2D uNormalTexture;
 	uniform PointLight pointLights[MAX_LIGHTS];
 
 	out vec4 frag_colour;
 
-	vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir) 
+	vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 textureVal) 
 	{
 		vec3 lightDir = normalize(light.position - fragPos);
 		// diffuse shading
@@ -95,12 +96,12 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 		float attenuation = 1.0 / (light.constant + light.linear * distance + 
 					light.quadratic * (distance * distance));    
 		// combine results
-		vec3 ambient  = light.color * ambientVal * diffuseVal * vec3(texture(uDiffuseTexture, oUV));
-		vec3 diffuse  = light.color  * diff * diffuseVal * vec3(texture(uDiffuseTexture, oUV));
+		vec3 ambient  = light.color * ambientVal * diffuseVal * textureVal;
+		vec3 diffuse  = light.color  * diff * diffuseVal * textureVal;
 		vec3 specular = vec3(0,0,0);
 
 		if (diff < 0.0f) {
-			specular = light.color * specularVal * spec * vec3(texture(uDiffuseTexture, oUV));
+			specular = light.color * specularVal * spec * textureVal;
 			specular *= attenuation;
 		}
 		
@@ -111,8 +112,9 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 	}
 
 	void main() {
+
 		vec3 regularNormal = normalize(normalInterp);
-		vec3 normal = texture(uNormalTexture, oUV).xyz;
+		vec3 normal = texture(uNormalTexture, -oUV).xyz;
 		normal = 2.0 * normal - 1.0;
 		normal = normal * vec3(5.0, 5.0, 5.0);
 		vec3 biTangent = cross(oNormal, oBitangent);
@@ -121,10 +123,19 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 		vec3 result = vec3(0,0,0);
 		vec3 viewDir = normalize(oCamPosition - oFragPosition);
 
+		vec4 texColor = texture(uDiffuseTexture, oUV);
+
 		for (int i = 0; i < numLights; i++) {
-			result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir);
+			result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir, texColor.xyz);
 		}
-		frag_colour = vec4(result, 1.0);
+
+		if (texColor.w < 0.1) {
+			discard;
+		}
+
+		
+
+		frag_colour = vec4(result, Alpha);
 	}
 	` + "\x00"
 }

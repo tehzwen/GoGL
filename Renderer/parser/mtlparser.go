@@ -8,12 +8,14 @@ import (
 )
 
 type ParsedMaterial struct {
-	Ns    float32
-	Ka    []float32
-	Kd    []float32
-	Ks    []float32
-	D     float32
-	MapKD string
+	Ns      float32
+	Ka      []float32
+	Kd      []float32
+	Ks      []float32
+	D       float32
+	MapKD   string
+	MapBump string
+	MapKs   string
 }
 
 func ParseMTLFile(filename string, materialName string) ParsedMaterial {
@@ -116,6 +118,8 @@ func ParseMTLFile(filename string, materialName string) ParsedMaterial {
 				mtlDetails.D = float32(d)
 			} else if whiteSpaceSplit[0] == "map_Kd" {
 				mtlDetails.MapKD = whiteSpaceSplit[1]
+			} else if whiteSpaceSplit[0] == "map_Bump" {
+				mtlDetails.MapBump = whiteSpaceSplit[1]
 			}
 		}
 	}
