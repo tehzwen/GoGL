@@ -15,7 +15,7 @@ func (s BasicShader) GetVertShader() string {
 
 func (s *BasicShader) Setup() {
 	s.vertShader = `
-	#version 300 es
+	#version 410
 	//needed to add layout location for mac to work properly
 	layout (location = 0) in vec3 aPosition;
 
@@ -25,7 +25,7 @@ func (s *BasicShader) Setup() {
 ` + "\x00"
 
 	s.fragShader = `
-	#version 300 es
+	#version 410
 	precision highp float;
 
 	out vec4 frag_colour;
