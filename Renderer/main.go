@@ -179,6 +179,46 @@ func draw(window *glfw.Window, state *geometry.State) {
 	window.SwapBuffers()
 }
 
+func collisionTest(state *geometry.State, object geometry.RenderObject) {
+	currentName, _, _ := object.CurrentObject.GetDetails()
+	currBox := object.CurrentObject.GetBoundingBox()
+
+	//iterate through all collidable objects
+	for x := 0; x < len(state.Objects); x++ {
+		//need to check for itself
+		name, _, _ := state.Objects[x].GetDetails()
+		if name == currentName {
+			continue
+		}
+
+		box := state.Objects[x].GetBoundingBox()
+		if box.Collide {
+
+			collide := geometry.Intersect(box, currBox)
+			if collide && currBox.CollisionBody != name {
+				object.CurrentObject.SetBoundingBox(geometry.BoundingBox{
+					Max:            currBox.Max,
+					Min:            currBox.Min,
+					Collide:        currBox.Collide,
+					CollisionCount: currBox.CollisionCount + 1,
+					CollisionBody:  name,
+				})
+				object.CurrentObject.OnCollide(box)
+
+			} else if currBox.CollisionBody == name {
+				//fmt.Println("RESET")
+				object.CurrentObject.SetBoundingBox(geometry.BoundingBox{
+					Max:            currBox.Max,
+					Min:            currBox.Min,
+					Collide:        currBox.Collide,
+					CollisionCount: 0,
+					CollisionBody:  "",
+				})
+			}
+		}
+	}
+}
+
 func renderObject(state *geometry.State, object geometry.RenderObject) {
 	currentProgramInfo := object.CurrentProgram
 	projection := object.ProjMatrix
@@ -188,6 +228,14 @@ func renderObject(state *geometry.State, object geometry.RenderObject) {
 	currentMaterial := object.CurrentMaterial
 	currentBuffers := object.CurrentBuffers
 	currentVertices := object.CurrentVertices
+
+	//do movement physics and collision testing
+	currentForce := object.CurrentObject.GetForce()
+	object.CurrentObject.Translate(currentForce)
+
+	if object.CurrentObject.GetBoundingBox().Collide {
+		collisionTest(state, object)
+	}
 
 	gl.UseProgram(currentProgramInfo.Program)
 

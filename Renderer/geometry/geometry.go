@@ -6,9 +6,11 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
+type collisionFunction func(BoundingBox)
+
 // Geometry : interface for all objects that will be rendered
 type Geometry interface {
-	Setup(Material, Model, string) error
+	Setup(Material, Model, string, bool) error
 	SetShader(string, string) error
 	SetShaderVal(shader.Shader)
 	GetProgramInfo() (ProgramInfo, error)
@@ -29,6 +31,12 @@ type Geometry interface {
 	Translate(mgl32.Vec3)
 	GetDetails() (string, string, string)
 	GetBoundingBox() BoundingBox
+	SetBoundingBox(BoundingBox)
+	SetOnCollide(collisionFunction)
+	OnCollide(BoundingBox)
+	AddForce(mgl32.Vec3)
+	GetForce() mgl32.Vec3
+	SetForce(mgl32.Vec3)
 }
 
 // Attributes : struct for holding vertex attribute locations
@@ -108,6 +116,9 @@ type Model struct {
 }
 
 type BoundingBox struct {
-	Min mgl32.Vec3
-	Max mgl32.Vec3
+	Min            mgl32.Vec3
+	Max            mgl32.Vec3
+	Collide        bool
+	CollisionCount int
+	CollisionBody  string
 }

@@ -40,6 +40,7 @@ type SceneObject struct {
 	NormalTexture  string    `json:"normalTexture"`
 	Parent         string    `json:"parent"`
 	Model          string    `json:"model"`
+	Collide        bool      `json:"collide"`
 }
 
 type PointLight struct {
@@ -142,6 +143,7 @@ func addObjectToState(object Geometry, state *State, sceneObj SceneObject) {
 		sceneObj.Material,
 		tempModel,
 		sceneObj.Name,
+		sceneObj.Collide,
 	)
 	object.Translate(mgl32.Vec3{sceneObj.Position[0], sceneObj.Position[1], sceneObj.Position[2]})
 	state.Objects = append(state.Objects, object)
@@ -185,7 +187,11 @@ func GetBoundingBox(vertices []float32) BoundingBox {
 }
 
 func ScaleBoundingBox(box BoundingBox, scaleVec mgl32.Vec3) BoundingBox {
-	result := BoundingBox{}
+	result := BoundingBox{
+		Collide:        box.Collide,
+		CollisionCount: box.CollisionCount,
+		CollisionBody:  box.CollisionBody,
+	}
 	result.Min = box.Min
 
 	for i := 0; i < 3; i++ {
@@ -200,7 +206,11 @@ func ScaleBoundingBox(box BoundingBox, scaleVec mgl32.Vec3) BoundingBox {
 }
 
 func TranslateBoundingBox(box BoundingBox, translateVec mgl32.Vec3) BoundingBox {
-	result := BoundingBox{}
+	result := BoundingBox{
+		Collide:        box.Collide,
+		CollisionCount: box.CollisionCount,
+		CollisionBody:  box.CollisionBody,
+	}
 
 	result.Min[0] = box.Min[0] + translateVec[0]
 	result.Max[0] = box.Max[0] + translateVec[0]
@@ -210,6 +220,12 @@ func TranslateBoundingBox(box BoundingBox, translateVec mgl32.Vec3) BoundingBox 
 	result.Max[2] = box.Max[2] + translateVec[2]
 
 	return result
+}
+
+func Intersect(a, b BoundingBox) bool {
+	return (a.Min[0] <= b.Max[0] && a.Max[0] >= b.Min[0]) &&
+		(a.Min[1] <= b.Max[1] && a.Max[1] >= b.Min[1]) &&
+		(a.Min[2] <= b.Max[2] && a.Max[2] >= b.Min[2])
 }
 
 func ParseJsonFile(filePath string, state *State) {
@@ -285,13 +301,6 @@ func ParseJsonFile(filePath string, state *State) {
 
 					tempName := scene[0].Objects[i].Name
 
-					if x > 1 {
-						tempModelObject.SetParent(scene[0].Objects[i].Name)
-						tempName = strings.Join([]string{tempName, strconv.Itoa(j)}, "")
-					} else {
-
-					}
-
 					tempModel := Model{
 						Position: mgl32.Vec3{scene[0].Objects[i].Position[0], scene[0].Objects[i].Position[1], scene[0].Objects[i].Position[2]},
 						Scale:    mgl32.Vec3{scene[0].Objects[i].Scale[0], scene[0].Objects[i].Scale[1], scene[0].Objects[i].Scale[2]},
@@ -327,7 +336,9 @@ func ParseJsonFile(filePath string, state *State) {
 					tempModelObject.Setup(
 						tempMaterial,
 						tempModel,
-						tempName)
+						tempName,
+						scene[0].Objects[i].Collide,
+					)
 
 					state.Objects = append(state.Objects, &tempModelObject)
 					state.LoadedObjects++

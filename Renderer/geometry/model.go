@@ -27,6 +27,32 @@ type ModelObject struct {
 	shaderVal      shader.Shader
 	diffuseTexture *texture.Texture
 	normalTexture  *texture.Texture
+	onCollide      collisionFunction
+	velocity       mgl32.Vec3
+}
+
+func (m *ModelObject) SetBoundingBox(b BoundingBox) {
+	m.boundingBox = b
+}
+
+func (m *ModelObject) SetForce(v mgl32.Vec3) {
+	m.velocity = v
+}
+
+func (m *ModelObject) GetForce() mgl32.Vec3 {
+	return m.velocity
+}
+
+func (m *ModelObject) AddForce(v mgl32.Vec3) {
+	m.velocity.Add(v)
+}
+
+func (m *ModelObject) OnCollide(box BoundingBox) {
+	m.onCollide(box)
+}
+
+func (m *ModelObject) SetOnCollide(colFunc collisionFunction) {
+	m.onCollide = colFunc
 }
 
 // SetShader : helper function for applying frag/vert shader
@@ -146,7 +172,7 @@ func (m *ModelObject) SetVertexValues(vertices []float32, normals []float32, uvs
 }
 
 // Setup : function for initializing ModelObject
-func (m *ModelObject) Setup(mat Material, mod Model, name string) error {
+func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool) error {
 	m.name = name
 	m.material = mat
 	m.programInfo = ProgramInfo{}
@@ -304,12 +330,20 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string) error {
 	}
 
 	m.boundingBox = GetBoundingBox(m.vertexValues.Vertices)
+
+	if collide {
+		m.boundingBox.Collide = true
+	} else {
+		m.boundingBox.Collide = false
+	}
+
 	m.Scale(mod.Scale)
 	m.boundingBox = ScaleBoundingBox(m.boundingBox, mod.Scale)
 	m.Model.Position = mod.Position
 	m.boundingBox = TranslateBoundingBox(m.boundingBox, mod.Position)
 	m.Model.Rotation = mod.Rotation
 	m.centroid = CalculateCentroid(m.vertexValues.Vertices, m.Model.Scale)
+	m.onCollide = func(box BoundingBox) {}
 
 	return nil
 }

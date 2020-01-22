@@ -37,7 +37,8 @@
                 "diffuseTexture": "./materials/plywood.jpg",
                 "normalTexture": "./materials/checkerNorm.jpg",
                 "parent": null,
-                "model": null
+                "model": null,
+                "collide": true
             },
             {
                 "name": "wall1",
@@ -75,7 +76,8 @@
                 "diffuseTexture": "./materials/plywood.jpg",
                 "normalTexture": null,
                 "parent": null,
-                "model": null
+                "model": null,
+                "collide": true
             },
             {
                 "name": "testCube0",
@@ -196,8 +198,8 @@
                 "material": {
                     "diffuse": [
                         0.6,
-                        0.2,
-                        0.8
+                        0.0,
+                        0.0
                     ],
                     "ambient": [
                         0.1,
@@ -215,9 +217,9 @@
                 },
                 "type": "cube",
                 "position": [
-                    1.5,
-                    0.10000000149011612,
-                    5
+                    -1,
+                    0,
+                    -2
                 ],
                 "scale": [
                     1,
@@ -227,7 +229,8 @@
                 "diffuseTexture": null,
                 "normalTexture": null,
                 "parent": null,
-                "model": null
+                "model": null,
+                "collide": true
             },
             {
                 "name": "floorPlane",
@@ -304,7 +307,7 @@
                 "diffuseTexture": null,
                 "normalTexture": null,
                 "parent": null,
-                "model": "./models/alien.obj"
+                "model": "./models/scrubPine.obj"
             },
             {
                 "name": "sponza",
