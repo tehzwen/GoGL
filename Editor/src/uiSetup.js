@@ -145,7 +145,6 @@ function handleTypeSelectChange(event) {
         if (fileUpload) {
             fileUpload.remove();
         }
-
     }
 }
 
@@ -162,7 +161,6 @@ function displayObjectValues(object, state) {
     } else {
         position = object.position;
     }
-    
 
     if (!object) {
         let selectedObjectDiv = document.getElementById("selectedObject");
@@ -175,9 +173,6 @@ function displayObjectValues(object, state) {
 
     let positionalInputDiv = document.createElement("div");
     positionalInputDiv.classList = "input-group";
-
-    let prependDivX = document.createElement("div");
-    prependDivX.classList = "input-group-prepend";
 
     //X move input handler
     let objectPositionX = document.createElement("input");
@@ -211,6 +206,9 @@ function displayObjectValues(object, state) {
     objectPositionZ.id = object.name + "-positionZ";
     objectPositionZ.classList = "form-control";
     objectPositionZ.value = parseFloat(position[2]).toFixed(1);
+
+    let prependDivX = document.createElement("div");
+    prependDivX.classList = "input-group-prepend";
 
     prependDivX.innerHTML = `
         <span class="input-group-text">X</span>
@@ -247,6 +245,8 @@ function displayObjectValues(object, state) {
     selectedObjectDiv.appendChild(createHeader(`<i>${object.name}</i>`, "h3"));
     selectedObjectDiv.appendChild(createHeader("Position", "h4"));
     selectedObjectDiv.appendChild(positionalInputDiv);
+    selectedObjectDiv.appendChild(createHeader("Rotation", "h4"));
+    selectedObjectDiv.appendChild(displayRotationValues(object, state))
 
 
     if (object.type !== "light") {
@@ -257,6 +257,72 @@ function displayObjectValues(object, state) {
     } else {
         //for light, we want to change its color not diffuse material
     }
+}
+
+/**
+ * Purpose: Function creates a ui row for editing the rotation of 
+ * a selected scene object
+ * @param {Scene object to be edited/displayed} object 
+ * @param {State object containing all objects} state 
+ */
+function displayRotationValues(object, state) {
+    let rotationalInputDiv = document.createElement("div");
+    rotationalInputDiv.classList = "input-group";
+
+    let prependDivX = document.createElement("div");
+    prependDivX.classList = "input-group-prepend";
+
+    prependDivX.innerHTML = `
+        <span class="input-group-text">X</span>
+        `;
+    let prependDivY = prependDivX.cloneNode(true);
+    prependDivY.innerHTML = `
+        <span class="input-group-text">Y</span>
+        `;
+
+    let prependDivZ = prependDivX.cloneNode(true);
+    prependDivZ.innerHTML = `
+        <span class="input-group-text">Z</span>
+        `;
+
+    //X rotation
+    let objectRotationX = document.createElement("input");
+    objectRotationX.type = "number";
+    objectRotationX.classList = "form-control";
+    objectRotationX.value = 0;
+    objectRotationX.addEventListener('input', (event) => {
+        mat4.rotateX(object.model.rotation, object.model.rotation, 1)
+        state.render = true;
+    })
+
+    //Y rotation
+    let objectRotationY = document.createElement("input");
+    objectRotationY.type = "number";
+    objectRotationY.classList = "form-control";
+    objectRotationY.value = 0;
+    objectRotationY.addEventListener('input', (event) => {
+        mat4.rotateY(object.model.rotation, object.model.rotation, 1)
+        state.render = true;
+    })
+
+    //Z rotation
+    let objectRotationZ = document.createElement("input");
+    objectRotationZ.type = "number";
+    objectRotationZ.classList = "form-control";
+    objectRotationZ.value = 0;
+    objectRotationZ.addEventListener('input', (event) => {
+        mat4.rotateZ(object.model.rotation, object.model.rotation, 1)
+        state.render = true;
+    })
+
+    rotationalInputDiv.appendChild(prependDivX);
+    rotationalInputDiv.appendChild(objectRotationX);
+    rotationalInputDiv.appendChild(prependDivY);
+    rotationalInputDiv.appendChild(objectRotationY);
+    rotationalInputDiv.appendChild(prependDivZ);
+    rotationalInputDiv.appendChild(objectRotationZ);
+
+    return rotationalInputDiv;
 }
 
 function createHeader(text, size) {

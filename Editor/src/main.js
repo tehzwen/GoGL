@@ -29,9 +29,18 @@ const shadowDepthFragShader =
 
 if (window.location.pathname.indexOf("main.html") !== -1) {
     window.onload = () => {
+        state.width = window.innerWidth;
+        state.height = window.innerHeight;
         state.renderedText = document.getElementById("renderedNumText");
         state.renderedText.style.color = "white";
         var sceneFile = "testsave.json";
+
+        //add event listener to canvas resize
+        window.addEventListener("resize", (e) => {
+            state.width = window.innerWidth;
+            state.height = window.innerHeight;
+        })
+
         parseSceneFile("./statefiles/" + sceneFile, state, main);
     }
 }
@@ -387,7 +396,7 @@ function drawScene(gl, deltaTime, state) {
 
     }
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.viewport(0, 0, state.width, state.height);
 
     //RENDER THE SCENE NOW HERE NORMALLY
 
@@ -469,6 +478,7 @@ function drawScene(gl, deltaTime, state) {
 
                 currentlyRendered++;
 
+                //TODO Centroid rotation of scaled objects not calculated properly
                 //Apply transformations to model matrix
                 var modelMatrix = mat4.create();
                 var negCentroid = vec3.fromValues(0.0, 0.0, 0.0);
@@ -484,7 +494,6 @@ function drawScene(gl, deltaTime, state) {
                     if (parent.modelMatrix) {
                         mat4.mul(modelMatrix, parent.modelMatrix, modelMatrix);
                     }
-                    //console.log(object)
                 }
 
                 object.modelMatrix = modelMatrix;

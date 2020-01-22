@@ -132,16 +132,27 @@ class Cube {
 
     scale(scaleVec) {
 
+        //model scale
         let xVal = this.model.scale[0];
         let yVal = this.model.scale[1];
         let zVal = this.model.scale[2];
 
+        //centroid scale
+        let cenX = this.centroid[0];
+        let cenY = this.centroid[1];
+        let cenZ = this.centroid[2];
+
+        cenX *= scaleVec[0];
+        cenY *= scaleVec[1];
+        cenZ *= scaleVec[2];
+
         xVal *= scaleVec[0];
         yVal *= scaleVec[1];
         zVal *= scaleVec[2];
-
+        
         //need to scale bounding box
         this.boundingBox = scaleBoundingBox(this.boundingBox, scaleVec);
+        this.centroid = vec3.fromValues(cenX, cenY, cenZ);
         this.model.scale = vec3.fromValues(xVal, yVal, zVal);
     }
 

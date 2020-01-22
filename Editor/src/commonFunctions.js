@@ -439,6 +439,7 @@ function createSceneFile(state, filename) {
                     scale: object.model.scale ? [object.model.scale[0], object.model.scale[1], object.model.scale[2]] : null,
                     diffuseTexture: object.model.diffuseTexture ? object.model.diffuseTexture : null,
                     normalTexture: object.model.normalTexture ? object.model.normalTexture : null,
+                    rotation: object.model.rotation ? object.model.rotation : null,
                     parent: object.parent ? object.parent : null,
                     model: object.modelName ? object.modelName : null
                 });
@@ -452,6 +453,7 @@ function createSceneFile(state, filename) {
                 scale: object.model.scale ? [object.model.scale[0], object.model.scale[1], object.model.scale[2]] : null,
                 diffuseTexture: object.model.diffuseTexture ? object.model.diffuseTexture : null,
                 normalTexture: object.model.normalTexture ? object.model.normalTexture : null,
+                rotation: object.model.rotation ? object.model.rotation : null,
                 parent: object.parent ? object.parent : null,
                 model: object.modelName ? object.modelName : null
             });

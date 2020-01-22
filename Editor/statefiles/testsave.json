@@ -36,9 +36,26 @@
                 ],
                 "diffuseTexture": "./materials/plywood.jpg",
                 "normalTexture": "./materials/checkerNorm.jpg",
+                "rotation": {
+                    "0": 1,
+                    "1": 0,
+                    "2": 0,
+                    "3": 0,
+                    "4": 0,
+                    "5": 1,
+                    "6": 0,
+                    "7": 0,
+                    "8": 0,
+                    "9": 0,
+                    "10": 1,
+                    "11": 0,
+                    "12": 0,
+                    "13": 0,
+                    "14": 0,
+                    "15": 1
+                },
                 "parent": null,
-                "model": null,
-                "collide": true
+                "model": null
             },
             {
                 "name": "wall1",
@@ -75,9 +92,26 @@
                 ],
                 "diffuseTexture": "./materials/plywood.jpg",
                 "normalTexture": null,
+                "rotation": {
+                    "0": 1,
+                    "1": 0,
+                    "2": 0,
+                    "3": 0,
+                    "4": 0,
+                    "5": 1,
+                    "6": 0,
+                    "7": 0,
+                    "8": 0,
+                    "9": 0,
+                    "10": 1,
+                    "11": 0,
+                    "12": 0,
+                    "13": 0,
+                    "14": 0,
+                    "15": 1
+                },
                 "parent": null,
-                "model": null,
-                "collide": true
+                "model": null
             },
             {
                 "name": "testCube0",
@@ -114,6 +148,24 @@
                 ],
                 "diffuseTexture": null,
                 "normalTexture": null,
+                "rotation": {
+                    "0": 1,
+                    "1": 0,
+                    "2": 0,
+                    "3": 0,
+                    "4": 0,
+                    "5": 1,
+                    "6": 0,
+                    "7": 0,
+                    "8": 0,
+                    "9": 0,
+                    "10": 1,
+                    "11": 0,
+                    "12": 0,
+                    "13": 0,
+                    "14": 0,
+                    "15": 1
+                },
                 "parent": null,
                 "model": null
             },
@@ -152,6 +204,24 @@
                 ],
                 "diffuseTexture": null,
                 "normalTexture": null,
+                "rotation": {
+                    "0": 1,
+                    "1": 0,
+                    "2": 0,
+                    "3": 0,
+                    "4": 0,
+                    "5": 1,
+                    "6": 0,
+                    "7": 0,
+                    "8": 0,
+                    "9": 0,
+                    "10": 1,
+                    "11": 0,
+                    "12": 0,
+                    "13": 0,
+                    "14": 0,
+                    "15": 1
+                },
                 "parent": null,
                 "model": null
             },
@@ -190,6 +260,24 @@
                 ],
                 "diffuseTexture": null,
                 "normalTexture": null,
+                "rotation": {
+                    "0": 1,
+                    "1": 0,
+                    "2": 0,
+                    "3": 0,
+                    "4": 0,
+                    "5": 1,
+                    "6": 0,
+                    "7": 0,
+                    "8": 0,
+                    "9": 0,
+                    "10": 1,
+                    "11": 0,
+                    "12": 0,
+                    "13": 0,
+                    "14": 0,
+                    "15": 1
+                },
                 "parent": "testCube1",
                 "model": null
             },
@@ -198,8 +286,8 @@
                 "material": {
                     "diffuse": [
                         0.6,
-                        0.0,
-                        0.0
+                        0,
+                        0
                     ],
                     "ambient": [
                         0.1,
@@ -228,9 +316,26 @@
                 ],
                 "diffuseTexture": null,
                 "normalTexture": null,
+                "rotation": {
+                    "0": 1,
+                    "1": 0,
+                    "2": 0,
+                    "3": 0,
+                    "4": 0,
+                    "5": 1,
+                    "6": 0,
+                    "7": 0,
+                    "8": 0,
+                    "9": 0,
+                    "10": 1,
+                    "11": 0,
+                    "12": 0,
+                    "13": 0,
+                    "14": 0,
+                    "15": 1
+                },
                 "parent": null,
-                "model": null,
-                "collide": true
+                "model": null
             },
             {
                 "name": "floorPlane",
@@ -267,6 +372,24 @@
                 ],
                 "diffuseTexture": "./materials/default.png",
                 "normalTexture": "./materials/concreteBricks.jpg",
+                "rotation": {
+                    "0": 1,
+                    "1": 0,
+                    "2": 0,
+                    "3": 0,
+                    "4": 0,
+                    "5": 1,
+                    "6": 0,
+                    "7": 0,
+                    "8": 0,
+                    "9": 0,
+                    "10": 1,
+                    "11": 0,
+                    "12": 0,
+                    "13": 0,
+                    "14": 0,
+                    "15": 1
+                },
                 "parent": null,
                 "model": null
             },
@@ -274,9 +397,9 @@
                 "name": "tree",
                 "material": {
                     "diffuse": [
-                        0.784314,
-                        0.784314,
-                        0.784314
+                        0.5882,
+                        0.5882,
+                        0.5882
                     ],
                     "ambient": [
                         1,
@@ -288,10 +411,10 @@
                         0,
                         0
                     ],
-                    "n": 7.999999,
-                    "shaderType": 1,
+                    "n": 10.000002,
+                    "shaderType": 3,
                     "alpha": 1,
-                    "diffuseMap": null
+                    "diffuseMap": "Piney.jpg"
                 },
                 "type": "mesh",
                 "position": [
@@ -306,6 +429,24 @@
                 ],
                 "diffuseTexture": null,
                 "normalTexture": null,
+                "rotation": {
+                    "0": 1,
+                    "1": 0,
+                    "2": 0,
+                    "3": 0,
+                    "4": 0,
+                    "5": 1,
+                    "6": 0,
+                    "7": 0,
+                    "8": 0,
+                    "9": 0,
+                    "10": 1,
+                    "11": 0,
+                    "12": 0,
+                    "13": 0,
+                    "14": 0,
+                    "15": 1
+                },
                 "parent": null,
                 "model": "./models/scrubPine.obj"
             },
@@ -313,9 +454,9 @@
                 "name": "sponza",
                 "material": {
                     "diffuse": [
-                        0.784314,
-                        0.784314,
-                        0.784314
+                        0.5882,
+                        0.5882,
+                        0.5882
                     ],
                     "ambient": [
                         1,
@@ -327,10 +468,10 @@
                         0,
                         0
                     ],
-                    "n": 7.999999,
-                    "shaderType": 4,
+                    "n": 10.000002,
+                    "shaderType": 3,
                     "alpha": 1,
-                    "diffuseMap": null
+                    "diffuseMap": "Piney.jpg"
                 },
                 "type": "mesh",
                 "position": [
@@ -339,14 +480,32 @@
                     7
                 ],
                 "scale": [
-                    0.005,
-                    0.005,
-                    0.005
+                    0.5,
+                    0.5,
+                    0.5
                 ],
                 "diffuseTexture": null,
                 "normalTexture": null,
+                "rotation": {
+                    "0": 1,
+                    "1": 0,
+                    "2": 0,
+                    "3": 0,
+                    "4": 0,
+                    "5": 1,
+                    "6": 0,
+                    "7": 0,
+                    "8": 0,
+                    "9": 0,
+                    "10": 1,
+                    "11": 0,
+                    "12": 0,
+                    "13": 0,
+                    "14": 0,
+                    "15": 1
+                },
                 "parent": null,
-                "model": "./models/sponza.obj"
+                "model": "./models/scrubPine.obj"
             }
         ],
         "pointLights": [
