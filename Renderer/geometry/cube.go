@@ -156,6 +156,7 @@ func (c Cube) GetModel() (Model, error) {
 func (c *Cube) Scale(scaleVec mgl32.Vec3) {
 	c.model.Scale = scaleVec
 	c.centroid = CalculateCentroid(c.vertexValues.Vertices, c.model.Scale)
+	c.boundingBox = ScaleBoundingBox(c.boundingBox, scaleVec)
 }
 
 func (c *Cube) Translate(translateVec mgl32.Vec3) {

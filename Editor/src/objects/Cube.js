@@ -8,8 +8,9 @@ class Cube {
         this.parent = object.parent;
         this.type = object.type;
         this.loaded = false;
-        this.initialTransform = { position: object.position, scale: object.scale };
+        this.initialTransform = { position: object.position, scale: object.scale, rotation: object.rotation };
         this.material = object.material;
+        this.collide = object.collide;
         this.model = {
             vertices: [
                 0.0, 0.0, 0.0,
@@ -290,6 +291,12 @@ class Cube {
         this.boundingBox = getBoundingBox(this.model.vertices);
         this.scale(this.initialTransform.scale);
         this.translate(this.initialTransform.position);
+
+        if (this.initialTransform.rotation) {
+            this.model.rotation = this.initialTransform.rotation;
+        }
+
+        console.warn(this.model.rotation);
         this.lightingShader();
     }
 }

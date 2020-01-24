@@ -137,6 +137,7 @@ func (p Plane) GetNormalTexture() *texture.Texture {
 func (p *Plane) Scale(scaleVec mgl32.Vec3) {
 	p.model.Scale = scaleVec
 	p.centroid = CalculateCentroid(p.vertexValues.Vertices, p.model.Scale)
+	p.boundingBox = ScaleBoundingBox(p.boundingBox, scaleVec)
 }
 
 func (p *Plane) Translate(translateVec mgl32.Vec3) {

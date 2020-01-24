@@ -363,14 +363,25 @@ func doObjectMath(object geometry.Geometry, state geometry.State, objects chan<-
 	viewMatrix := mgl32.LookAtV(state.Camera.Position, camFront, state.Camera.Up)
 	camPosition := []float32{state.Camera.Position[0], state.Camera.Position[1], state.Camera.Position[2]}
 	modelMatrix := mgl32.Ident4()
-	positionMat := mgl32.Translate3D(currentModel.Position[0], currentModel.Position[1], currentModel.Position[2])
-	modelMatrix = modelMatrix.Mul4(positionMat)
+
+	//move to centroid
 	centroidMat := mgl32.Translate3D(currentCentroid[0], currentCentroid[1], currentCentroid[2])
 	modelMatrix = modelMatrix.Mul4(centroidMat)
+
+	//rotation
 	modelMatrix = modelMatrix.Mul4(currentModel.Rotation)
+
+	//position
+	positionMat := mgl32.Translate3D(currentModel.Position[0], currentModel.Position[1], currentModel.Position[2])
+	modelMatrix = modelMatrix.Mul4(positionMat)
+
+	//negative centroid
 	negCent := mgl32.Translate3D(-currentCentroid[0], -currentCentroid[1], -currentCentroid[2])
 	modelMatrix = modelMatrix.Mul4(negCent)
+
+	//scale
 	modelMatrix = geometry.ScaleM4(modelMatrix, currentModel.Scale)
+
 	camDist := geometry.VectorDistance(state.Camera.Position, currentModel.Position.Add(currentCentroid)) //calculate this for transparency
 
 	if parent != "" {

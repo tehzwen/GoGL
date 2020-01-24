@@ -156,6 +156,7 @@ func (m ModelObject) GetModel() (Model, error) {
 func (m *ModelObject) Scale(scaleVec mgl32.Vec3) {
 	m.Model.Scale = scaleVec
 	m.centroid = CalculateCentroid(m.vertexValues.Vertices, m.Model.Scale)
+	m.boundingBox = ScaleBoundingBox(m.boundingBox, scaleVec)
 }
 
 func (m *ModelObject) Translate(translateVec mgl32.Vec3) {

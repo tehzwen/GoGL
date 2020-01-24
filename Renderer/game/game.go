@@ -54,6 +54,12 @@ func Update(state *geometry.State, deltaTime float64) {
 		speed *= runSpeed
 	}
 
+	if state.Keys[glfw.Key5] {
+		rot := mgl32.HomogRotate3D(float32(angle), mgl32.Vec3{0, 1, 0})
+		wall0.SetRotation(rot)
+
+	}
+
 	if state.Keys[glfw.Key1] {
 		cube3.AddForce(mgl32.Vec3{0.5 * float32(deltaTime), 0.0, 0.0})
 	}
@@ -89,5 +95,7 @@ func Update(state *geometry.State, deltaTime float64) {
 	if state.Keys[glfw.KeyD] {
 		MoveRight(state, speed)
 	}
+	
+	angle += 0.5 * deltaTime
 
 }

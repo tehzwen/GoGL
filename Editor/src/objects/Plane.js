@@ -8,8 +8,9 @@ class Plane {
         this.parent = object.parent;
         this.type = "plane";
         this.loaded = false;
-        this.initialTransform = { position: object.position, scale: object.scale };
+        this.initialTransform = { position: object.position, scale: object.scale, rotation: object.rotation };
         this.material = object.material;
+        this.collide = object.collide;
         this.model = {
             vertices: [
                 0.0, 0.5, 0.5,
@@ -237,6 +238,10 @@ class Plane {
         this.lightingShader();
         this.scale(this.initialTransform.scale);
         this.translate(this.initialTransform.position);
+
+        if (this.initialTransform.rotation) {
+            this.model.rotation = this.initialTransform.rotation;
+        }
     }
 }
 

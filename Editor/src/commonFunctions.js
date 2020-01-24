@@ -439,7 +439,8 @@ function createSceneFile(state, filename) {
                     scale: object.model.scale ? [object.model.scale[0], object.model.scale[1], object.model.scale[2]] : null,
                     diffuseTexture: object.model.diffuseTexture ? object.model.diffuseTexture : null,
                     normalTexture: object.model.normalTexture ? object.model.normalTexture : null,
-                    rotation: object.model.rotation ? object.model.rotation : null,
+                    rotation: object.model.rotation ? mat4ToArray(object.model.rotation) : null,
+                    collide: object.collide,
                     parent: object.parent ? object.parent : null,
                     model: object.modelName ? object.modelName : null
                 });
@@ -453,7 +454,8 @@ function createSceneFile(state, filename) {
                 scale: object.model.scale ? [object.model.scale[0], object.model.scale[1], object.model.scale[2]] : null,
                 diffuseTexture: object.model.diffuseTexture ? object.model.diffuseTexture : null,
                 normalTexture: object.model.normalTexture ? object.model.normalTexture : null,
-                rotation: object.model.rotation ? object.model.rotation : null,
+                rotation: object.model.rotation ? mat4ToArray(object.model.rotation) : null,
+                collide: object.collide,
                 parent: object.parent ? object.parent : null,
                 model: object.modelName ? object.modelName : null
             });
@@ -484,6 +486,16 @@ function createSceneFile(state, filename) {
     fs.writeFile(filename, JSON.stringify(totalState), 'utf-8', () => {
         console.log("Writing complete!")
     })
+}
+
+function mat4ToArray(mat) {
+    let array = [];
+
+    for (let i = 0; i < mat.length; i++) {
+        array.push(mat[i]);
+    }
+
+    return array;
 }
 
 function initShaderUniforms(gl, shaderProgram, uniforms, attribs) {

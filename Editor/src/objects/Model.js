@@ -9,8 +9,9 @@ class Model {
         this.loaded = false;
         this.modelName = object.model;
         this.parentTransform = object.parentTransform ? object.parentTransform : null;
-        this.initialTransform = { position: object.position, scale: object.scale };
+        this.initialTransform = { position: object.position, scale: object.scale, rotation:object.rotation };
         this.material = object.mtl ? object.mtl : object.material;
+        this.collide = object.collide;
         this.model = {
             normals: meshDetails.normals,
             vertices: meshDetails.vertices,
@@ -74,6 +75,10 @@ class Model {
         } else {
             this.scale(this.initialTransform.scale);
             this.translate(this.initialTransform.position);
+
+            if (this.initialTransform.rotation) {
+                this.model.rotation = this.initialTransform.rotation;
+            }
         }
 
 

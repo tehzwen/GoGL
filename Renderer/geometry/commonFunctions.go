@@ -2,8 +2,10 @@ package geometry
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math"
 	"os"
 	"path/filepath"
@@ -36,6 +38,7 @@ type SceneObject struct {
 	ObjectType     string    `json:"type"`
 	Position       []float32 `json:"position"`
 	Scale          []float32 `json:"scale"`
+	Rotation       []float32 `json:"rotation"`
 	DiffuseTexture string    `json:"diffuseTexture"`
 	NormalTexture  string    `json:"normalTexture"`
 	Parent         string    `json:"parent"`
@@ -125,10 +128,18 @@ func ScaleM4(a mgl32.Mat4, v mgl32.Vec3) mgl32.Mat4 {
 
 func addObjectToState(object Geometry, state *State, sceneObj SceneObject) {
 
+	//get rotation
+	rot, err := CreateMat4FromArray(sceneObj.Rotation)
+
+	if err != nil {
+		log.Fatal(err)
+		panic(err)
+	}
+
 	//create model
 	tempModel := Model{
 		Scale:    mgl32.Vec3{sceneObj.Scale[0], sceneObj.Scale[1], sceneObj.Scale[2]},
-		Rotation: mgl32.Ident4(),
+		Rotation: rot,
 	}
 
 	if sceneObj.DiffuseTexture != "" {
@@ -346,88 +357,6 @@ func ParseJsonFile(filePath string, state *State) {
 
 				}
 			}
-			/*meshes, err := assimp.ParseFile(meshPath)
-
-			if err != nil {
-				panic(err)
-			}
-
-			for j := 0; j < len(meshes); j++ {
-				// fmt.Println("Material: ", meshes[j].Material, "Num verts: ", len(meshes[j].Mesh.Vertices), "Num uvs: ", len(meshes[j].Mesh.UVChannels[0]))
-				// fmt.Println(len(meshes[j].Mesh.Faces))
-				//flatten the verts, normals and uvs
-				verts := []float32{}
-				norms := []float32{}
-				uvs := []float32{}
-				faces := []uint32{}
-
-				tempMaterial := Material{
-					DiffuseTexture: meshes[j].Material.DiffuseMap,
-					Diffuse:        meshes[j].Material.Diffuse,
-					Ambient:        meshes[j].Material.Ambient,
-					Specular:       meshes[j].Material.Specular,
-					Alpha:          meshes[j].Material.Alpha,
-					N:              meshes[j].Material.Shininess,
-					ShaderType:     scene[0].Objects[i].Material.ShaderType,
-				}
-
-				tempModelObject := ModelObject{}
-				tempName := scene[0].Objects[i].Name
-
-				for x := 0; x < len(meshes[j].Mesh.Vertices); x++ {
-					verts = append(verts, meshes[j].Mesh.Vertices[x][0])
-					verts = append(verts, meshes[j].Mesh.Vertices[x][1])
-					verts = append(verts, meshes[j].Mesh.Vertices[x][2])
-
-					norms = append(norms, meshes[j].Mesh.Normals[x][0])
-					norms = append(norms, meshes[j].Mesh.Normals[x][1])
-					norms = append(norms, meshes[j].Mesh.Normals[x][2])
-
-				}
-				for v := 0; v < len(meshes[j].Mesh.UVChannels[0]); v++ {
-					if len(meshes[j].Mesh.UVChannels[0]) > 0 {
-						uvs = append(uvs, meshes[j].Mesh.UVChannels[0][v][0])
-						uvs = append(uvs, meshes[j].Mesh.UVChannels[0][v][1])
-					}
-				}
-
-				for z := 0; z < len(meshes[j].Mesh.Faces); z++ {
-					faces = append(faces, meshes[j].Mesh.Faces[z][0])
-					faces = append(faces, meshes[j].Mesh.Faces[z][1])
-					faces = append(faces, meshes[j].Mesh.Faces[z][2])
-				}
-
-				tempModel := Model{
-					Scale:    mgl32.Vec3{scene[0].Objects[i].Scale[0], scene[0].Objects[i].Scale[1], scene[0].Objects[i].Scale[2]},
-					Rotation: mgl32.Ident4(),
-				}
-
-				if j > 0 {
-					tempModelObject.SetParent(scene[0].Objects[i].Name)
-					tempName = strings.Join([]string{tempName, strconv.Itoa(j)}, "")
-					tempModelObject.SetParent(scene[0].Objects[i].Name)
-					tempModel.Position = mgl32.Vec3{0, 0, 0}
-					tempModel.Scale = mgl32.Vec3{1, 1, 1}
-				}
-
-				tempModelObject.SetVertexValues(verts, norms, uvs, faces)
-
-				tempModelObject.Setup(
-					tempMaterial,
-					tempModel,
-					tempName)
-
-				if j == 0 {
-					tempModelObject.Translate(mgl32.Vec3{scene[0].Objects[i].Position[0], scene[0].Objects[i].Position[1], scene[0].Objects[i].Position[2]})
-				} else {
-					tempModelObject.boundingBox = TranslateBoundingBox(tempModelObject.boundingBox, mgl32.Vec3{scene[0].Objects[i].Position[0], scene[0].Objects[i].Position[1], scene[0].Objects[i].Position[2]})
-				}
-
-				state.Objects = append(state.Objects, &tempModelObject)
-				state.LoadedObjects++
-				fmt.Println(tempModelObject.name, " loaded successfully!")
-
-			} */
 		}
 	}
 
@@ -511,6 +440,24 @@ func CalculateBitangents(vertices []float32, uvs []float32) ([]float32, []float3
 
 func ToRadians(deg float32) float64 {
 	return float64(deg * (math.Pi / 180))
+}
+
+func CreateMat4FromArray(arr []float32) (mgl32.Mat4, error) {
+
+	if len(arr) != 16 {
+		return mgl32.Mat4{}, errors.New("Array is not a mat4")
+	}
+
+	// return mgl32.Mat4{arr[15], arr[14], arr[13], arr[12],
+	// 	arr[11], arr[10], arr[9], arr[8],
+	// 	arr[7], arr[6], arr[5], arr[4],
+	// 	arr[3], arr[2], arr[1], arr[0]}, nil
+
+	return mgl32.Mat4{arr[0], arr[1], arr[2], arr[3],
+		arr[4], arr[5], arr[6], arr[7],
+		arr[8], arr[9], arr[10], arr[11],
+		arr[12], arr[13], arr[14], arr[15]}, nil
+
 }
 
 func VectorDistance(a, b mgl32.Vec3) float32 {
