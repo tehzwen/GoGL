@@ -17,6 +17,7 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
+// RenderObject - Struct used for applying math in coroutine and used for rendering
 type RenderObject struct {
 	ViewMatrix       mgl32.Mat4
 	ProjMatrix       mgl32.Mat4
@@ -32,6 +33,7 @@ type RenderObject struct {
 	DistanceToCamera float32
 }
 
+// SceneObject - Object used for reading in from JSON scene file
 type SceneObject struct {
 	Name           string    `json:"name"`
 	Material       Material  `json:"material"`
@@ -46,6 +48,7 @@ type SceneObject struct {
 	Collide        bool      `json:"collide"`
 }
 
+// PointLight - struct for a pointlight in the scene
 type PointLight struct {
 	Name      string    `json:"name"`
 	Position  []float32 `json:"position"`
@@ -57,9 +60,11 @@ type PointLight struct {
 	Constant  float32   `json:"constant"`
 }
 
+// Settings - WIP
 type Settings struct {
 }
 
+// Scene - Struct for holding allthe info about the current scene
 type Scene struct {
 	Objects  []SceneObject `json:"objects"`
 	Lights   []PointLight  `json:"pointLights"`
@@ -160,6 +165,7 @@ func addObjectToState(object Geometry, state *State, sceneObj SceneObject) {
 	state.Objects = append(state.Objects, object)
 }
 
+// GetBoundingBox - Given a set of vertices, returns a bounding box object that contains the min & max of the box
 func GetBoundingBox(vertices []float32) BoundingBox {
 	min := mgl32.Vec3{0, 0, 0}
 	max := mgl32.Vec3{0, 0, 0}
@@ -197,6 +203,7 @@ func GetBoundingBox(vertices []float32) BoundingBox {
 	return result
 }
 
+// ScaleBoundingBox - Scales an existing bounding box by a vector, used when scaling an object to keep collision detection in scale
 func ScaleBoundingBox(box BoundingBox, scaleVec mgl32.Vec3) BoundingBox {
 	result := BoundingBox{
 		Collide:        box.Collide,
@@ -216,6 +223,7 @@ func ScaleBoundingBox(box BoundingBox, scaleVec mgl32.Vec3) BoundingBox {
 	return result
 }
 
+// TranslateBoundingBox - Translates a bounding box by a vec3
 func TranslateBoundingBox(box BoundingBox, translateVec mgl32.Vec3) BoundingBox {
 	result := BoundingBox{
 		Collide:        box.Collide,
@@ -233,13 +241,15 @@ func TranslateBoundingBox(box BoundingBox, translateVec mgl32.Vec3) BoundingBox 
 	return result
 }
 
+// Intersect - Intersection function for checking if two bounding boxes are intersecting at all
 func Intersect(a, b BoundingBox) bool {
 	return (a.Min[0] <= b.Max[0] && a.Max[0] >= b.Min[0]) &&
 		(a.Min[1] <= b.Max[1] && a.Max[1] >= b.Min[1]) &&
 		(a.Min[2] <= b.Max[2] && a.Max[2] >= b.Min[2])
 }
 
-func ParseJsonFile(filePath string, state *State) {
+// ParseJSONFile - Given a json file that contains scene information, load it and put into global state
+func ParseJSONFile(filePath string, state *State) {
 	fmt.Printf("Opening scene file: %s\n", filePath)
 
 	ex, err := os.Executable()
@@ -374,7 +384,9 @@ func ParseJsonFile(filePath string, state *State) {
 
 }
 
+// GetSceneObject - Helper function for getting an object by searching using name
 func GetSceneObject(name string, state State) Geometry {
+	//TODO make this a goroutine instead
 	for i := 0; i < len(state.Objects); i++ {
 		objName, _, _ := state.Objects[i].GetDetails()
 		if objName == name {
@@ -392,7 +404,9 @@ func getUVRowN(uvs []float32, n int) mgl32.Vec2 {
 	return mgl32.Vec2{uvs[n*2], uvs[(n*2)+1]}
 }
 
+// CalculateBitangents - Function for calculating bitangent of a given object
 func CalculateBitangents(vertices []float32, uvs []float32) ([]float32, []float32) {
+	//TODO confirm that this function is correct with Dana
 	var tangents []float32
 	var bitangents []float32
 
@@ -438,20 +452,17 @@ func CalculateBitangents(vertices []float32, uvs []float32) ([]float32, []float3
 	return tangents, bitangents
 }
 
+// ToRadians - Simple helper function to convert degrees to radians
 func ToRadians(deg float32) float64 {
 	return float64(deg * (math.Pi / 180))
 }
 
+// CreateMat4FromArray - Helper function for taking a JSON array and converting it into a mat4
 func CreateMat4FromArray(arr []float32) (mgl32.Mat4, error) {
 
 	if len(arr) != 16 {
 		return mgl32.Mat4{}, errors.New("Array is not a mat4")
 	}
-
-	// return mgl32.Mat4{arr[15], arr[14], arr[13], arr[12],
-	// 	arr[11], arr[10], arr[9], arr[8],
-	// 	arr[7], arr[6], arr[5], arr[4],
-	// 	arr[3], arr[2], arr[1], arr[0]}, nil
 
 	return mgl32.Mat4{arr[0], arr[1], arr[2], arr[3],
 		arr[4], arr[5], arr[6], arr[7],
@@ -460,8 +471,8 @@ func CreateMat4FromArray(arr []float32) (mgl32.Mat4, error) {
 
 }
 
+// VectorDistance - helper function for getting distance between 2 vectors
 func VectorDistance(a, b mgl32.Vec3) float32 {
-	//fmt.Println(a)
 	xDiff := math.Pow(float64(a[0]-b[0]), 2)
 	yDiff := math.Pow(float64(a[1]-b[1]), 2)
 	zDiff := math.Pow(float64(a[2]-b[2]), 2)

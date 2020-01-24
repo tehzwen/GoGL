@@ -1,8 +1,11 @@
 package shader
 
+import "errors"
+
 type BlinnDiffuseTexture struct {
 	fragShader string
 	vertShader string
+	geoShader  string
 }
 
 func (s BlinnDiffuseTexture) GetFragShader() string {
@@ -11,6 +14,13 @@ func (s BlinnDiffuseTexture) GetFragShader() string {
 
 func (s BlinnDiffuseTexture) GetVertShader() string {
 	return s.vertShader
+}
+
+func (s BlinnDiffuseTexture) GetGeometryShader() (string, error) {
+	if s.geoShader == "" {
+		return "", errors.New("No geometry shader present")
+	}
+	return s.geoShader, nil
 }
 
 func (s *BlinnDiffuseTexture) Setup() {
@@ -42,6 +52,8 @@ func (s *BlinnDiffuseTexture) Setup() {
 		gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0); 
 	}
 ` + "\x00"
+
+	s.geoShader = ""
 
 	s.fragShader = `
 	#version 410

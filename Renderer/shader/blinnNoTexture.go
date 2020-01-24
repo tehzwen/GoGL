@@ -1,8 +1,11 @@
 package shader
 
+import "errors"
+
 type BlinnNoTexture struct {
 	fragShader string
 	vertShader string
+	geoShader  string
 }
 
 func (s BlinnNoTexture) GetFragShader() string {
@@ -11,6 +14,13 @@ func (s BlinnNoTexture) GetFragShader() string {
 
 func (s BlinnNoTexture) GetVertShader() string {
 	return s.vertShader
+}
+
+func (s BlinnNoTexture) GetGeometryShader() (string, error) {
+	if s.geoShader == "" {
+		return "", errors.New("No geometry shader present")
+	}
+	return s.geoShader, nil
 }
 
 func (s *BlinnNoTexture) Setup() {
@@ -39,6 +49,8 @@ func (s *BlinnNoTexture) Setup() {
 		gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0); 
 	}
 ` + "\x00"
+
+	s.geoShader = ""
 
 	s.fragShader = `
 	#version 410
@@ -107,7 +119,7 @@ func (s *BlinnNoTexture) Setup() {
 		}
 
 		if (Alpha < 1.0) {
-			frag_colour = vec4(vec3(Alpha), Alpha);
+			frag_colour = vec4(vec3(result), Alpha);
 		} else {
 			frag_colour = vec4(result, Alpha);
 		}

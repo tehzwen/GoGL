@@ -3,7 +3,9 @@ import UI from "./uiSetup.js";
 import { Cube, PointLight, Plane, Model, DirectionalLight } from "./objects/index.js";
 
 var currentlyRendered = 0;
-var state = {};
+var state = {
+    saveFile: "rayTest.json"
+};
 
 const shadowDepthVertShader =
     `#version 300 es
@@ -33,7 +35,6 @@ if (window.location.pathname.indexOf("main.html") !== -1) {
         state.height = window.innerHeight;
         state.renderedText = document.getElementById("renderedNumText");
         state.renderedText.style.color = "white";
-        var sceneFile = "testsave.json";
 
         //add event listener to canvas resize
         window.addEventListener("resize", (e) => {
@@ -41,7 +42,7 @@ if (window.location.pathname.indexOf("main.html") !== -1) {
             state.height = window.innerHeight;
         })
 
-        parseSceneFile("./statefiles/" + sceneFile, state, main);
+        parseSceneFile("./statefiles/" + state.saveFile, state, main);
     }
 }
 

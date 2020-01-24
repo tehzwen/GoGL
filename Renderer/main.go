@@ -9,7 +9,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"syscall"
 
 	"./game"
@@ -24,7 +23,6 @@ import (
 var keys map[glfw.Key]bool
 var buttons map[glfw.MouseButton]bool
 var mouseMovement map[string]float64
-var mu sync.Mutex
 var objectsToRender chan geometry.RenderObject
 
 const (
@@ -75,7 +73,7 @@ func main() {
 	window.SetMouseButtonCallback(MouseButtonHandler)
 	window.SetCursorPosCallback(MouseMoveHandler)
 
-	geometry.ParseJsonFile(argsWithoutProgram[0], &state)
+	geometry.ParseJSONFile(argsWithoutProgram[0], &state)
 
 	fmt.Println(len(state.Objects))
 
@@ -172,6 +170,18 @@ func draw(window *glfw.Window, state *geometry.State) {
 		}
 	})
 
+	depthMapFBO := geometry.CreateCubeDepthMap(1024, 1024)
+	gl.Viewport(0, 0, 1024, 1024)
+	gl.BindFramebuffer(gl.FRAMEBUFFER, depthMapFBO)
+	gl.Clear(gl.DEPTH_BUFFER_BIT)
+	for x := 0; x < len(tempList); x++ {
+		renderObject(state, tempList[x])
+	}
+
+	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+	gl.Viewport(0, 0, width, height)
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	//normal render here
 	for x := 0; x < len(tempList); x++ {
 		renderObject(state, tempList[x])
 	}

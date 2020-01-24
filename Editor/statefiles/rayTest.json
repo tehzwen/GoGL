@@ -1,0 +1,139 @@
+[
+    {
+        "objects": [
+            {
+                "name": "testCube3",
+                "material": {
+                    "diffuse": [
+                        0.6,
+                        0,
+                        0
+                    ],
+                    "ambient": [
+                        0.1,
+                        0.1,
+                        0.1
+                    ],
+                    "specular": [
+                        0.8,
+                        0.8,
+                        0.8
+                    ],
+                    "n": 10,
+                    "alpha": 1,
+                    "shaderType": 1
+                },
+                "type": "cube",
+                "position": [
+                    -1,
+                    0,
+                    -2
+                ],
+                "scale": [
+                    1,
+                    1,
+                    1
+                ],
+                "diffuseTexture": null,
+                "normalTexture": null,
+                "rotation": [
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1
+                ],
+                "collide": true,
+                "parent": null,
+                "model": null
+            },
+            {
+                "name": "floorPlane",
+                "material": {
+                    "diffuse": [
+                        0.596078431372549,
+                        0.596078431372549,
+                        0.596078431372549
+                    ],
+                    "ambient": [
+                        1,
+                        1,
+                        1
+                    ],
+                    "specular": [
+                        0.1,
+                        0.1,
+                        0.1
+                    ],
+                    "n": 1,
+                    "alpha": 1,
+                    "shaderType": 4
+                },
+                "type": "plane",
+                "position": [
+                    -5,
+                    -1.5,
+                    -6
+                ],
+                "scale": [
+                    50,
+                    1,
+                    50
+                ],
+                "diffuseTexture": "./materials/default.png",
+                "normalTexture": "./materials/concreteBricks.jpg",
+                "rotation": [
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1
+                ],
+                "parent": null,
+                "model": null
+            }
+        ],
+        "pointLights": [
+            {
+                "colour": [
+                    1,
+                    1,
+                    1
+                ],
+                "position": [
+                    7,
+                    2,
+                    0
+                ],
+                "strength": 0.05,
+                "quadratic": 0.035,
+                "linear": 0.09,
+                "constant": 1
+            }
+        ],
+        "directionalLights": [],
+        "settings": {}
+    }
+]

@@ -8,12 +8,12 @@ function setup() {
     //listeners for header button presses
     document.getElementById('saveButton').addEventListener('click', () => {
         if (!document.location.href.includes("editor")) {
-            createSceneFile(state, "./statefiles/" + saveFile);
+            createSceneFile(state, "./statefiles/" + state.saveFile);
         }
     })
 
     document.getElementById('launchButton').addEventListener('click', () => {
-        document.location.href = "compiler.html?scene=" + __dirname + "/statefiles/" + saveFile
+        document.location.href = "compiler.html?scene=" + __dirname + "/statefiles/" + state.saveFile
     })
 }
 

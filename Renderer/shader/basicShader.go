@@ -1,8 +1,11 @@
 package shader
 
+import "errors"
+
 type BasicShader struct {
 	fragShader string
 	vertShader string
+	geoShader  string
 }
 
 func (s BasicShader) GetFragShader() string {
@@ -11,6 +14,13 @@ func (s BasicShader) GetFragShader() string {
 
 func (s BasicShader) GetVertShader() string {
 	return s.vertShader
+}
+
+func (s BasicShader) GetGeometryShader() (string, error) {
+	if s.geoShader == "" {
+		return "", errors.New("No geometry shader present")
+	}
+	return s.geoShader, nil
 }
 
 func (s *BasicShader) Setup() {
@@ -23,7 +33,7 @@ func (s *BasicShader) Setup() {
 		gl_Position = vec4(aPosition, 1.0);
 	}
 ` + "\x00"
-
+	s.geoShader = ""
 	s.fragShader = `
 	#version 410
 	precision highp float;

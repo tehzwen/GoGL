@@ -37,12 +37,12 @@
                 "diffuseTexture": "./materials/plywood.jpg",
                 "normalTexture": "./materials/checkerNorm.jpg",
                 "rotation": [
-                    1,
+                    -0.4161468365471423,
+                    0.9092974268256818,
                     0,
                     0,
-                    0,
-                    0,
-                    1,
+                    -0.9092974268256818,
+                    -0.4161468365471423,
                     0,
                     0,
                     0,
@@ -421,7 +421,7 @@
                 },
                 "type": "mesh",
                 "position": [
-                    11,
+                    9,
                     0,
                     -5
                 ],
@@ -450,6 +450,8 @@
                     0,
                     1
                 ],
+                "shaderType": 3,
+                "alpha": 1,
                 "parent": null,
                 "model": "./models/scrubPine.obj"
             },
