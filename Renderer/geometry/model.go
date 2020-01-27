@@ -11,24 +11,27 @@ import (
 
 // ModelObject : Primitive ModelObject geometry struct
 type ModelObject struct {
-	name           string
-	fragShader     string
-	vertShader     string
-	shaderType     string
-	parent         string
-	boundingBox    BoundingBox
-	buffers        ObjectBuffers
-	programInfo    ProgramInfo
-	material       Material
-	Model          Model
-	centroid       mgl32.Vec3
-	vertexValues   VertexValues
-	modelMatrix    mgl32.Mat4
-	shaderVal      shader.Shader
-	diffuseTexture *texture.Texture
-	normalTexture  *texture.Texture
-	onCollide      collisionFunction
-	velocity       mgl32.Vec3
+	name              string
+	fragShader        string
+	vertShader        string
+	shaderType        string
+	parent            string
+	boundingBox       BoundingBox
+	buffers           ObjectBuffers
+	programInfo       ProgramInfo
+	material          Material
+	Model             Model
+	centroid          mgl32.Vec3
+	vertexValues      VertexValues
+	modelMatrix       mgl32.Mat4
+	shaderVal         shader.Shader
+	diffuseTexture    *texture.Texture
+	normalTexture     *texture.Texture
+	onCollide         collisionFunction
+	velocity          mgl32.Vec3
+	shadowProgramInfo ProgramInfo
+	shadowShaderVal   shader.Shader
+	shadowBuffers     ObjectBuffers
 }
 
 func (m *ModelObject) SetBoundingBox(b BoundingBox) {
@@ -77,6 +80,17 @@ func (m ModelObject) GetModelMatrix() (mgl32.Mat4, error) {
 		return m.modelMatrix, nil
 	}
 	return mgl32.Mat4{}, errors.New("No matrix yet")
+}
+
+func (m ModelObject) GetShadowProgramInfo() (ProgramInfo, error) {
+	if (m.shadowProgramInfo != ProgramInfo{}) {
+		return m.shadowProgramInfo, nil
+	}
+	return ProgramInfo{}, errors.New("No shadow program info")
+}
+
+func (m ModelObject) GetShadowBuffers() ObjectBuffers {
+	return m.shadowBuffers
 }
 
 // GetProgramInfo : getter for programinfo
@@ -186,7 +200,7 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool) 
 		bS := &shader.BasicShader{}
 		bS.Setup()
 		m.shaderVal = bS
-		m.programInfo.Program = InitOpenGL(m.shaderVal.GetVertShader(), m.shaderVal.GetFragShader())
+		m.programInfo.Program = InitOpenGL(m.shaderVal.GetVertShader(), m.shaderVal.GetFragShader(), m.shaderVal.GetGeometryShader())
 		m.programInfo.attributes = Attributes{
 			position: 0,
 			normal:   1,
@@ -211,7 +225,7 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool) 
 		bS := &shader.BlinnNoTexture{}
 		bS.Setup()
 		m.shaderVal = bS
-		m.programInfo.Program = InitOpenGL(m.shaderVal.GetVertShader(), m.shaderVal.GetFragShader())
+		m.programInfo.Program = InitOpenGL(m.shaderVal.GetVertShader(), m.shaderVal.GetFragShader(), m.shaderVal.GetGeometryShader())
 		m.programInfo.attributes = Attributes{
 			position: 0,
 			normal:   1,
@@ -243,7 +257,7 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool) 
 			bS := &shader.BlinnDiffuseTexture{}
 			bS.Setup()
 			m.shaderVal = bS
-			m.programInfo.Program = InitOpenGL(m.shaderVal.GetVertShader(), m.shaderVal.GetFragShader())
+			m.programInfo.Program = InitOpenGL(m.shaderVal.GetVertShader(), m.shaderVal.GetFragShader(), m.shaderVal.GetGeometryShader())
 			m.programInfo.attributes = Attributes{
 				position: 0,
 				normal:   1,
@@ -260,7 +274,7 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool) 
 			bS := &shader.BlinnNoTexture{}
 			bS.Setup()
 			m.shaderVal = bS
-			m.programInfo.Program = InitOpenGL(m.shaderVal.GetVertShader(), m.shaderVal.GetFragShader())
+			m.programInfo.Program = InitOpenGL(m.shaderVal.GetVertShader(), m.shaderVal.GetFragShader(), m.shaderVal.GetGeometryShader())
 			m.programInfo.attributes = Attributes{
 				position: 0,
 				normal:   1,
@@ -300,7 +314,7 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool) 
 		bS := &shader.BlinnDiffuseAndNormal{}
 		bS.Setup()
 		m.shaderVal = bS
-		m.programInfo.Program = InitOpenGL(m.shaderVal.GetVertShader(), m.shaderVal.GetFragShader())
+		m.programInfo.Program = InitOpenGL(m.shaderVal.GetVertShader(), m.shaderVal.GetFragShader(), m.shaderVal.GetGeometryShader())
 		m.programInfo.attributes = Attributes{
 			position:  0,
 			normal:    1,
@@ -329,6 +343,27 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool) 
 		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, m.vertexValues.uvs, tangents, bitangents, m.vertexValues.faces)
 
 	}
+
+	//setup the shadow shader
+	//###########################################################
+	shadowShaderVals := make(map[string]bool)
+	shadowShaderVals["uModelMatrix"] = true
+	shadowShaderVals["aPosition"] = true
+	shadowShaderVals["shadowMatrices"] = true
+
+	shadShader := &shader.OmniDirectionalShadow{}
+	shadShader.Setup()
+	m.shadowShaderVal = shadShader
+	m.shadowProgramInfo = ProgramInfo{}
+	m.shadowProgramInfo.Program = InitOpenGL(m.shadowShaderVal.GetVertShader(), m.shadowShaderVal.GetFragShader(), m.shadowShaderVal.GetGeometryShader())
+	m.shadowProgramInfo.attributes = Attributes{
+		position: 0,
+	}
+
+	SetupAttributesMap(&m.shadowProgramInfo, shadowShaderVals)
+	m.shadowBuffers.Vao = CreateTriangleVAO(&m.shadowProgramInfo, m.vertexValues.Vertices, m.vertexValues.normals, m.vertexValues.uvs, nil, nil, m.vertexValues.faces)
+
+	//#############################################################
 
 	m.boundingBox = GetBoundingBox(m.vertexValues.Vertices)
 

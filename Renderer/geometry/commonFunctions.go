@@ -19,18 +19,20 @@ import (
 
 // RenderObject - Struct used for applying math in coroutine and used for rendering
 type RenderObject struct {
-	ViewMatrix       mgl32.Mat4
-	ProjMatrix       mgl32.Mat4
-	ModelMatrix      mgl32.Mat4
-	CurrentBuffers   ObjectBuffers
-	CurrentModel     Model
-	CurrentMaterial  Material
-	CurrentCentroid  mgl32.Vec3
-	CurrentProgram   ProgramInfo
-	CameraPosition   []float32
-	CurrentVertices  VertexValues
-	CurrentObject    Geometry
-	DistanceToCamera float32
+	ViewMatrix               mgl32.Mat4
+	ProjMatrix               mgl32.Mat4
+	ModelMatrix              mgl32.Mat4
+	CurrentBuffers           ObjectBuffers
+	CurrentModel             Model
+	CurrentMaterial          Material
+	CurrentCentroid          mgl32.Vec3
+	CurrentProgram           ProgramInfo
+	CameraPosition           []float32
+	CurrentVertices          VertexValues
+	CurrentObject            Geometry
+	DistanceToCamera         float32
+	CurrentShadowProgramInfo ProgramInfo
+	CurrentShadowBuffers     ObjectBuffers
 }
 
 // SceneObject - Object used for reading in from JSON scene file

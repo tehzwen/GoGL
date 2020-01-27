@@ -11,24 +11,27 @@ import (
 
 // Plane : Primitive plane geometry struct
 type Plane struct {
-	name           string
-	fragShader     string
-	vertShader     string
-	shaderType     string
-	parent         string
-	boundingBox    BoundingBox
-	buffers        ObjectBuffers
-	programInfo    ProgramInfo
-	material       Material
-	model          Model
-	centroid       mgl32.Vec3
-	vertexValues   VertexValues
-	modelMatrix    mgl32.Mat4
-	shaderVal      shader.Shader
-	diffuseTexture *texture.Texture
-	normalTexture  *texture.Texture
-	onCollide      collisionFunction
-	velocity       mgl32.Vec3
+	name              string
+	fragShader        string
+	vertShader        string
+	shaderType        string
+	parent            string
+	boundingBox       BoundingBox
+	buffers           ObjectBuffers
+	programInfo       ProgramInfo
+	material          Material
+	model             Model
+	centroid          mgl32.Vec3
+	vertexValues      VertexValues
+	modelMatrix       mgl32.Mat4
+	shaderVal         shader.Shader
+	diffuseTexture    *texture.Texture
+	normalTexture     *texture.Texture
+	onCollide         collisionFunction
+	velocity          mgl32.Vec3
+	shadowProgramInfo ProgramInfo
+	shadowShaderVal   shader.Shader
+	shadowBuffers     ObjectBuffers
 }
 
 func (p *Plane) SetBoundingBox(b BoundingBox) {
@@ -75,6 +78,17 @@ func (p Plane) GetModelMatrix() (mgl32.Mat4, error) {
 		return p.modelMatrix, nil
 	}
 	return mgl32.Mat4{}, errors.New("No matrix yet")
+}
+
+func (p Plane) GetShadowProgramInfo() (ProgramInfo, error) {
+	if (p.shadowProgramInfo != ProgramInfo{}) {
+		return p.shadowProgramInfo, nil
+	}
+	return ProgramInfo{}, errors.New("No shadow program info")
+}
+
+func (p Plane) GetShadowBuffers() ObjectBuffers {
+	return p.shadowBuffers
 }
 
 // GetProgramInfo : getter for programinfo
@@ -201,7 +215,7 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 		bS := &shader.BasicShader{}
 		bS.Setup()
 		p.shaderVal = bS
-		p.programInfo.Program = InitOpenGL(p.shaderVal.GetVertShader(), p.shaderVal.GetFragShader())
+		p.programInfo.Program = InitOpenGL(p.shaderVal.GetVertShader(), p.shaderVal.GetFragShader(), p.shaderVal.GetGeometryShader())
 		p.programInfo.attributes = Attributes{
 			position: 0,
 			normal:   1,
@@ -224,11 +238,12 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 		shaderVals["pointLights"] = true
 		shaderVals["numLights"] = true
 		shaderVals["cameraPosition"] = true
+		shaderVals["depthMap"] = true
 
 		bS := &shader.BlinnNoTexture{}
 		bS.Setup()
 		p.shaderVal = bS
-		p.programInfo.Program = InitOpenGL(p.shaderVal.GetVertShader(), p.shaderVal.GetFragShader())
+		p.programInfo.Program = InitOpenGL(p.shaderVal.GetVertShader(), p.shaderVal.GetFragShader(), p.shaderVal.GetGeometryShader())
 		p.programInfo.attributes = Attributes{
 			position: 0,
 			normal:   1,
@@ -239,7 +254,7 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 		p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, p.vertexValues.normals, nil, nil, nil, p.vertexValues.faces)
 
 	} else if mat.ShaderType == 2 {
-		p.programInfo.Program = InitOpenGL(p.vertShader, p.fragShader)
+		p.programInfo.Program = InitOpenGL(p.shaderVal.GetVertShader(), p.shaderVal.GetFragShader(), p.shaderVal.GetGeometryShader())
 		p.programInfo.attributes = Attributes{
 			position: 0,
 			normal:   1,
@@ -265,7 +280,7 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 		bS := &shader.BlinnDiffuseTexture{}
 		bS.Setup()
 		p.shaderVal = bS
-		p.programInfo.Program = InitOpenGL(p.shaderVal.GetVertShader(), p.shaderVal.GetFragShader())
+		p.programInfo.Program = InitOpenGL(p.shaderVal.GetVertShader(), p.shaderVal.GetFragShader(), p.shaderVal.GetGeometryShader())
 		p.programInfo.attributes = Attributes{
 			position: 0,
 			normal:   1,
@@ -304,7 +319,7 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 		bS := &shader.BlinnDiffuseAndNormal{}
 		bS.Setup()
 		p.shaderVal = bS
-		p.programInfo.Program = InitOpenGL(p.shaderVal.GetVertShader(), p.shaderVal.GetFragShader())
+		p.programInfo.Program = InitOpenGL(p.shaderVal.GetVertShader(), p.shaderVal.GetFragShader(), p.shaderVal.GetGeometryShader())
 		p.programInfo.attributes = Attributes{
 			position:  0,
 			normal:    1,
@@ -334,6 +349,27 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 		p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, p.vertexValues.normals, p.vertexValues.uvs, tangents, bitangents, p.vertexValues.faces)
 
 	}
+
+	//setup the shadow shader
+	//###########################################################
+	shadowShaderVals := make(map[string]bool)
+	shadowShaderVals["uModelMatrix"] = true
+	shadowShaderVals["aPosition"] = true
+	shadowShaderVals["shadowMatrices"] = true
+
+	shadShader := &shader.OmniDirectionalShadow{}
+	shadShader.Setup()
+	p.shadowShaderVal = shadShader
+	p.shadowProgramInfo = ProgramInfo{}
+	p.shadowProgramInfo.Program = InitOpenGL(p.shadowShaderVal.GetVertShader(), p.shadowShaderVal.GetFragShader(), p.shadowShaderVal.GetGeometryShader())
+	p.shadowProgramInfo.attributes = Attributes{
+		position: 0,
+	}
+
+	SetupAttributesMap(&p.shadowProgramInfo, shadowShaderVals)
+	p.shadowBuffers.Vao = CreateTriangleVAO(&p.shadowProgramInfo, p.vertexValues.Vertices, p.vertexValues.normals, p.vertexValues.uvs, nil, nil, p.vertexValues.faces)
+
+	//#############################################################
 
 	p.boundingBox = GetBoundingBox(p.vertexValues.Vertices)
 

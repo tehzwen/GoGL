@@ -16,6 +16,9 @@ type State struct {
 	Keys            map[glfw.Key]bool
 	LoadedObjects   int
 	RenderedObjects int
+	ShadowMatrices  []mgl32.Mat4
+	DepthCubeMap    uint32
+	DepthMapFBO     uint32
 }
 
 // Camera : struct for holding info about the camera

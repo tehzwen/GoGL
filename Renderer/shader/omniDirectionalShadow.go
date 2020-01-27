@@ -1,7 +1,5 @@
 package shader
 
-import "errors"
-
 type OmniDirectionalShadow struct {
 	fragShader string
 	vertShader string
@@ -16,11 +14,8 @@ func (s OmniDirectionalShadow) GetVertShader() string {
 	return s.vertShader
 }
 
-func (s OmniDirectionalShadow) GetGeometryShader() (string, error) {
-	if s.geoShader == "" {
-		return "", errors.New("No geometry shader present")
-	}
-	return s.geoShader, nil
+func (s OmniDirectionalShadow) GetGeometryShader() string {
+	return s.geoShader
 }
 
 func (s *OmniDirectionalShadow) Setup() {
@@ -28,8 +23,9 @@ func (s *OmniDirectionalShadow) Setup() {
 	#version 410
 	//needed to add layout location for mac to work properly
 	layout (location = 0) in vec3 aPosition;
+	
 
-	uniform mat4 uModelMatrix;;
+	uniform mat4 uModelMatrix;
 
 	void main() {
 		gl_Position = uModelMatrix * vec4(aPosition, 1.0);
@@ -57,33 +53,23 @@ func (s *OmniDirectionalShadow) Setup() {
 			}    
 			EndPrimitive();
 		}
+		
 	}  
 	`
 	s.fragShader = `
 	#version 410
 	precision highp float;
-	define MAX_LIGHTS 128;
 
 	in vec4 FragPos;
 
-	struct PointLight {
-		vec3 position;
-		float strength;
-		float constant;
-		float linear;
-		float quadratic; 
-		vec3 color;
-	};
-
-	uniform PointLight pointLights[MAX_LIGHTS];
+	uniform vec3 lightPos;
 
 	void main() {
 		float far_plane = 25.0f;
 
 		//try with the first light in the array
-		float lightDistance = length(FragPos.xyz - pointLights[0].position);
+		float lightDistance = length(lightPos - FragPos.xyz);
 		lightDistance = lightDistance / far_plane;
-
 		gl_FragDepth = lightDistance;
 	}
 ` + "\x00"

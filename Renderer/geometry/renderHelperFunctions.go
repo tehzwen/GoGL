@@ -9,10 +9,11 @@ import (
 )
 
 // InitOpenGL : initializes OpenGL and returns an intiialized Program.
-func InitOpenGL(vertexShaderSource string, fragmentShaderSource string) uint32 {
+func InitOpenGL(vertexShaderSource, fragmentShaderSource, geometryShaderSource string) uint32 {
 	if err := gl.Init(); err != nil {
 		panic(err)
 	}
+	var compiled int32
 	/*
 		version := gl.GoStr(gl.GetString(gl.VERSION))
 		log.Println("OpenGL version", version)*/
@@ -22,15 +23,49 @@ func InitOpenGL(vertexShaderSource string, fragmentShaderSource string) uint32 {
 		panic(err)
 	}
 
+	gl.GetShaderiv(vertexShader, gl.COMPILE_STATUS, &compiled)
+	if compiled == gl.FALSE {
+		panic(compiled)
+	}
+
 	fragmentShader, err := compileShader(fragmentShaderSource, gl.FRAGMENT_SHADER)
 	if err != nil {
 		panic(err)
 	}
 
+	gl.GetShaderiv(fragmentShader, gl.COMPILE_STATUS, &compiled)
+	if compiled == gl.FALSE {
+		panic(compiled)
+	}
+
 	prog := gl.CreateProgram()
 	gl.AttachShader(prog, vertexShader)
 	gl.AttachShader(prog, fragmentShader)
-	gl.LinkProgram(prog)
+
+	//try and check for a geometry shader here
+	if geometryShaderSource != "" {
+		geoShader, err := compileShader(geometryShaderSource, gl.GEOMETRY_SHADER)
+		if err != nil {
+			panic(err)
+		}
+
+		gl.GetShaderiv(geoShader, gl.COMPILE_STATUS, &compiled)
+		if compiled == gl.FALSE {
+			panic(compiled)
+		}
+
+		gl.AttachShader(prog, geoShader)
+		gl.LinkProgram(prog)
+	} else {
+		gl.LinkProgram(prog)
+	}
+
+	var status int32
+
+	gl.GetProgramiv(prog, gl.LINK_STATUS, &status)
+	if status == gl.FALSE {
+		panic(status)
+	}
 
 	return prog
 }
@@ -59,6 +94,9 @@ func compileShader(source string, shaderType uint32) (uint32, error) {
 }
 
 func SetupAttributesMap(p *ProgramInfo, m map[string]bool) {
+	//fmt.Println(p)
+	//PrintActiveAttribs(p)
+
 	//do checks to see what values need to be attributed
 	if m["aPosition"] {
 		(*p).attributes.vertexPosition = gl.GetAttribLocation((*p).Program, gl.Str("aPosition\x00"))
@@ -157,13 +195,54 @@ func SetupAttributesMap(p *ProgramInfo, m map[string]bool) {
 			fmt.Printf("ERROR: uDiffuseTexture not found in shader\n")
 		}
 	}
+	if m["depthMap"] {
+		(*p).UniformLocations.DepthMap = gl.GetUniformLocation((*p).Program, gl.Str("depthMap\x00"))
+		if (*p).UniformLocations.DepthMap == -1 {
+			fmt.Printf("ERROR: Depth map not found in shader\n")
+		}
+	}
+	if m["shadowMatrices"] {
+		//fmt.Println("SHADOWS")
+		(*p).UniformLocations.ShadowMatrices = gl.GetUniformLocation((*p).Program, gl.Str("shadowMatrices\x00"))
+		if (*p).UniformLocations.ShadowMatrices == -1 {
+			fmt.Printf("ERROR: Shadow matrices not found in shader\n")
+		}
+	}
+	if m["lightPos"] {
+		(*p).UniformLocations.LightPos = gl.GetUniformLocation((*p).Program, gl.Str("lightPos\x00"))
+		if (*p).UniformLocations.LightPos == -1 {
+			fmt.Printf("ERROR: lightPos not found in shader\n")
+		}
+	}
+
 	// if m["pointLights"] {
 	// 	(*p).UniformLocations.PointLights = gl.GetUniformLocation((*p).Program, gl.Str("pointLights\x00"))
 	// 	if (*p).UniformLocations.PointLights == -1 {
 	// 		fmt.Printf("ERROR: pointLights not found in shader\n")
-	// 		fmt.Println(m)
 	// 	}
 	// }
+}
+
+func PrintActiveAttribs(p *ProgramInfo) {
+	var count int32
+	var length int32
+	var bufsize int32 = 16
+	var size int32
+	var typeVal uint32
+	var name uint8
+
+	var i int32 = 0
+	gl.GetProgramiv(p.Program, gl.ACTIVE_ATTRIBUTES, &count)
+
+	for ; i < count; i++ {
+		gl.GetActiveAttrib(p.Program, uint32(i), bufsize, &length, &size, &typeVal, &name)
+		fmt.Printf("Attribute #%d Type: %d Name: %s\n", i, typeVal, string(name))
+	}
+
+	for i = 0; i < count; i++ {
+		gl.GetActiveUniform(p.Program, uint32(i), bufsize, &length, &size, &typeVal, &name)
+		fmt.Printf("Uniform #%d Type: %d Name: %s\n", i, typeVal, string(name))
+	}
 }
 
 // CalculateCentroid : helper function for calculating the centroid of the geometry

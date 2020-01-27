@@ -1,7 +1,5 @@
 package shader
 
-import "errors"
-
 type BasicShader struct {
 	fragShader string
 	vertShader string
@@ -16,11 +14,8 @@ func (s BasicShader) GetVertShader() string {
 	return s.vertShader
 }
 
-func (s BasicShader) GetGeometryShader() (string, error) {
-	if s.geoShader == "" {
-		return "", errors.New("No geometry shader present")
-	}
-	return s.geoShader, nil
+func (s BasicShader) GetGeometryShader() string {
+	return s.geoShader
 }
 
 func (s *BasicShader) Setup() {

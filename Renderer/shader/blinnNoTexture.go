@@ -1,7 +1,5 @@
 package shader
 
-import "errors"
-
 type BlinnNoTexture struct {
 	fragShader string
 	vertShader string
@@ -16,11 +14,8 @@ func (s BlinnNoTexture) GetVertShader() string {
 	return s.vertShader
 }
 
-func (s BlinnNoTexture) GetGeometryShader() (string, error) {
-	if s.geoShader == "" {
-		return "", errors.New("No geometry shader present")
-	}
-	return s.geoShader, nil
+func (s BlinnNoTexture) GetGeometryShader() string {
+	return s.geoShader
 }
 
 func (s *BlinnNoTexture) Setup() {
@@ -56,6 +51,7 @@ func (s *BlinnNoTexture) Setup() {
 	#version 410
 	precision highp float;
 	#define MAX_LIGHTS 128
+	#extension GL_NV_shadow_samplers_cube : enable
 
 	struct PointLight {
 		vec3 position;
@@ -77,24 +73,26 @@ func (s *BlinnNoTexture) Setup() {
 	uniform float nVal;
 	uniform float Alpha;
 	uniform int numLights;
+	uniform samplerCube depthMap;
 	uniform PointLight pointLights[MAX_LIGHTS];
 
 	out vec4 frag_colour;
 
-	vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir) 
+	vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, float shadow) 
 	{
 		vec3 lightDir = normalize(light.position - fragPos);
 		// diffuse shading
-		float diff = max(dot(normal, lightDir), 0.0);
+		float diff = max(dot(lightDir, normal), 0.0);
 		// specular shading
 		vec3 reflectDir = reflect(lightDir, normal);
 		float spec = pow(max(dot(viewDir, reflectDir), 0.0), nVal);
 		// attenuation
 		float distance    = length(light.position - fragPos);
-		float attenuation = 1.0 / (light.constant + light.linear * distance + 
+		float attenuation = light.strength / (light.constant + light.linear * distance + 
 					light.quadratic * (distance * distance));    
 		// combine results
-		vec3 ambient  = light.color * ambientVal * diffuseVal;
+		//vec3 ambient  = light.color * ambientVal * diffuseVal;
+		vec3 ambient = 0.3 * light.color * diffuseVal;
 		vec3 diffuse  = light.color  * diff * diffuseVal;
 		vec3 specular = vec3(0,0,0);
 
@@ -106,24 +104,65 @@ func (s *BlinnNoTexture) Setup() {
 		ambient  *= attenuation;
 		diffuse  *= attenuation;
 		
-		return (ambient + diffuse + specular);
+		return (ambient + (1.0 - shadow) * (diffuse + specular));
+		//return vec4(vec3(shadow), 1.0);
+	}
+
+	float VectorToDepth (vec3 Vec)
+	{
+		vec3 AbsVec = abs(Vec);
+		float LocalZcomp = max(AbsVec.x, max(AbsVec.y, AbsVec.z));
+
+		// Replace f and n with the far and near plane values you used when
+		//   you drew your cube map.
+		const float f = 25.0;
+		const float n = 1.0;
+
+		float NormZComp = (f+n) / (f-n) - (2*f*n)/(f-n)/LocalZcomp;
+		return (NormZComp + 1.0) * 0.5;
+	}
+
+	float ShadowCalculation(vec3 fragPos, PointLight light)
+	{
+		vec3 fragToLight = fragPos - light.position;
+		float closestDepth = texture(depthMap, fragToLight).r;
+
+		closestDepth *= 25.0f;
+		float currentDepth = length(fragToLight);
+
+		float bias = 0.05;
+		float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;  
+
+		// return shadow;
+		float lightDepth = VectorToDepth(fragPos - light.position);
+		
+		if (closestDepth + bias > lightDepth){
+			return 1.0;
+		}
+
+		//return 0.0;
+		return shadow;
 	}
 
 	void main() {
 		vec3 normal = normalize(normalInterp);
 		vec3 result = vec3(0,0,0);
 		vec3 viewDir = normalize(oCamPosition - oFragPosition);
+		//float shadow = ShadowCalculation(oFragPosition, pointLights[0]);
 
 		for (int i = 0; i < numLights; i++) {
-			result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir);
+			float shadow = ShadowCalculation(oFragPosition, pointLights[i]);
+			result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir, shadow);
 		}
 
 		if (Alpha < 1.0) {
-			frag_colour = vec4(vec3(result), Alpha);
+			frag_colour = vec4(result, Alpha);
 		} else {
 			frag_colour = vec4(result, Alpha);
 		}
-		
+
+		//frag_colour = vec4(vec3(texture(depthMap, (oFragPosition - pointLights[0].position)).w / 25), 1.0);
+
 	}
 	` + "\x00"
 }

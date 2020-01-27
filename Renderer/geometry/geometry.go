@@ -14,6 +14,7 @@ type Geometry interface {
 	SetShader(string, string) error
 	SetShaderVal(shader.Shader)
 	GetProgramInfo() (ProgramInfo, error)
+	GetShadowProgramInfo() (ProgramInfo, error)
 	GetModel() (Model, error)
 	GetType() string
 	GetCentroid() mgl32.Vec3
@@ -22,6 +23,7 @@ type Geometry interface {
 	GetNormalTexture() *texture.Texture
 	GetMaterial() Material
 	GetBuffers() ObjectBuffers
+	GetShadowBuffers() ObjectBuffers
 	GetVertices() VertexValues
 	GetModelMatrix() (mgl32.Mat4, error)
 	SetRotation(mgl32.Mat4)
@@ -51,6 +53,14 @@ type Attributes struct {
 	vertexUV        int32
 	vertexTangent   int32
 	vertexBitangent int32
+}
+
+func (a *Attributes) SetPosition(pos uint32) {
+	a.position = pos
+}
+
+func (a *Attributes) SetNormal(norm uint32) {
+	a.normal = norm
 }
 
 // ObjectBuffers : holds references to vertex buffers
@@ -86,6 +96,9 @@ type Uniforms struct {
 	LightStrengths int32
 	DiffuseTexture int32
 	PointLights    int32
+	DepthMap       int32
+	ShadowMatrices int32
+	LightPos       int32
 }
 
 // ProgramInfo : struct for holding program info (program, uniforms, attributes)
@@ -94,6 +107,10 @@ type ProgramInfo struct {
 	UniformLocations Uniforms
 	attributes       Attributes
 	indexBuffer      uint32
+}
+
+func (p *ProgramInfo) SetAttributes(a Attributes) {
+	p.attributes = a
 }
 
 // Material : struct for holding material info

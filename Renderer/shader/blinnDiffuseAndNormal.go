@@ -1,7 +1,5 @@
 package shader
 
-import "errors"
-
 type BlinnDiffuseAndNormal struct {
 	fragShader string
 	vertShader string
@@ -16,11 +14,8 @@ func (s BlinnDiffuseAndNormal) GetVertShader() string {
 	return s.vertShader
 }
 
-func (s BlinnDiffuseAndNormal) GetGeometryShader() (string, error) {
-	if s.geoShader == "" {
-		return "", errors.New("No geometry shader present")
-	}
-	return s.geoShader, nil
+func (s BlinnDiffuseAndNormal) GetGeometryShader() string {
+	return s.geoShader
 }
 
 func (s *BlinnDiffuseAndNormal) Setup() {
