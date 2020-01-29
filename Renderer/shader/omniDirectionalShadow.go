@@ -55,7 +55,7 @@ func (s *OmniDirectionalShadow) Setup() {
 		}
 		
 	}  
-	`
+	` + "\x00"
 	s.fragShader = `
 	#version 410
 	precision highp float;

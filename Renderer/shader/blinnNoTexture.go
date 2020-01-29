@@ -51,7 +51,6 @@ func (s *BlinnNoTexture) Setup() {
 	#version 410
 	precision highp float;
 	#define MAX_LIGHTS 128
-	#extension GL_NV_shadow_samplers_cube : enable
 
 	struct PointLight {
 		vec3 position;
@@ -127,7 +126,7 @@ func (s *BlinnNoTexture) Setup() {
 		vec3 fragToLight = fragPos - light.position;
 		float closestDepth = texture(depthMap, fragToLight).r;
 
-		closestDepth *= 25.0f;
+		//closestDepth *= 25.0f;
 		float currentDepth = length(fragToLight);
 
 		float bias = 0.05;
@@ -141,27 +140,30 @@ func (s *BlinnNoTexture) Setup() {
 		}
 
 		//return 0.0;
-		return shadow;
+		return closestDepth;
+		//return shadow;
 	}
 
 	void main() {
 		vec3 normal = normalize(normalInterp);
 		vec3 result = vec3(0,0,0);
 		vec3 viewDir = normalize(oCamPosition - oFragPosition);
-		//float shadow = ShadowCalculation(oFragPosition, pointLights[0]);
+		float testShad = ShadowCalculation(oFragPosition, pointLights[0]);
 
-		for (int i = 0; i < numLights; i++) {
-			float shadow = ShadowCalculation(oFragPosition, pointLights[i]);
-			result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir, shadow);
-		}
+		// for (int i = 0; i < numLights; i++) {
+		// 	float shadow = ShadowCalculation(oFragPosition, pointLights[i]);
+		// 	result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir, shadow);
+		// }
 
-		if (Alpha < 1.0) {
-			frag_colour = vec4(result, Alpha);
-		} else {
-			frag_colour = vec4(result, Alpha);
-		}
+		// if (Alpha < 1.0) {
+		// 	frag_colour = vec4(result, Alpha);
+		// } else {
+		// 	frag_colour = vec4(result, Alpha);
+		// }
 
-		//frag_colour = vec4(vec3(texture(depthMap, (oFragPosition - pointLights[0].position)).w / 25), 1.0);
+		//frag_colour = vec4(vec3(texture(depthMap, (oFragPosition - pointLights[0].position)).r), 1.0);
+		//frag_colour = texture(depthMap, (oFragPosition - pointLights[0].position));
+		frag_colour = vec4(vec3(testShad), 1.0);
 
 	}
 	` + "\x00"

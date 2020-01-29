@@ -4,7 +4,7 @@ import { Cube, PointLight, Plane, Model, DirectionalLight } from "./objects/inde
 
 var currentlyRendered = 0;
 var state = {
-    saveFile: "rayTest.json"
+    saveFile: "testsave.json"
 };
 
 const shadowDepthVertShader =

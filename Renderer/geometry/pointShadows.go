@@ -30,7 +30,7 @@ func CreateCubeDepthMap(state *State, width, height int32) {
 	gl.BindFramebuffer(gl.FRAMEBUFFER, state.DepthMapFBO)
 	gl.FramebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, state.DepthCubeMap, 0)
 	gl.DrawBuffer(gl.NONE)
-	gl.ReadBuffer(gl.NONE)
+	//gl.ReadBuffer(gl.NONE)
 
 	//error check the framebuffer
 	status := gl.CheckFramebufferStatus(gl.FRAMEBUFFER)
