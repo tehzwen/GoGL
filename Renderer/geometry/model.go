@@ -344,27 +344,6 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool) 
 
 	}
 
-	//setup the shadow shader
-	//###########################################################
-	shadowShaderVals := make(map[string]bool)
-	shadowShaderVals["uModelMatrix"] = true
-	shadowShaderVals["aPosition"] = true
-	shadowShaderVals["shadowMatrices"] = true
-
-	shadShader := &shader.OmniDirectionalShadow{}
-	shadShader.Setup()
-	m.shadowShaderVal = shadShader
-	m.shadowProgramInfo = ProgramInfo{}
-	m.shadowProgramInfo.Program = InitOpenGL(m.shadowShaderVal.GetVertShader(), m.shadowShaderVal.GetFragShader(), m.shadowShaderVal.GetGeometryShader())
-	m.shadowProgramInfo.attributes = Attributes{
-		position: 0,
-	}
-
-	SetupAttributesMap(&m.shadowProgramInfo, shadowShaderVals)
-	m.shadowBuffers.Vao = CreateTriangleVAO(&m.shadowProgramInfo, m.vertexValues.Vertices, m.vertexValues.normals, m.vertexValues.uvs, nil, nil, m.vertexValues.faces)
-
-	//#############################################################
-
 	m.boundingBox = GetBoundingBox(m.vertexValues.Vertices)
 
 	if collide {

@@ -77,6 +77,17 @@ func (s *BlinnNoTexture) Setup() {
 
 	out vec4 frag_colour;
 
+
+	// array of offset direction for sampling
+	vec3 gridSamplingDisk[20] = vec3[]
+	(
+		vec3(1, 1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1, 1,  1), 
+		vec3(1, 1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+		vec3(1, 1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1, 1,  0),
+		vec3(1, 0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1, 0, -1),
+		vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
+	);
+
 	vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, float shadow) 
 	{
 		vec3 lightDir = normalize(light.position - fragPos);
@@ -103,8 +114,7 @@ func (s *BlinnNoTexture) Setup() {
 		ambient  *= attenuation;
 		diffuse  *= attenuation;
 		
-		return (ambient + (1.0 - shadow) * (diffuse + specular));
-		//return vec4(vec3(shadow), 1.0);
+		return (ambient + diffuse + specular) * (1.0 - shadow);
 	}
 
 	float VectorToDepth (vec3 Vec)
@@ -124,46 +134,63 @@ func (s *BlinnNoTexture) Setup() {
 	float ShadowCalculation(vec3 fragPos, PointLight light)
 	{
 		vec3 fragToLight = fragPos - light.position;
-		float closestDepth = texture(depthMap, fragToLight).r;
+		float far_plane = 25.0;
 
-		//closestDepth *= 25.0f;
+		// float shadowVec = texture(depthMap, fragToLight).r;
+		// // if (shadowVec + 0.0001 > VectorToDepth(fragToLight)) {
+		// // 	return 1.0;
+		// // }
+
+		// // return 0.0;
+
+		// shadowVec *= 25.0;
 		float currentDepth = length(fragToLight);
 
-		float bias = 0.05;
-		float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;  
+		// float bias = 0.05;
+		// float shadow = currentDepth - bias > shadowVec ? 1.0: 0.0;
 
+		// //return shadowVec;
 		// return shadow;
-		float lightDepth = VectorToDepth(fragPos - light.position);
-		
-		if (closestDepth + bias > lightDepth){
-			return 1.0;
-		}
 
-		//return 0.0;
-		return closestDepth;
-		//return shadow;
+		float shadow = 0.0;
+		float bias = 0.15;
+		int samples = 20;
+		float viewDistance = length(oCamPosition - fragPos);
+		float diskRadius = (1.0 + (viewDistance / far_plane)) /25.0;
+
+		for(int i = 0; i < samples; ++i)
+		{
+			float closestDepth = texture(depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
+			closestDepth *= far_plane;   // undo mapping [0;1]
+			if(currentDepth - bias > closestDepth)
+				shadow += 1.0;
+		}
+		shadow /= float(samples);
+
+		return shadow;
 	}
 
 	void main() {
 		vec3 normal = normalize(normalInterp);
 		vec3 result = vec3(0,0,0);
 		vec3 viewDir = normalize(oCamPosition - oFragPosition);
-		float testShad = ShadowCalculation(oFragPosition, pointLights[0]);
+		//float testShad = ShadowCalculation(oFragPosition, pointLights[0]);
 
-		// for (int i = 0; i < numLights; i++) {
-		// 	float shadow = ShadowCalculation(oFragPosition, pointLights[i]);
-		// 	result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir, shadow);
-		// }
+		for (int i = 0; i < numLights; i++) {
+			float shadow = ShadowCalculation(oFragPosition, pointLights[i]);
+			result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir, shadow);
+		}
 
-		// if (Alpha < 1.0) {
-		// 	frag_colour = vec4(result, Alpha);
-		// } else {
-		// 	frag_colour = vec4(result, Alpha);
-		// }
+		if (Alpha < 1.0) {
+			frag_colour = vec4(result, Alpha);
+		} else {
+			frag_colour = vec4(result, Alpha);
+		}
 
 		//frag_colour = vec4(vec3(texture(depthMap, (oFragPosition - pointLights[0].position)).r), 1.0);
 		//frag_colour = texture(depthMap, (oFragPosition - pointLights[0].position));
-		frag_colour = vec4(vec3(testShad), 1.0);
+		//frag_colour = vec4(vec3(testShad), 1.0);
+		//frag_colour = vec4(vec3(testShad), 1.0);
 
 	}
 	` + "\x00"

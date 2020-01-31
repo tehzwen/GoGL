@@ -73,6 +73,14 @@ func Update(state *geometry.State, deltaTime float64) {
 		lightToMove.Position[2] -= 0.1
 	}
 
+	if state.Keys[glfw.Key3] {
+		lightToMove.Position[0] += 0.1
+	}
+
+	if state.Keys[glfw.Key1] {
+		lightToMove.Position[0] -= 0.1
+	}
+
 	if state.Keys[glfw.KeyT] {
 		if lightToMove.Constant > 0 {
 			lightToMove.Constant -= 0.025

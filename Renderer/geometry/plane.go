@@ -350,27 +350,6 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 
 	}
 
-	//setup the shadow shader
-	//###########################################################
-	shadowShaderVals := make(map[string]bool)
-	shadowShaderVals["uModelMatrix"] = true
-	shadowShaderVals["aPosition"] = true
-	shadowShaderVals["shadowMatrices"] = true
-
-	shadShader := &shader.OmniDirectionalShadow{}
-	shadShader.Setup()
-	p.shadowShaderVal = shadShader
-	p.shadowProgramInfo = ProgramInfo{}
-	p.shadowProgramInfo.Program = InitOpenGL(p.shadowShaderVal.GetVertShader(), p.shadowShaderVal.GetFragShader(), p.shadowShaderVal.GetGeometryShader())
-	p.shadowProgramInfo.attributes = Attributes{
-		position: 0,
-	}
-
-	SetupAttributesMap(&p.shadowProgramInfo, shadowShaderVals)
-	p.shadowBuffers.Vao = CreateTriangleVAO(&p.shadowProgramInfo, p.vertexValues.Vertices, p.vertexValues.normals, p.vertexValues.uvs, nil, nil, p.vertexValues.faces)
-
-	//#############################################################
-
 	p.boundingBox = GetBoundingBox(p.vertexValues.Vertices)
 
 	if collide {

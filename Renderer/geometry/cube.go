@@ -446,28 +446,6 @@ func (c *Cube) Setup(mat Material, mod Model, name string, collide bool) error {
 
 	}
 
-	//setup the shadow shader
-	//###########################################################
-	shadowShaderVals := make(map[string]bool)
-	shadowShaderVals["uModelMatrix"] = true
-	shadowShaderVals["aPosition"] = true
-	shadowShaderVals["shadowMatrices"] = true
-	shadowShaderVals["lightPos"] = true
-
-	shadShader := &shader.OmniDirectionalShadow{}
-	shadShader.Setup()
-	c.shadowShaderVal = shadShader
-	c.shadowProgramInfo = ProgramInfo{}
-	c.shadowProgramInfo.Program = InitOpenGL(c.shadowShaderVal.GetVertShader(), c.shadowShaderVal.GetFragShader(), c.shadowShaderVal.GetGeometryShader())
-	c.shadowProgramInfo.attributes = Attributes{
-		position: 0,
-	}
-
-	SetupAttributesMap(&c.shadowProgramInfo, shadowShaderVals)
-	c.shadowBuffers.Vao = CreateTriangleVAO(&c.shadowProgramInfo, c.vertexValues.Vertices, c.vertexValues.normals, c.vertexValues.uvs, nil, nil, c.vertexValues.faces)
-
-	//#############################################################
-
 	c.boundingBox = GetBoundingBox(c.vertexValues.Vertices)
 
 	if collide {
