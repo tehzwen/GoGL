@@ -61,12 +61,11 @@ func main() {
 			Yaw:      90,
 			Roll:     0,
 		},
-		Lights:        []geometry.Light{},
-		Objects:       []geometry.Geometry{},
-		Keys:          make(map[glfw.Key]bool),
-		LoadedObjects: 0,
-		DepthCubeMap:  0,
-		DepthMapFBO:   0,
+		Lights:         []geometry.Light{},
+		Objects:        []geometry.Geometry{},
+		Keys:           make(map[glfw.Key]bool),
+		LoadedObjects:  0,
+		CurrentTexUnit: 0,
 	}
 
 	window := initGlfw()
@@ -91,48 +90,27 @@ func main() {
 	game.Start(&state) //main logic start
 	fmt.Println("PID: ", os.Getpid())
 
-	//#############################################################
-
-	var depthMapFBO uint32
-	var depthCubeMap uint32
-
-	gl.GenFramebuffers(1, &depthMapFBO)
-	gl.GenTextures(1, &depthCubeMap)
-
-	gl.BindTexture(gl.TEXTURE_CUBE_MAP, depthCubeMap)
-	gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-	gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-	gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-	gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-	gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE)
-	// var i uint32 = 0
-	// for i = 0; i < 6; i++ {
-	// 	gl.TexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, 0, gl.DEPTH_COMPONENT, 1024, 1024, 0, gl.DEPTH_COMPONENT, gl.FLOAT, nil)
-	// }
-	gl.TexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.DEPTH_COMPONENT, 1024, 1024, 0, gl.DEPTH_COMPONENT, gl.FLOAT, nil)
-	gl.TexImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, gl.DEPTH_COMPONENT, 1024, 1024, 0, gl.DEPTH_COMPONENT, gl.FLOAT, nil)
-	gl.TexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, gl.DEPTH_COMPONENT, 1024, 1024, 0, gl.DEPTH_COMPONENT, gl.FLOAT, nil)
-	gl.TexImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, gl.DEPTH_COMPONENT, 1024, 1024, 0, gl.DEPTH_COMPONENT, gl.FLOAT, nil)
-	gl.TexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.DEPTH_COMPONENT, 1024, 1024, 0, gl.DEPTH_COMPONENT, gl.FLOAT, nil)
-	gl.TexImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.DEPTH_COMPONENT, 1024, 1024, 0, gl.DEPTH_COMPONENT, gl.FLOAT, nil)
-
-	//gl.BindTexture(gl.TEXTURE_CUBE_MAP, 0)
-	gl.BindFramebuffer(gl.FRAMEBUFFER, depthMapFBO)
-	gl.FramebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, depthCubeMap, 0)
-	gl.DrawBuffer(gl.NONE)
-	gl.ReadBuffer(gl.NONE)
-
-	//error check the framebuffer
-	status := gl.CheckFramebufferStatus(gl.FRAMEBUFFER)
-
-	if status != gl.FRAMEBUFFER_COMPLETE {
-		fmt.Println("ERROR WITH FRAMEBUFFER ", status)
-		panic(status)
+	//iterate through lights and create depth maps for each
+	for l := 0; l < len(state.Lights); l++ {
+		state.Lights[l].DepthFBO = uint32(l)
+		gl.GenFramebuffers(1, &state.Lights[l].DepthFBO)
+		state.Lights[l].DepthMap = geometry.CreateCubeDepthMap(2048, 2048)
 	}
-	//gl.BindTexture(gl.TEXTURE_CUBE_MAP, 0)
-	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
-	//#############################################################
+	//setup shadow shader program
+	shadowShaderVals := make(map[string]bool)
+	shadowShaderVals["uModelMatrix"] = true
+	shadowShaderVals["aPosition"] = true
+	shadowShaderVals["shadowMatrices"] = true
+	shadowShaderVals["lightPos"] = true
+	shadShader := &shader.OmniDirectionalShadow{}
+	shadShader.Setup()
+	shadowProgramInfo := geometry.ProgramInfo{}
+	shadowProgramInfo.Program = geometry.InitOpenGL(shadShader.GetVertShader(), shadShader.GetFragShader(), shadShader.GetGeometryShader())
+	shadowProgAttribs := geometry.Attributes{}
+	shadowProgAttribs.SetPosition(0)
+	shadowProgramInfo.SetAttributes(shadowProgAttribs)
+	geometry.SetupAttributesMap(&shadowProgramInfo, shadowShaderVals)
 
 	for !window.ShouldClose() {
 		if state.LoadedObjects == len(state.Objects) {
@@ -174,7 +152,7 @@ func main() {
 			if thread {
 				MultithreadRender(window, &state)
 			} else {
-				draw(window, &state, depthMapFBO, depthCubeMap)
+				draw(window, &state, &shadowProgramInfo)
 			}
 
 		}
@@ -182,7 +160,7 @@ func main() {
 	fmt.Println("Program ended successfully!")
 }
 
-func draw(window *glfw.Window, state *geometry.State, depthFBO, depthCubeMap uint32) {
+func draw(window *glfw.Window, state *geometry.State, shadowProgramInfo *geometry.ProgramInfo) {
 	gl.Enable(gl.DEPTH_TEST)
 	gl.Enable(gl.CULL_FACE)
 	gl.ClearColor(0.1, 0.1, 0.1, 1.0)
@@ -196,27 +174,19 @@ func draw(window *glfw.Window, state *geometry.State, depthFBO, depthCubeMap uin
 
 	glfw.PollEvents()
 
-	//setup shadow shader program
-	shadowShaderVals := make(map[string]bool)
-	shadowShaderVals["uModelMatrix"] = true
-	shadowShaderVals["aPosition"] = true
-	shadowShaderVals["shadowMatrices"] = true
-	shadowShaderVals["lightPos"] = true
-	shadShader := &shader.OmniDirectionalShadow{}
-	shadShader.Setup()
-	shadowProgramInfo := geometry.ProgramInfo{}
-	shadowProgramInfo.Program = geometry.InitOpenGL(shadShader.GetVertShader(), shadShader.GetFragShader(), shadShader.GetGeometryShader())
-	shadowProgAttribs := geometry.Attributes{}
-	shadowProgAttribs.SetPosition(0)
-	shadowProgramInfo.SetAttributes(shadowProgAttribs)
-	geometry.SetupAttributesMap(&shadowProgramInfo, shadowShaderVals)
+	//going to have to render depth for each light here
 
-	//fmt.Println(state.ShadowMatrices)
-	gl.Viewport(0, 0, 1024, 1024)
-	gl.BindFramebuffer(gl.FRAMEBUFFER, depthFBO)
-	gl.Clear(gl.DEPTH_BUFFER_BIT)
-	for x := 0; x < len(state.Objects); x++ {
-		ShadowRender(state, state.Objects[x], &shadowProgramInfo)
+	for l := 0; l < len(state.Lights); l++ {
+		//fmt.Println(state.Lights[l].DepthFBO)
+		geometry.BindDepthMap(&state.Lights[l])
+		gl.Viewport(0, 0, 1024, 1024)
+		gl.BindFramebuffer(gl.FRAMEBUFFER, state.Lights[l].DepthFBO)
+		gl.Clear(gl.DEPTH_BUFFER_BIT)
+		for x := 0; x < len(state.Objects); x++ {
+			ShadowRender(state, state.Objects[x], shadowProgramInfo, &state.Lights[l])
+		}
+		gl.FramebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, 0, 0)
+		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 	}
 
 	//try the classical render method
@@ -224,12 +194,12 @@ func draw(window *glfw.Window, state *geometry.State, depthFBO, depthCubeMap uin
 	gl.Viewport(0, 0, width, height)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	for i := 0; i < len(state.Objects); i++ {
-		ClassicRender(state, state.Objects[i], depthCubeMap)
+		ClassicRender(state, state.Objects[i])
 	}
 	window.SwapBuffers()
 }
 
-func ShadowRender(state *geometry.State, object geometry.Geometry, shadowProgramInfo *geometry.ProgramInfo) {
+func ShadowRender(state *geometry.State, object geometry.Geometry, shadowProgramInfo *geometry.ProgramInfo, light *geometry.Light) {
 
 	// glError := gl.GetError()
 
@@ -286,16 +256,14 @@ func ShadowRender(state *geometry.State, object geometry.Geometry, shadowProgram
 		}
 	}
 
-	shadowMatrices := geometry.CreateLightSpaceTransforms(state.Lights[0], 0.5, 25, 1024, 1024)
+	shadowMatrices := geometry.CreateLightSpaceTransforms((*light), 0.5, 25, 1024, 1024)
 	for i := 0; i < 6; i++ {
-		//gl.UniformMatrix4fv(shadowProgramInfo.UniformLocations.ShadowMatrices, 1, false, &shadowMatrices[i][0])
-		//fmt.Println("MATRIX i:", i, " ", gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str(strings.Join([]string{"shadowMatrices[", strconv.Itoa(i)}, "")+"]\x00")))
 		gl.UniformMatrix4fv(gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str(strings.Join([]string{"shadowMatrices[", strconv.Itoa(i)}, "")+"]\x00")), 1, false, &shadowMatrices[i][0])
 	}
 
 	//object.SetModelMatrix(modelMatrix)
 	gl.UniformMatrix4fv(gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str("uModelMatrix\x00")), 1, false, &modelMatrix[0])
-	gl.Uniform3fv(gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str("lightPos\x00")), 1, &state.Lights[0].Position[0])
+	gl.Uniform3fv(gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str("lightPos\x00")), 1, &light.Position[0])
 	gl.BindVertexArray(currentBuffers.Vao)
 
 	if object.GetType() != "mesh" {
@@ -309,7 +277,7 @@ func ShadowRender(state *geometry.State, object geometry.Geometry, shadowProgram
 }
 
 //Classic non threaded render
-func ClassicRender(state *geometry.State, object geometry.Geometry, depthCubeMap uint32) {
+func ClassicRender(state *geometry.State, object geometry.Geometry) {
 
 	// glError := gl.GetError()
 
@@ -328,10 +296,8 @@ func ClassicRender(state *geometry.State, object geometry.Geometry, depthCubeMap
 
 	gl.UseProgram(currentProgramInfo.Program)
 
-	gl.ActiveTexture(gl.TEXTURE0)
-	gl.BindTexture(gl.TEXTURE_CUBE_MAP, depthCubeMap)
-	gl.Uniform1i(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("depthMap\x00")), 0)
-	//fmt.Println(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("depthMap\x00")))
+	currentForce := object.GetForce()
+	object.Translate(currentForce)
 
 	//now get the model
 	currentModel, err := object.GetModel()
@@ -431,7 +397,8 @@ func ClassicRender(state *geometry.State, object geometry.Geometry, depthCubeMap
 	normalTexture := object.GetNormalTexture()
 
 	if diffuseTexture != nil {
-		diffuseTexture.Bind(gl.TEXTURE1)
+		diffuseTexture.Bind(gl.TEXTURE0 + state.CurrentTexUnit)
+		state.CurrentTexUnit++
 		err := diffuseTexture.SetUniform(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("uDiffuseTexture\x00")))
 		if err != nil {
 			panic(err)
@@ -439,7 +406,8 @@ func ClassicRender(state *geometry.State, object geometry.Geometry, depthCubeMap
 	}
 
 	if normalTexture != nil {
-		normalTexture.Bind(gl.TEXTURE2)
+		diffuseTexture.Bind(gl.TEXTURE0 + state.CurrentTexUnit)
+		state.CurrentTexUnit++
 		err := normalTexture.SetUniform(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("uNormalTexture\x00")))
 		if err != nil {
 			panic(err)
@@ -456,12 +424,19 @@ func ClassicRender(state *geometry.State, object geometry.Geometry, depthCubeMap
 	gl.Uniform1iv(currentProgramInfo.UniformLocations.NumLights, 1, &num)
 
 	for i := 0; i < len(state.Lights); i++ {
+		//fmt.Println(state.Lights[i].DepthMap)
 		gl.Uniform3fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].position\x00")), 1, &state.Lights[i].Position[0])
 		gl.Uniform3fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].color\x00")), 1, &state.Lights[i].Colour[0])
 		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].strength\x00")), 1, &state.Lights[i].Strength)
 		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].constant\x00")), 1, &state.Lights[i].Constant)
 		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].linear\x00")), 1, &state.Lights[i].Linear)
 		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].quadratic\x00")), 1, &state.Lights[i].Quadratic)
+		state.CurrentTexUnit++
+		gl.ActiveTexture(gl.TEXTURE0 + state.CurrentTexUnit)
+		//state.CurrentTexUnit++
+		gl.BindTexture(gl.TEXTURE_CUBE_MAP, state.Lights[i].DepthMap)
+		gl.Uniform1i(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].depthMap\x00")), int32(state.Lights[i].DepthMap))
+
 	}
 
 	gl.BindVertexArray(currentBuffers.Vao)
@@ -481,6 +456,7 @@ func ClassicRender(state *geometry.State, object geometry.Geometry, depthCubeMap
 	if normalTexture != nil {
 		normalTexture.UnBind()
 	}
+	state.CurrentTexUnit = 0
 	//gl.BindTexture(gl.TEXTURE_CUBE_MAP, nil)
 }
 

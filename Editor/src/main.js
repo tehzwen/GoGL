@@ -4,7 +4,7 @@ import { Cube, PointLight, Plane, Model, DirectionalLight } from "./objects/inde
 
 var currentlyRendered = 0;
 var state = {
-    saveFile: "testsave.json"
+    saveFile: "rayTest.json"
 };
 
 const shadowDepthVertShader =
@@ -113,7 +113,7 @@ function main() {
         gameStarted: false,
         camera: {
             name: 'camera',
-            position: vec3.fromValues(6, 0, 0),
+            position: vec3.fromValues(6, 6, 0),
             front: vec3.fromValues(0.0, 0.0, 1.0),
             up: vec3.fromValues(0.0, 1.0, 0.0),
             pitch: 0,

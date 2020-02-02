@@ -255,10 +255,6 @@ func renderObject(state *geometry.State, object geometry.RenderObject, shadowPas
 
 	// }
 
-	gl.ActiveTexture(gl.TEXTURE1)
-	gl.BindTexture(gl.TEXTURE_CUBE_MAP, state.DepthCubeMap)
-	gl.Uniform1ui(currentProgramInfo.UniformLocations.DepthMap, state.DepthCubeMap)
-
 	state.RenderedObjects++
 
 	gl.Uniform3fv(currentProgramInfo.UniformLocations.DiffuseVal, 1, &currentMaterial.Diffuse[0])

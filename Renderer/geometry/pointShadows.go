@@ -8,25 +8,30 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-func CreateCubeDepthMap(state *State, width, height int32) {
+func CreateCubeDepthMap(width, height int32) uint32 {
 
-	//var depthMapFBO uint32
-	gl.GenFramebuffers(1, &state.DepthMapFBO)
-	gl.GenTextures(1, &state.DepthCubeMap)
-
-	gl.BindTexture(gl.TEXTURE_CUBE_MAP, state.DepthCubeMap)
+	var depthCubeMap uint32
+	gl.GenTextures(1, &depthCubeMap)
+	gl.BindTexture(gl.TEXTURE_CUBE_MAP, depthCubeMap)
 	gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 	gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 	gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
 	gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 	gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE)
-	var i uint32 = 0
-	for i = 0; i < 6; i++ {
-		gl.TexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, 0, gl.DEPTH_COMPONENT, width, height, 0, gl.DEPTH_COMPONENT, gl.FLOAT, nil)
-	}
-	//gl.BindTexture(gl.TEXTURE_CUBE_MAP, 0)
-	gl.BindFramebuffer(gl.FRAMEBUFFER, state.DepthMapFBO)
-	gl.FramebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, state.DepthCubeMap, 0)
+	gl.TexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.DEPTH_COMPONENT, 1024, 1024, 0, gl.DEPTH_COMPONENT, gl.FLOAT, nil)
+	gl.TexImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, gl.DEPTH_COMPONENT, 1024, 1024, 0, gl.DEPTH_COMPONENT, gl.FLOAT, nil)
+	gl.TexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, gl.DEPTH_COMPONENT, 1024, 1024, 0, gl.DEPTH_COMPONENT, gl.FLOAT, nil)
+	gl.TexImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, gl.DEPTH_COMPONENT, 1024, 1024, 0, gl.DEPTH_COMPONENT, gl.FLOAT, nil)
+	gl.TexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.DEPTH_COMPONENT, 1024, 1024, 0, gl.DEPTH_COMPONENT, gl.FLOAT, nil)
+	gl.TexImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.DEPTH_COMPONENT, 1024, 1024, 0, gl.DEPTH_COMPONENT, gl.FLOAT, nil)
+
+	return depthCubeMap
+}
+
+func BindDepthMap(light *Light) {
+	gl.FramebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, 0, 0)
+	gl.BindFramebuffer(gl.FRAMEBUFFER, light.DepthFBO)
+	gl.FramebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, light.DepthMap, 0)
 	gl.DrawBuffer(gl.NONE)
 	gl.ReadBuffer(gl.NONE)
 
@@ -37,7 +42,6 @@ func CreateCubeDepthMap(state *State, width, height int32) {
 		fmt.Println("ERROR WITH FRAMEBUFFER ", status)
 		panic(status)
 	}
-	//gl.BindTexture(gl.TEXTURE_CUBE_MAP, 0)
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 }
 

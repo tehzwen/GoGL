@@ -25,9 +25,9 @@
                 },
                 "type": "cube",
                 "position": [
-                    -1,
+                    4,
                     2,
-                    -2
+                    3
                 ],
                 "scale": [
                     1,
@@ -42,12 +42,12 @@
                     0,
                     0,
                     0,
-                    1,
+                    -0.9899924966004455,
+                    0.1411200080598674,
                     0,
                     0,
-                    0,
-                    0,
-                    1,
+                    -0.1411200080598674,
+                    -0.9899924966004455,
                     0,
                     0,
                     0,
@@ -82,14 +82,14 @@
                 },
                 "type": "cube",
                 "position": [
-                    2,
+                    6,
                     3,
-                    -2
+                    2
                 ],
                 "scale": [
-                    1,
-                    1,
-                    1
+                    3,
+                    3,
+                    3
                 ],
                 "diffuseTexture": null,
                 "normalTexture": null,
@@ -171,6 +171,45 @@
                 "collide": true,
                 "parent": null,
                 "model": null
+            },
+            {
+                "name": "tree",
+                "material": {
+                    "diffuse": [
+                        0.8,
+                        0.8,
+                        0.8
+                    ],
+                    "ambient": [
+                        1,
+                        1,
+                        1
+                    ],
+                    "specular": [
+                        0.5,
+                        0.5,
+                        0.5
+                    ],
+                    "n": 225,
+                    "shaderType": 1,
+                    "alpha": 1,
+                    "diffuseMap": null
+                },
+                "type": "mesh",
+                "position": [
+                    6,
+                    2,
+                    -2
+                ],
+                "scale": [
+                    0.5,
+                    0.5,
+                    0.5
+                ],
+                "diffuseTexture": null,
+                "normalTexture": null,
+                "parent": null,
+                "model": "./models/bunny.obj"
             }
         ],
         "pointLights": [
@@ -184,6 +223,22 @@
                     -1,
                     5,
                     -2
+                ],
+                "strength": 4,
+                "quadratic": 0.035,
+                "linear": 0.035,
+                "constant": 1
+            },
+            {
+                "colour": [
+                    1,
+                    1,
+                    1
+                ],
+                "position": [
+                    6,
+                    5,
+                    2
                 ],
                 "strength": 4,
                 "quadratic": 0.035,

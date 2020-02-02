@@ -59,6 +59,7 @@ func (s *BlinnNoTexture) Setup() {
 		float linear;
 		float quadratic; 
 		vec3 color;
+		samplerCube depthMap;
 	};
 
 	in vec3 oFragPosition;
@@ -72,7 +73,6 @@ func (s *BlinnNoTexture) Setup() {
 	uniform float nVal;
 	uniform float Alpha;
 	uniform int numLights;
-	uniform samplerCube depthMap;
 	uniform PointLight pointLights[MAX_LIGHTS];
 
 	out vec4 frag_colour;
@@ -88,8 +88,33 @@ func (s *BlinnNoTexture) Setup() {
 		vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
 	);
 
-	vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, float shadow) 
+	float ShadowCalculation(vec3 fragPos, PointLight light)
 	{
+		vec3 fragToLight = fragPos - light.position;
+		float far_plane = 25.0;
+		float currentDepth = length(fragToLight);
+
+		float shadow = 0.0;
+		float bias = 0.15;
+		int samples = 20;
+		float viewDistance = length(oCamPosition - fragPos);
+		float diskRadius = (1.0 + (viewDistance / far_plane)) /25.0;
+
+		for(int i = 0; i < samples; ++i)
+		{
+			float closestDepth = texture(light.depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
+			closestDepth *= far_plane;   // undo mapping [0;1]
+			if(currentDepth - bias > closestDepth)
+				shadow += 1.0;
+		}
+		shadow /= float(samples);
+
+		return shadow;
+	}
+
+	vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir) 
+	{
+		float shadow = ShadowCalculation(oFragPosition, light);
 		vec3 lightDir = normalize(light.position - fragPos);
 		// diffuse shading
 		float diff = max(dot(lightDir, normal), 0.0);
@@ -117,68 +142,13 @@ func (s *BlinnNoTexture) Setup() {
 		return (ambient + diffuse + specular) * (1.0 - shadow);
 	}
 
-	float VectorToDepth (vec3 Vec)
-	{
-		vec3 AbsVec = abs(Vec);
-		float LocalZcomp = max(AbsVec.x, max(AbsVec.y, AbsVec.z));
-
-		// Replace f and n with the far and near plane values you used when
-		//   you drew your cube map.
-		const float f = 25.0;
-		const float n = 1.0;
-
-		float NormZComp = (f+n) / (f-n) - (2*f*n)/(f-n)/LocalZcomp;
-		return (NormZComp + 1.0) * 0.5;
-	}
-
-	float ShadowCalculation(vec3 fragPos, PointLight light)
-	{
-		vec3 fragToLight = fragPos - light.position;
-		float far_plane = 25.0;
-
-		// float shadowVec = texture(depthMap, fragToLight).r;
-		// // if (shadowVec + 0.0001 > VectorToDepth(fragToLight)) {
-		// // 	return 1.0;
-		// // }
-
-		// // return 0.0;
-
-		// shadowVec *= 25.0;
-		float currentDepth = length(fragToLight);
-
-		// float bias = 0.05;
-		// float shadow = currentDepth - bias > shadowVec ? 1.0: 0.0;
-
-		// //return shadowVec;
-		// return shadow;
-
-		float shadow = 0.0;
-		float bias = 0.15;
-		int samples = 20;
-		float viewDistance = length(oCamPosition - fragPos);
-		float diskRadius = (1.0 + (viewDistance / far_plane)) /25.0;
-
-		for(int i = 0; i < samples; ++i)
-		{
-			float closestDepth = texture(depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
-			closestDepth *= far_plane;   // undo mapping [0;1]
-			if(currentDepth - bias > closestDepth)
-				shadow += 1.0;
-		}
-		shadow /= float(samples);
-
-		return shadow;
-	}
-
 	void main() {
 		vec3 normal = normalize(normalInterp);
 		vec3 result = vec3(0,0,0);
 		vec3 viewDir = normalize(oCamPosition - oFragPosition);
-		//float testShad = ShadowCalculation(oFragPosition, pointLights[0]);
 
 		for (int i = 0; i < numLights; i++) {
-			float shadow = ShadowCalculation(oFragPosition, pointLights[i]);
-			result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir, shadow);
+			result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir);
 		}
 
 		if (Alpha < 1.0) {
@@ -186,12 +156,6 @@ func (s *BlinnNoTexture) Setup() {
 		} else {
 			frag_colour = vec4(result, Alpha);
 		}
-
-		//frag_colour = vec4(vec3(texture(depthMap, (oFragPosition - pointLights[0].position)).r), 1.0);
-		//frag_colour = texture(depthMap, (oFragPosition - pointLights[0].position));
-		//frag_colour = vec4(vec3(testShad), 1.0);
-		//frag_colour = vec4(vec3(testShad), 1.0);
-
 	}
 	` + "\x00"
 }

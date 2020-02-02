@@ -238,7 +238,6 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 		shaderVals["pointLights"] = true
 		shaderVals["numLights"] = true
 		shaderVals["cameraPosition"] = true
-		shaderVals["depthMap"] = true
 
 		bS := &shader.BlinnNoTexture{}
 		bS.Setup()

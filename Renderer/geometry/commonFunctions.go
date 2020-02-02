@@ -60,6 +60,7 @@ type PointLight struct {
 	Quadratic float32   `json:"quadratic"`
 	Linear    float32   `json:"linear"`
 	Constant  float32   `json:"constant"`
+	DepthMap  uint32
 }
 
 // Settings - WIP
@@ -324,6 +325,13 @@ func ParseJSONFile(filePath string, state *State) {
 
 					tempName := scene[0].Objects[i].Name
 
+					rot, err := CreateMat4FromArray(scene[0].Objects[i].Rotation)
+
+					if err != nil {
+						fmt.Println(err)
+						rot = mgl32.Ident4()
+					}
+
 					tempModel := Model{
 						Position: mgl32.Vec3{scene[0].Objects[i].Position[0], scene[0].Objects[i].Position[1], scene[0].Objects[i].Position[2]},
 						Scale:    mgl32.Vec3{scene[0].Objects[i].Scale[0], scene[0].Objects[i].Scale[1], scene[0].Objects[i].Scale[2]},
@@ -336,6 +344,8 @@ func ParseJSONFile(filePath string, state *State) {
 						tempModel.Position = mgl32.Vec3{0, 0, 0}
 						tempModel.Scale = mgl32.Vec3{1, 1, 1}
 					}
+
+					tempModel.Rotation = rot
 
 					tempMaterial := Material{
 						Diffuse:  parsedMaterial.Kd,
@@ -362,11 +372,9 @@ func ParseJSONFile(filePath string, state *State) {
 						tempName,
 						scene[0].Objects[i].Collide,
 					)
-
 					state.Objects = append(state.Objects, &tempModelObject)
 					state.LoadedObjects++
 					fmt.Println(tempModelObject.name, " loaded successfully!")
-
 				}
 			}
 		}

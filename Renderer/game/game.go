@@ -4,7 +4,9 @@ import (
 	"fmt"
 
 	"../geometry"
+	"../scene"
 	"github.com/go-gl/glfw/v3.1/glfw"
+	"github.com/go-gl/mathgl/mgl32"
 )
 
 var angle = 0.0
@@ -12,19 +14,20 @@ var walkSpeed float64 = 1
 var runSpeed float64 = 5
 var lightToMove *geometry.Light
 
-// var cube3 geometry.Geometry
+var cube3 geometry.Geometry
+
 // var wall0 geometry.Geometry
-// var err error
+var err error
 
 // Start : initialize our values for our game here
 func Start(state *geometry.State) {
 	fmt.Printf("Started!\n")
-	lightToMove = &state.Lights[0]
-	// 	cube3, err = scene.GetObjectFromScene(state, "testCube3")
+	lightToMove = &state.Lights[1]
+	cube3, err = scene.GetObjectFromScene(state, "testCube3")
 
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
+	if err != nil {
+		panic(err)
+	}
 
 	// 	wall0, err = scene.GetObjectFromScene(state, "wall1")
 
@@ -57,6 +60,8 @@ func Update(state *geometry.State, deltaTime float64) {
 	// 		wall0.SetRotation(rot)
 	// 	}
 
+	rot := mgl32.HomogRotate3D(float32(angle), mgl32.Vec3{0, 1, 0})
+	cube3.SetRotation(rot)
 	// 	if state.Keys[glfw.Key1] {
 	// 		cube3.AddForce(mgl32.Vec3{0.5 * float32(deltaTime), 0.0, 0.0})
 	// 	}
@@ -85,7 +90,13 @@ func Update(state *geometry.State, deltaTime float64) {
 		if lightToMove.Constant > 0 {
 			lightToMove.Constant -= 0.025
 		}
+	}
 
+	if state.Keys[glfw.KeyLeft] {
+		cube3.AddForce(mgl32.Vec3{-0.5 * float32(deltaTime), 0.0, 0.0})
+	}
+	if state.Keys[glfw.KeyRight] {
+		cube3.AddForce(mgl32.Vec3{0.5 * float32(deltaTime), 0.0, 0.0})
 	}
 
 	if state.Keys[glfw.KeyW] {

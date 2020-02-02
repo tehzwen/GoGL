@@ -17,8 +17,7 @@ type State struct {
 	LoadedObjects   int
 	RenderedObjects int
 	ShadowMatrices  []mgl32.Mat4
-	DepthCubeMap    uint32
-	DepthMapFBO     uint32
+	CurrentTexUnit  uint32
 }
 
 // Camera : struct for holding info about the camera
@@ -40,4 +39,6 @@ type Light struct {
 	Linear    float32
 	Quadratic float32
 	Constant  float32
+	DepthMap  uint32
+	DepthFBO  uint32
 }
