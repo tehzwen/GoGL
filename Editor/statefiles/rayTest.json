@@ -139,14 +139,14 @@
                 },
                 "type": "plane",
                 "position": [
-                    -3,
+                    -20,
                     -5,
-                    -5
+                    -20
                 ],
                 "scale": [
-                    50,
+                    100,
                     10,
-                    50
+                    100
                 ],
                 "diffuseTexture": null,
                 "normalTexture": null,

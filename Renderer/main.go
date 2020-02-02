@@ -12,6 +12,7 @@ import (
 
 	"./game"
 	"./geometry"
+	"./globals"
 	"./mymath"
 	"./shader"
 
@@ -26,8 +27,6 @@ var mouseMovement map[string]float64
 var objectsToRender chan geometry.RenderObject
 
 const (
-	width  = 1280
-	height = 960
 	thread = false
 )
 
@@ -191,7 +190,7 @@ func draw(window *glfw.Window, state *geometry.State, shadowProgramInfo *geometr
 
 	//try the classical render method
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
-	gl.Viewport(0, 0, width, height)
+	gl.Viewport(0, 0, int32(globals.Width), int32(globals.Height))
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	for i := 0; i < len(state.Objects); i++ {
 		ClassicRender(state, state.Objects[i])
@@ -314,7 +313,7 @@ func ClassicRender(state *geometry.State, object geometry.Geometry) {
 	state.RenderedObjects++
 
 	var fovy = float32(60 * math.Pi / 180)
-	var aspect = float32(width / height)
+	var aspect = float32(globals.Width / globals.Height)
 	var near = float32(0.1)
 	var far = float32(100.0)
 
@@ -466,17 +465,18 @@ func initGlfw() *glfw.Window {
 		panic(err)
 	}
 	glfw.WindowHint(glfw.Samples, 4)
-	glfw.WindowHint(glfw.Resizable, glfw.False)
+	glfw.WindowHint(glfw.Resizable, glfw.True)
 	glfw.WindowHint(glfw.ContextVersionMajor, 4)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
-	window, err := glfw.CreateWindow(width, height, "Go GL", nil, nil)
+	window, err := glfw.CreateWindow(globals.Width, globals.Height, "Go GL", nil, nil)
 	if err != nil {
 		panic(err)
 	}
 	window.MakeContextCurrent()
+	window.SetFramebufferSizeCallback(frameBufferSizeCallback)
 
 	return window
 }
@@ -519,4 +519,10 @@ func collisionTest(state *geometry.State, object geometry.RenderObject) {
 			}
 		}
 	}
+}
+
+func frameBufferSizeCallback(window *glfw.Window, width, height int) {
+	globals.Width = width
+	globals.Height = height
+	gl.Viewport(0, 0, int32(width), int32(height))
 }

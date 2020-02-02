@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"./geometry"
+	"./globals"
 	"./mymath"
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
@@ -114,7 +115,7 @@ func doObjectMath(object geometry.Geometry, state geometry.State, objects chan<-
 	currentVertices := object.GetVertices()
 
 	var fovy = float32(60 * math.Pi / 180)
-	var aspect = float32(width / height)
+	var aspect = float32(globals.Width / globals.Height)
 	var near = float32(0.1)
 	var far = float32(100.0)
 
