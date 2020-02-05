@@ -22,7 +22,7 @@ var err error
 // Start : initialize our values for our game here
 func Start(state *geometry.State) {
 	fmt.Printf("Started!\n")
-	lightToMove = &state.Lights[1]
+	lightToMove = &state.Lights[0]
 	cube3, err = scene.GetObjectFromScene(state, "testCube3")
 
 	if err != nil {

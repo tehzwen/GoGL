@@ -28,9 +28,9 @@ func CreateCubeDepthMap(width, height int32) uint32 {
 	return depthCubeMap
 }
 
-func BindDepthMap(light *Light) {
+func BindDepthMap(state *State, light *Light) {
 	gl.FramebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, 0, 0)
-	gl.BindFramebuffer(gl.FRAMEBUFFER, light.DepthFBO)
+	gl.BindFramebuffer(gl.FRAMEBUFFER, state.DepthFBO)
 	gl.FramebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, light.DepthMap, 0)
 	gl.DrawBuffer(gl.NONE)
 	gl.ReadBuffer(gl.NONE)

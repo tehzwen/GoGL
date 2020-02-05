@@ -88,12 +88,10 @@ func main() {
 
 	game.Start(&state) //main logic start
 	fmt.Println("PID: ", os.Getpid())
-
+	gl.GenFramebuffers(1, &state.DepthFBO)
 	//iterate through lights and create depth maps for each
 	for l := 0; l < len(state.Lights); l++ {
-		state.Lights[l].DepthFBO = uint32(l)
-		gl.GenFramebuffers(1, &state.Lights[l].DepthFBO)
-		state.Lights[l].DepthMap = geometry.CreateCubeDepthMap(2048, 2048)
+		state.Lights[l].DepthMap = geometry.CreateCubeDepthMap(1024, 1024)
 	}
 
 	//setup shadow shader program
@@ -177,9 +175,9 @@ func draw(window *glfw.Window, state *geometry.State, shadowProgramInfo *geometr
 
 	for l := 0; l < len(state.Lights); l++ {
 		//fmt.Println(state.Lights[l].DepthFBO)
-		geometry.BindDepthMap(&state.Lights[l])
+		geometry.BindDepthMap(state, &state.Lights[l])
 		gl.Viewport(0, 0, 1024, 1024)
-		gl.BindFramebuffer(gl.FRAMEBUFFER, state.Lights[l].DepthFBO)
+		gl.BindFramebuffer(gl.FRAMEBUFFER, state.DepthFBO)
 		gl.Clear(gl.DEPTH_BUFFER_BIT)
 		for x := 0; x < len(state.Objects); x++ {
 			ShadowRender(state, state.Objects[x], shadowProgramInfo, &state.Lights[l])
@@ -464,7 +462,7 @@ func initGlfw() *glfw.Window {
 	if err := glfw.Init(); err != nil {
 		panic(err)
 	}
-	glfw.WindowHint(glfw.Samples, 4)
+	glfw.WindowHint(glfw.Samples, 3)
 	glfw.WindowHint(glfw.Resizable, glfw.True)
 	glfw.WindowHint(glfw.ContextVersionMajor, 4)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)

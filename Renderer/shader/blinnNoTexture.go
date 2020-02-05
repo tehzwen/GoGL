@@ -50,7 +50,7 @@ func (s *BlinnNoTexture) Setup() {
 	s.fragShader = `
 	#version 410
 	precision highp float;
-	#define MAX_LIGHTS 128
+	#define MAX_LIGHTS 20
 
 	struct PointLight {
 		vec3 position;
