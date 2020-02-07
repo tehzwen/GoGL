@@ -150,66 +150,9 @@
                 ],
                 "diffuseTexture": null,
                 "normalTexture": null,
-                "rotation": [
-                    1,
-                    0,
-                    0,
-                    0,
-                    0,
-                    1,
-                    0,
-                    0,
-                    0,
-                    0,
-                    1,
-                    0,
-                    0,
-                    0,
-                    0,
-                    1
-                ],
                 "collide": true,
                 "parent": null,
                 "model": null
-            },
-            {
-                "name": "tree",
-                "material": {
-                    "diffuse": [
-                        0.8,
-                        0.8,
-                        0.8
-                    ],
-                    "ambient": [
-                        1,
-                        1,
-                        1
-                    ],
-                    "specular": [
-                        0.5,
-                        0.5,
-                        0.5
-                    ],
-                    "n": 225,
-                    "shaderType": 1,
-                    "alpha": 1,
-                    "diffuseMap": null
-                },
-                "type": "mesh",
-                "position": [
-                    6,
-                    2,
-                    -2
-                ],
-                "scale": [
-                    0.5,
-                    0.5,
-                    0.5
-                ],
-                "diffuseTexture": null,
-                "normalTexture": null,
-                "parent": null,
-                "model": "./models/bunny.obj"
             }
         ],
         "pointLights": [
@@ -223,22 +166,6 @@
                     -1,
                     5,
                     -2
-                ],
-                "strength": 4,
-                "quadratic": 0.035,
-                "linear": 0.035,
-                "constant": 1
-            },
-            {
-                "colour": [
-                    1,
-                    1,
-                    1
-                ],
-                "position": [
-                    6,
-                    5,
-                    2
                 ],
                 "strength": 4,
                 "quadratic": 0.035,

@@ -2,10 +2,8 @@ package geometry
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math"
 	"os"
 	"path/filepath"
@@ -137,12 +135,7 @@ func ScaleM4(a mgl32.Mat4, v mgl32.Vec3) mgl32.Mat4 {
 func addObjectToState(object Geometry, state *State, sceneObj SceneObject) {
 
 	//get rotation
-	rot, err := CreateMat4FromArray(sceneObj.Rotation)
-
-	if err != nil {
-		log.Fatal(err)
-		panic(err)
-	}
+	rot := CreateMat4FromArray(sceneObj.Rotation)
 
 	//create model
 	tempModel := Model{
@@ -325,12 +318,7 @@ func ParseJSONFile(filePath string, state *State) {
 
 					tempName := scene[0].Objects[i].Name
 
-					rot, err := CreateMat4FromArray(scene[0].Objects[i].Rotation)
-
-					if err != nil {
-						fmt.Println(err)
-						rot = mgl32.Ident4()
-					}
+					rot := CreateMat4FromArray(scene[0].Objects[i].Rotation)
 
 					tempModel := Model{
 						Position: mgl32.Vec3{scene[0].Objects[i].Position[0], scene[0].Objects[i].Position[1], scene[0].Objects[i].Position[2]},
@@ -468,16 +456,16 @@ func ToRadians(deg float32) float64 {
 }
 
 // CreateMat4FromArray - Helper function for taking a JSON array and converting it into a mat4
-func CreateMat4FromArray(arr []float32) (mgl32.Mat4, error) {
+func CreateMat4FromArray(arr []float32) mgl32.Mat4 {
 
 	if len(arr) != 16 {
-		return mgl32.Mat4{}, errors.New("Array is not a mat4")
+		return mgl32.Ident4()
 	}
 
 	return mgl32.Mat4{arr[0], arr[1], arr[2], arr[3],
 		arr[4], arr[5], arr[6], arr[7],
 		arr[8], arr[9], arr[10], arr[11],
-		arr[12], arr[13], arr[14], arr[15]}, nil
+		arr[12], arr[13], arr[14], arr[15]}
 
 }
 

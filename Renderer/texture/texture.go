@@ -107,3 +107,7 @@ func loadImageFile(file string) (image.Image, error) {
 	img, _, err := image.Decode(infile)
 	return img, err
 }
+
+func (tex *Texture) GetHandle() uint32 {
+	return tex.handle
+}
