@@ -275,7 +275,6 @@ func ShadowRender(state *geometry.State, object geometry.Geometry, shadowProgram
 
 //Classic non threaded render
 func ClassicRender(state *geometry.State, object geometry.Geometry) {
-
 	// glError := gl.GetError()
 
 	// if glError != gl.NO_ERROR {
@@ -390,26 +389,6 @@ func ClassicRender(state *geometry.State, object geometry.Geometry) {
 	if !result {
 		return
 	}
-	diffuseTexture := object.GetDiffuseTexture()
-	normalTexture := object.GetNormalTexture()
-
-	if diffuseTexture != nil {
-		diffuseTexture.Bind(gl.TEXTURE0 + state.CurrentTexUnit)
-		state.CurrentTexUnit++
-		err := diffuseTexture.SetUniform(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("uDiffuseTexture\x00")))
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	if normalTexture != nil {
-		diffuseTexture.Bind(gl.TEXTURE0 + state.CurrentTexUnit)
-		state.CurrentTexUnit++
-		err := normalTexture.SetUniform(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("uNormalTexture\x00")))
-		if err != nil {
-			panic(err)
-		}
-	}
 
 	gl.Uniform3fv(currentProgramInfo.UniformLocations.DiffuseVal, 1, &currentMaterial.Diffuse[0])
 	gl.Uniform3fv(currentProgramInfo.UniformLocations.AmbientVal, 1, &currentMaterial.Ambient[0])
@@ -420,41 +399,47 @@ func ClassicRender(state *geometry.State, object geometry.Geometry) {
 	num := int32(len(state.Lights))
 	gl.Uniform1iv(currentProgramInfo.UniformLocations.NumLights, 1, &num)
 
+	diffuseTexture := object.GetDiffuseTexture()
+	normalTexture := object.GetNormalTexture()
+
+	if diffuseTexture != nil {
+
+		diffuseTex := diffuseTexture.GetHandle()
+		gl.ActiveTexture(gl.TEXTURE0 + diffuseTex)
+		gl.BindTexture(gl.TEXTURE_2D, diffuseTex)
+		gl.Uniform1i(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("uDiffuseTexture\x00")), int32(diffuseTex))
+	}
+
+	if normalTexture != nil {
+
+		normTex := normalTexture.GetHandle()
+		gl.ActiveTexture(gl.TEXTURE0 + normTex)
+		gl.BindTexture(gl.TEXTURE_2D, normTex)
+		gl.Uniform1i(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("uNormalTexture\x00")), int32(normTex))
+	}
+
 	for i := 0; i < len(state.Lights); i++ {
-		//fmt.Println(state.Lights[i].DepthMap)
 		gl.Uniform3fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].position\x00")), 1, &state.Lights[i].Position[0])
 		gl.Uniform3fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].color\x00")), 1, &state.Lights[i].Colour[0])
 		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].strength\x00")), 1, &state.Lights[i].Strength)
 		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].constant\x00")), 1, &state.Lights[i].Constant)
 		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].linear\x00")), 1, &state.Lights[i].Linear)
 		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].quadratic\x00")), 1, &state.Lights[i].Quadratic)
-		state.CurrentTexUnit++
-		gl.ActiveTexture(gl.TEXTURE0 + state.CurrentTexUnit)
-		//state.CurrentTexUnit++
+		gl.ActiveTexture(gl.TEXTURE0 + state.Lights[i].DepthMap)
 		gl.BindTexture(gl.TEXTURE_CUBE_MAP, state.Lights[i].DepthMap)
 		gl.Uniform1i(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].depthMap\x00")), int32(state.Lights[i].DepthMap))
-
 	}
 
 	gl.BindVertexArray(currentBuffers.Vao)
-
 	if object.GetType() != "mesh" {
 		gl.DrawElements(gl.TRIANGLES, int32(len(currentVertices.Vertices)), gl.UNSIGNED_INT, gl.Ptr(nil))
 	} else {
 		gl.DrawArrays(gl.TRIANGLES, 0, int32(len(currentVertices.Vertices)))
 	}
 
+	gl.BindTexture(gl.TEXTURE_2D, 0)
+	gl.BindTexture(gl.TEXTURE_CUBE_MAP, 0)
 	gl.BindVertexArray(0)
-
-	if diffuseTexture != nil {
-		diffuseTexture.UnBind()
-	}
-
-	if normalTexture != nil {
-		normalTexture.UnBind()
-	}
-	state.CurrentTexUnit = 0
-	//gl.BindTexture(gl.TEXTURE_CUBE_MAP, nil)
 }
 
 // initGlfw initializes glfw and returns a Window to use.

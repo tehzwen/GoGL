@@ -43,7 +43,7 @@ func (s *BlinnDiffuseTexture) Setup() {
 		oNormal = normalize((uModelMatrix * vec4(aNormal, 1.0)).xyz);
 		normalInterp = vec3(normalMatrix * vec4(aNormal, 0.0));
 		oFragPosition = (uModelMatrix * vec4(aPosition, 1.0)).xyz;
-		oUV = -aUV;
+		oUV = aUV;
 		oCamPosition =  (uViewMatrix * vec4(cameraPosition, 1.0)).xyz;
 		gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0); 
 	}
@@ -54,7 +54,7 @@ func (s *BlinnDiffuseTexture) Setup() {
 	s.fragShader = `
 	#version 410
 	precision highp float;
-	#define MAX_LIGHTS 1
+	#define MAX_LIGHTS 20
 
 	struct PointLight {
 		vec3 position;
@@ -128,7 +128,7 @@ func (s *BlinnDiffuseTexture) Setup() {
 		float spec = pow(max(dot(viewDir, reflectDir), 0.0), nVal);
 		// attenuation
 		float distance    = length(light.position - fragPos);
-		float attenuation = 1.0 / (light.constant + light.linear * distance + 
+		float attenuation = light.strength / (light.constant + light.linear * distance + 
 					   light.quadratic * (distance * distance));    
 		// combine results
 		vec3 ambient  = light.color * ambientVal * diffuseVal * textureVal;
@@ -143,9 +143,7 @@ func (s *BlinnDiffuseTexture) Setup() {
 		ambient  *= attenuation;
 		diffuse  *= attenuation;
 		
-		//return (ambient + diffuse + specular);
-		//return (ambient + diffuse + specular) * (1.0 - shadow);
-		return textureVal;
+		return (ambient + (1.0 - shadow) * (diffuse + specular));
 	}
 
 	void main() {

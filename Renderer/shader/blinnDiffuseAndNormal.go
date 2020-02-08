@@ -59,7 +59,7 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 	s.fragShader = `
 	#version 410
 	precision highp float;
-	#define MAX_LIGHTS 128
+	#define MAX_LIGHTS 20
 
 	struct PointLight {
 		vec3 position;
@@ -68,6 +68,7 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 		float linear;
 		float quadratic; 
 		vec3 color;
+		samplerCube depthMap;
 	};
 
 	in vec3 oFragPosition;
@@ -90,8 +91,43 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 
 	out vec4 frag_colour;
 
+	// array of offset direction for sampling
+	vec3 gridSamplingDisk[20] = vec3[]
+	(
+		vec3(1, 1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1, 1,  1), 
+		vec3(1, 1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+		vec3(1, 1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1, 1,  0),
+		vec3(1, 0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1, 0, -1),
+		vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
+	);
+
+	float ShadowCalculation(vec3 fragPos, PointLight light)
+	{
+		vec3 fragToLight = fragPos - light.position;
+		float far_plane = 25.0;
+		float currentDepth = length(fragToLight);
+
+		float shadow = 0.0;
+		float bias = 0.15;
+		int samples = 20;
+		float viewDistance = length(oCamPosition - fragPos);
+		float diskRadius = (1.0 + (viewDistance / far_plane)) /25.0;
+
+		for(int i = 0; i < samples; ++i)
+		{
+			float closestDepth = texture(light.depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
+			closestDepth *= far_plane;   // undo mapping [0;1]
+			if(currentDepth - bias > closestDepth)
+				shadow += 1.0;
+		}
+		shadow /= float(samples);
+
+		return shadow;
+	}
+
 	vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 textureVal) 
 	{
+		float shadow = ShadowCalculation(oFragPosition, light);
 		vec3 lightDir = normalize(light.position - fragPos);
 		// diffuse shading
 		float diff = max(dot(normal, lightDir), 0.0);
@@ -100,7 +136,7 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 		float spec = pow(max(dot(viewDir, reflectDir), 0.0), nVal);
 		// attenuation
 		float distance    = length(light.position - fragPos);
-		float attenuation = 1.0 / (light.constant + light.linear * distance + 
+		float attenuation = light.strength / (light.constant + light.linear * distance + 
 					light.quadratic * (distance * distance));    
 		// combine results
 		vec3 ambient  = light.color * ambientVal * diffuseVal * textureVal;
@@ -115,7 +151,7 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 		ambient  *= attenuation;
 		diffuse  *= attenuation;
 		
-		return (ambient + diffuse + specular);
+		return (ambient + (1.0 - shadow) * (diffuse + specular));
 	}
 
 	void main() {
