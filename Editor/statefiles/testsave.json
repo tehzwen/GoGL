@@ -426,9 +426,9 @@
                     -5
                 ],
                 "scale": [
-                    0.005,
-                    0.005,
-                    0.005
+                    0.5,
+                    0.5,
+                    0.5
                 ],
                 "diffuseTexture": null,
                 "normalTexture": null,
@@ -479,13 +479,13 @@
                 "type": "mesh",
                 "position": [
                     11,
-                    0,
+                    -0.5,
                     7
                 ],
                 "scale": [
-                    0.5,
-                    0.5,
-                    0.5
+                    0.3,
+                    0.3,
+                    0.3
                 ],
                 "diffuseTexture": null,
                 "normalTexture": null,
@@ -520,26 +520,10 @@
                 ],
                 "position": [
                     7,
-                    2,
+                    5,
                     0
                 ],
-                "strength": 0.05,
-                "quadratic": 0.035,
-                "linear": 0.09,
-                "constant": 1
-            },
-            {
-                "colour": [
-                    1,
-                    0.5,
-                    1
-                ],
-                "position": [
-                    -5,
-                    0,
-                    0
-                ],
-                "strength": 0.05,
+                "strength": 3,
                 "quadratic": 0.035,
                 "linear": 0.09,
                 "constant": 1

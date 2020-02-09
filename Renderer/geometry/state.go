@@ -34,11 +34,13 @@ type Camera struct {
 
 // Light : struct for lights in the scene
 type Light struct {
-	Position  []float32
-	Colour    []float32
-	Strength  float32
-	Linear    float32
-	Quadratic float32
-	Constant  float32
-	DepthMap  uint32
+	Position          []float32
+	Colour            []float32
+	Strength          float32
+	Linear            float32
+	Quadratic         float32
+	Constant          float32
+	DepthMap          uint32
+	LightViewMatrices []mgl32.Mat4
+	Move              bool
 }

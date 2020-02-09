@@ -379,7 +379,6 @@ func ParseJSONFile(filePath string, state *State) {
 		}
 		state.Lights = append(state.Lights, tempLight)
 	}
-
 }
 
 // GetSceneObject - Helper function for getting an object by searching using name

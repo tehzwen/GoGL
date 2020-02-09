@@ -51,6 +51,7 @@ func Start(state *geometry.State) {
 func Update(state *geometry.State, deltaTime float64) {
 	speed := deltaTime * walkSpeed
 
+	lightToMove.Move = false
 	if state.Keys[glfw.KeyLeftShift] {
 		speed *= runSpeed
 	}
@@ -72,18 +73,22 @@ func Update(state *geometry.State, deltaTime float64) {
 
 	if state.Keys[glfw.KeyQ] {
 		lightToMove.Position[2] += 0.1
+		lightToMove.Move = true
 	}
 
 	if state.Keys[glfw.KeyR] {
 		lightToMove.Position[2] -= 0.1
+		lightToMove.Move = true
 	}
 
 	if state.Keys[glfw.Key3] {
 		lightToMove.Position[0] += 0.1
+		lightToMove.Move = true
 	}
 
 	if state.Keys[glfw.Key1] {
 		lightToMove.Position[0] -= 0.1
+		lightToMove.Move = true
 	}
 
 	if state.Keys[glfw.KeyT] {

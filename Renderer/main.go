@@ -75,14 +75,10 @@ func main() {
 	window.SetCursorPosCallback(MouseMoveHandler)
 
 	if len(argsWithoutProgram) <= 0 {
-		geometry.ParseJSONFile("../Editor/statefiles/rayTest.json", &state)
+		geometry.ParseJSONFile("../Editor/statefiles/testsave.json", &state)
 	} else {
 		geometry.ParseJSONFile(argsWithoutProgram[0], &state)
 	}
-
-	fmt.Println(len(state.Objects))
-
-	//geometry.CreateCubeDepthMap(&state, 1024, 1024)
 
 	then := 0.0
 
@@ -91,6 +87,7 @@ func main() {
 	gl.GenFramebuffers(1, &state.DepthFBO)
 	//iterate through lights and create depth maps for each
 	for l := 0; l < len(state.Lights); l++ {
+		state.Lights[l].LightViewMatrices = geometry.CreateLightSpaceTransforms(state.Lights[l], 0.5, 25, 1024, 1024)
 		state.Lights[l].DepthMap = geometry.CreateCubeDepthMap(1024, 1024)
 	}
 
@@ -151,7 +148,6 @@ func main() {
 			} else {
 				draw(window, &state, &shadowProgramInfo)
 			}
-
 		}
 	}
 	fmt.Println("Program ended successfully!")
@@ -174,7 +170,6 @@ func draw(window *glfw.Window, state *geometry.State, shadowProgramInfo *geometr
 	//going to have to render depth for each light here
 
 	for l := 0; l < len(state.Lights); l++ {
-		//fmt.Println(state.Lights[l].DepthFBO)
 		geometry.BindDepthMap(state, &state.Lights[l])
 		gl.Viewport(0, 0, 1024, 1024)
 		gl.BindFramebuffer(gl.FRAMEBUFFER, state.DepthFBO)
@@ -197,30 +192,17 @@ func draw(window *glfw.Window, state *geometry.State, shadowProgramInfo *geometr
 }
 
 func ShadowRender(state *geometry.State, object geometry.Geometry, shadowProgramInfo *geometry.ProgramInfo, light *geometry.Light) {
-
-	// glError := gl.GetError()
-
-	// if glError != gl.NO_ERROR {
-	// 	fmt.Println(glError)
-	// }
-
 	gl.UseProgram(shadowProgramInfo.Program)
-
-	// fmt.Println("VALUES: ")
-	// fmt.Println("MODEL: ", gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str("uModelMatrix\x00")))
-	// fmt.Println("LIGHT: ", gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str("lightPos\x00")))
-
 	currentModel, err := object.GetModel()
+
 	if err != nil {
 		//throw an error
 		fmt.Printf("ERROR getting model!")
 	}
-
 	_, _, parent := object.GetDetails()
 	currentCentroid := object.GetCentroid()
 	currentVertices := object.GetVertices()
 	currentBuffers := object.GetBuffers()
-
 	modelMatrix := mgl32.Ident4()
 
 	//move to centroid
@@ -252,13 +234,14 @@ func ShadowRender(state *geometry.State, object geometry.Geometry, shadowProgram
 			fmt.Println("ERROR GETTING PARENT OBJECT")
 		}
 	}
-
-	shadowMatrices := geometry.CreateLightSpaceTransforms((*light), 0.5, 25, 1024, 1024)
-	for i := 0; i < 6; i++ {
-		gl.UniformMatrix4fv(gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str(strings.Join([]string{"shadowMatrices[", strconv.Itoa(i)}, "")+"]\x00")), 1, false, &shadowMatrices[i][0])
+	if light.Move {
+		light.LightViewMatrices = geometry.CreateLightSpaceTransforms((*light), 0.5, 25, 1024, 1024)
 	}
 
-	//object.SetModelMatrix(modelMatrix)
+	for i := 0; i < 6; i++ {
+		gl.UniformMatrix4fv(gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str(strings.Join([]string{"shadowMatrices[", strconv.Itoa(i)}, "")+"]\x00")), 1, false, &light.LightViewMatrices[i][0])
+	}
+
 	gl.UniformMatrix4fv(gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str("uModelMatrix\x00")), 1, false, &modelMatrix[0])
 	gl.Uniform3fv(gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str("lightPos\x00")), 1, &light.Position[0])
 	gl.BindVertexArray(currentBuffers.Vao)
@@ -268,21 +251,11 @@ func ShadowRender(state *geometry.State, object geometry.Geometry, shadowProgram
 	} else {
 		gl.DrawArrays(gl.TRIANGLES, 0, int32(len(currentVertices.Vertices)))
 	}
-
 	gl.BindVertexArray(0)
-
 }
 
 //Classic non threaded render
 func ClassicRender(state *geometry.State, object geometry.Geometry) {
-	// glError := gl.GetError()
-
-	// if glError != gl.NO_ERROR {
-	// 	fmt.Println(glError)
-	// }
-
-	var err error
-
 	currentProgramInfo, err := object.GetProgramInfo()
 	if err != nil {
 		panic(err)
@@ -491,7 +464,6 @@ func collisionTest(state *geometry.State, object geometry.RenderObject) {
 				object.CurrentObject.OnCollide(box)
 
 			} else if currBox.CollisionBody == name {
-				//fmt.Println("RESET")
 				object.CurrentObject.SetBoundingBox(geometry.BoundingBox{
 					Max:            currBox.Max,
 					Min:            currBox.Min,
