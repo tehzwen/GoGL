@@ -145,11 +145,11 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 
 		if (diff < 0.0f) {
 			specular = light.color * specularVal * spec * textureVal;
-			specular *= attenuation;
+			//specular *= attenuation;
 		}
 		
 		ambient  *= attenuation;
-		diffuse  *= attenuation;
+		//diffuse  *= attenuation;
 		
 		return (ambient + (1.0 - shadow) * (diffuse + specular));
 	}
@@ -175,10 +175,8 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 		if (texColor.w < 0.1) {
 			discard;
 		}
-
-		
-
 		frag_colour = vec4(result, Alpha);
+		//frag_colour = vec4(vec3(normal), Alpha);
 	}
 	` + "\x00"
 }

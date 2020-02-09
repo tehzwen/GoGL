@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"../common"
 	"../parser"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -291,17 +292,26 @@ func ParseJSONFile(filePath string, state *State) {
 
 		} else if scene[0].Objects[i].ObjectType == "mesh" {
 			fmt.Println(scene[0].Objects[i].Name, " loading....")
-			meshPath := exPath + "/../Editor/" + scene[0].Objects[i].Model
+			//check here if a cached version of the mesh already exists
+			fmt.Println("CHECK THIS FILE ", scene[0].Objects[i].Model+".dat")
 
-			objects := parser.Parse(meshPath)
+			var objects []parser.OBJObject
 
-			//tempModelObject := ModelObject{}
-
+			//if there is no cached value
+			if _, err := os.Stat("./game/.cache/" + scene[0].Objects[i].Model + ".dat"); os.IsNotExist(err) {
+				meshPath := exPath + "/../Editor/models/" + scene[0].Objects[i].Model
+				objects = parser.Parse(meshPath)
+				b64Objects := parser.SerializeOBJ(objects)
+				common.WriteB64("./game/.cache/"+scene[0].Objects[i].Model+".dat", b64Objects)
+			} else {
+				val := common.ReadB64("./game/.cache/" + scene[0].Objects[i].Model + ".dat")
+				objects = parser.DeserializeOBJ(val)
+			}
 			for x := 0; x < len(objects); x++ {
 				for j := 0; j < len(objects[x].Materials); j++ {
 
-					fmt.Println("verts: ", len(objects[x].Geometry.Vertices), " normals: ", len(objects[x].Geometry.Normals), " uvs: ", len(objects[x].Geometry.UVs))
-					fmt.Println("Start: ", objects[x].Materials[j].Start, " End: ", objects[x].Materials[j].End)
+					//fmt.Println("verts: ", len(objects[x].Geometry.Vertices), " normals: ", len(objects[x].Geometry.Normals), " uvs: ", len(objects[x].Geometry.UVs))
+					//fmt.Println("Start: ", objects[x].Materials[j].Start, " End: ", objects[x].Materials[j].End)
 
 					parsedMaterial := parser.ParseMTLFile(objects[x].Materials[j].MTLLib, objects[x].Materials[j].Name)
 					tempModelObject := ModelObject{}
@@ -365,6 +375,7 @@ func ParseJSONFile(filePath string, state *State) {
 					fmt.Println(tempModelObject.name, " loaded successfully!")
 				}
 			}
+
 		}
 	}
 

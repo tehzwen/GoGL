@@ -181,9 +181,9 @@ func (m *ModelObject) Translate(translateVec mgl32.Vec3) {
 
 func (m *ModelObject) SetVertexValues(vertices []float32, normals []float32, uvs []float32, faces []uint32) {
 	m.vertexValues.Vertices = vertices
-	m.vertexValues.normals = normals
-	m.vertexValues.uvs = uvs
-	m.vertexValues.faces = faces
+	m.vertexValues.Normals = normals
+	m.vertexValues.Uvs = uvs
+	m.vertexValues.Faces = faces
 }
 
 // Setup : function for initializing ModelObject
@@ -206,7 +206,7 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool) 
 			normal:   1,
 		}
 		SetupAttributesMap(&m.programInfo, shaderVals)
-		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, nil, nil, nil, nil, m.vertexValues.faces)
+		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, nil, nil, nil, nil, m.vertexValues.Faces)
 	} else if mat.ShaderType == 1 {
 		shaderVals["aPosition"] = true
 		shaderVals["aNormal"] = true
@@ -232,7 +232,7 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool) 
 		}
 
 		SetupAttributesMap(&m.programInfo, shaderVals)
-		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, nil, nil, nil, m.vertexValues.faces)
+		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.Normals, nil, nil, nil, m.vertexValues.Faces)
 
 	} else if mat.ShaderType == 2 {
 		//not sure yet what TODO here
@@ -285,10 +285,10 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool) 
 		SetupAttributesMap(&m.programInfo, shaderVals)
 
 		//check if UVS or not
-		if len(m.vertexValues.uvs) > 0 {
-			m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, m.vertexValues.uvs, nil, nil, m.vertexValues.faces)
+		if len(m.vertexValues.Uvs) > 0 {
+			m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.Normals, m.vertexValues.Uvs, nil, nil, m.vertexValues.Faces)
 		} else {
-			m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, nil, nil, nil, m.vertexValues.faces)
+			m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.Normals, nil, nil, nil, m.vertexValues.Faces)
 		}
 
 	} else if mat.ShaderType == 4 {
@@ -309,7 +309,7 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool) 
 		shaderVals["uDiffuseTexture"] = true
 		shaderVals["uNormalTexture"] = true
 
-		tangents, bitangents := CalculateBitangents(m.vertexValues.Vertices, m.vertexValues.uvs)
+		tangents, bitangents := CalculateBitangents(m.vertexValues.Vertices, m.vertexValues.Uvs)
 
 		bS := &shader.BlinnDiffuseAndNormal{}
 		bS.Setup()
@@ -340,8 +340,7 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool) 
 		m.diffuseTexture = texture0
 		m.normalTexture = texture1
 		SetupAttributesMap(&m.programInfo, shaderVals)
-		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.normals, m.vertexValues.uvs, tangents, bitangents, m.vertexValues.faces)
-
+		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.Normals, m.vertexValues.Uvs, tangents, bitangents, m.vertexValues.Faces)
 	}
 
 	m.boundingBox = GetBoundingBox(m.vertexValues.Vertices)

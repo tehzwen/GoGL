@@ -220,7 +220,7 @@ func (c *Cube) Setup(mat Material, mod Model, name string, collide bool) error {
 		0.0, 0.5, 0.0,
 	}
 
-	c.vertexValues.faces = []uint32{
+	c.vertexValues.Faces = []uint32{
 		//front face
 		2, 0, 1, 3, 0, 2,
 		//backface
@@ -235,7 +235,7 @@ func (c *Cube) Setup(mat Material, mod Model, name string, collide bool) error {
 		22, 21, 20, 23, 21, 22,
 	}
 
-	c.vertexValues.normals = []float32{
+	c.vertexValues.Normals = []float32{
 		0.0, 0.0, -1.0,
 		0.0, 0.0, -1.0,
 		0.0, 0.0, -1.0,
@@ -266,7 +266,7 @@ func (c *Cube) Setup(mat Material, mod Model, name string, collide bool) error {
 		-1.0, 0.0, 0.0,
 		-1.0, 0.0, 0.0,
 	}
-	c.vertexValues.uvs = []float32{
+	c.vertexValues.Uvs = []float32{
 		0.0, 0.0,
 		1.0, 0.0,
 		1.0, 1.0,
@@ -318,7 +318,7 @@ func (c *Cube) Setup(mat Material, mod Model, name string, collide bool) error {
 
 		SetupAttributesMap(&c.programInfo, shaderVals)
 
-		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, nil, nil, nil, nil, c.vertexValues.faces)
+		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, nil, nil, nil, nil, c.vertexValues.Faces)
 
 	} else if mat.ShaderType == 1 {
 		shaderVals["aPosition"] = true
@@ -345,7 +345,7 @@ func (c *Cube) Setup(mat Material, mod Model, name string, collide bool) error {
 
 		SetupAttributesMap(&c.programInfo, shaderVals)
 
-		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, c.vertexValues.normals, nil, nil, nil, c.vertexValues.faces)
+		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, c.vertexValues.Normals, nil, nil, nil, c.vertexValues.Faces)
 
 	} else if mat.ShaderType == 2 {
 		c.programInfo.Program = InitOpenGL(c.shaderVal.GetVertShader(), c.shaderVal.GetFragShader(), c.shaderVal.GetGeometryShader())
@@ -391,7 +391,7 @@ func (c *Cube) Setup(mat Material, mod Model, name string, collide bool) error {
 		fmt.Println("HERE ", c.diffuseTexture.GetHandle())
 
 		SetupAttributesMap(&c.programInfo, shaderVals)
-		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, c.vertexValues.normals, c.vertexValues.uvs, nil, nil, c.vertexValues.faces)
+		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, c.vertexValues.Normals, c.vertexValues.Uvs, nil, nil, c.vertexValues.Faces)
 
 	} else if mat.ShaderType == 4 {
 		shaderVals["aPosition"] = true
@@ -411,7 +411,7 @@ func (c *Cube) Setup(mat Material, mod Model, name string, collide bool) error {
 		shaderVals["uNormalTexture"] = true
 
 		//calculate tangents and bitangents
-		tangents, bitangents := CalculateBitangents(c.vertexValues.Vertices, c.vertexValues.uvs)
+		tangents, bitangents := CalculateBitangents(c.vertexValues.Vertices, c.vertexValues.Uvs)
 
 		bS := &shader.BlinnDiffuseAndNormal{}
 		bS.Setup()
@@ -444,7 +444,7 @@ func (c *Cube) Setup(mat Material, mod Model, name string, collide bool) error {
 		c.normalTexture = texture1
 
 		SetupAttributesMap(&c.programInfo, shaderVals)
-		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, c.vertexValues.normals, c.vertexValues.uvs, tangents, bitangents, c.vertexValues.faces)
+		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, c.vertexValues.Normals, c.vertexValues.Uvs, tangents, bitangents, c.vertexValues.Faces)
 
 	}
 

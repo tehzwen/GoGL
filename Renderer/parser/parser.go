@@ -2,6 +2,9 @@ package parser
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/base64"
+	"encoding/gob"
 	"fmt"
 	"os"
 	"regexp"
@@ -21,6 +24,36 @@ type OBJObject struct {
 	Materials []MTLMaterial
 	Name      string
 	Smooth    bool
+}
+
+func SerializeOBJ(vals []OBJObject) string {
+	b := bytes.Buffer{}
+	e := gob.NewEncoder(&b)
+
+	err := e.Encode(vals)
+	if err != nil {
+		panic(err)
+	}
+	return base64.StdEncoding.EncodeToString(b.Bytes())
+}
+
+func DeserializeOBJ(value string) []OBJObject {
+	var objects []OBJObject
+	by, err := base64.StdEncoding.DecodeString(value)
+	if err != nil {
+		fmt.Println(value)
+		panic(err)
+	}
+	b := bytes.Buffer{}
+
+	b.Write(by)
+	d := gob.NewDecoder(&b)
+	err = d.Decode(&objects)
+	if err != nil {
+		panic(err)
+	}
+
+	return objects
 }
 
 type Mesh struct {

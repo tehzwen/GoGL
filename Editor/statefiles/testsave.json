@@ -451,14 +451,14 @@
                     1
                 ],
                 "parent": null,
-                "model": "./models/bunny.obj"
+                "model": "bunny.obj"
             },
             {
-                "name": "sponza",
+                "name": "bunny0",
                 "material": {
                     "diffuse": [
                         0.5882,
-                        0.5882,
+                        0.0,
                         0.5882
                     ],
                     "ambient": [
@@ -478,14 +478,14 @@
                 },
                 "type": "mesh",
                 "position": [
-                    11,
-                    -0.5,
-                    7
+                    6,
+                    0,
+                    -5
                 ],
                 "scale": [
-                    0.3,
-                    0.3,
-                    0.3
+                    0.01,
+                    0.01,
+                    0.01
                 ],
                 "diffuseTexture": null,
                 "normalTexture": null,
@@ -508,7 +508,7 @@
                     1
                 ],
                 "parent": null,
-                "model": "./models/scrubPine.obj"
+                "model": "mydoomguy2.obj"
             }
         ],
         "pointLights": [

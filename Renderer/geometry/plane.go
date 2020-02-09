@@ -186,17 +186,17 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 		0.5, 0.5, 0.5,
 	}
 
-	p.vertexValues.faces = []uint32{
+	p.vertexValues.Faces = []uint32{
 		0, 2, 1, 2, 0, 3,
 	}
 
-	p.vertexValues.normals = []float32{
+	p.vertexValues.Normals = []float32{
 		0.0, -1.0, 0.0,
 		0.0, -1.0, 0.0,
 		0.0, -1.0, 0.0,
 		0.0, -1.0, 0.0,
 	}
-	p.vertexValues.uvs = []float32{
+	p.vertexValues.Uvs = []float32{
 		0.0, 0.0,
 		5.0, 0.0,
 		5.0, 5.0,
@@ -223,7 +223,7 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 
 		SetupAttributesMap(&p.programInfo, shaderVals)
 
-		p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, nil, nil, nil, nil, p.vertexValues.faces)
+		p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, nil, nil, nil, nil, p.vertexValues.Faces)
 
 	} else if mat.ShaderType == 1 {
 		shaderVals["aPosition"] = true
@@ -250,7 +250,7 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 
 		SetupAttributesMap(&p.programInfo, shaderVals)
 
-		p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, p.vertexValues.normals, nil, nil, nil, p.vertexValues.faces)
+		p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, p.vertexValues.Normals, nil, nil, nil, p.vertexValues.Faces)
 
 	} else if mat.ShaderType == 2 {
 		p.programInfo.Program = InitOpenGL(p.shaderVal.GetVertShader(), p.shaderVal.GetFragShader(), p.shaderVal.GetGeometryShader())
@@ -294,7 +294,7 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 		p.diffuseTexture = texture0
 
 		SetupAttributesMap(&p.programInfo, shaderVals)
-		p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, p.vertexValues.normals, p.vertexValues.uvs, nil, nil, p.vertexValues.faces)
+		p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, p.vertexValues.Normals, p.vertexValues.Uvs, nil, nil, p.vertexValues.Faces)
 
 	} else if mat.ShaderType == 4 {
 		shaderVals["aPosition"] = true
@@ -313,7 +313,7 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 		shaderVals["uDiffuseTexture"] = true
 
 		//calculate tangents and bitangents
-		tangents, bitangents := CalculateBitangents(p.vertexValues.Vertices, p.vertexValues.uvs)
+		tangents, bitangents := CalculateBitangents(p.vertexValues.Vertices, p.vertexValues.Uvs)
 
 		bS := &shader.BlinnDiffuseAndNormal{}
 		bS.Setup()
@@ -345,7 +345,7 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 		p.normalTexture = texture1
 
 		SetupAttributesMap(&p.programInfo, shaderVals)
-		p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, p.vertexValues.normals, p.vertexValues.uvs, tangents, bitangents, p.vertexValues.faces)
+		p.buffers.Vao = CreateTriangleVAO(&p.programInfo, p.vertexValues.Vertices, p.vertexValues.Normals, p.vertexValues.Uvs, tangents, bitangents, p.vertexValues.Faces)
 
 	}
 

@@ -49,6 +49,23 @@ func main() {
 	buttons = make(map[glfw.MouseButton]bool)
 	mouseMovement = make(map[string]float64)
 
+	// vVal := geometry.VertexValues{
+	// 	Vertices: []float32{1.0, 0.0, 0.0},
+	// 	Normals:  []float32{1.0, 0.0, 0.0},
+	// 	Uvs:      []float32{0.0, 0.5},
+	// }
+
+	//b64 := vVal.Serialize()
+	// b64 := common.ReadB64("test.dat")
+	//common.WriteB64("./game/.cache/test.dat", b64)
+	// newVal := geometry.VertexValues{}
+	// err := newVal.Deserialize(b64)
+
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println("WHAT WE READ!? ", newVal)
+
 	mouseMovement["sensitivity"] = 1.2
 
 	state := geometry.State{
@@ -156,6 +173,7 @@ func main() {
 func draw(window *glfw.Window, state *geometry.State, shadowProgramInfo *geometry.ProgramInfo) {
 	gl.Enable(gl.DEPTH_TEST)
 	gl.Enable(gl.CULL_FACE)
+	gl.Enable(gl.FRAMEBUFFER_SRGB)
 	gl.ClearColor(0.1, 0.1, 0.1, 1.0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	// err := gl.GetError()
@@ -384,7 +402,6 @@ func ClassicRender(state *geometry.State, object geometry.Geometry) {
 	}
 
 	if normalTexture != nil {
-
 		normTex := normalTexture.GetHandle()
 		gl.ActiveTexture(gl.TEXTURE0 + normTex)
 		gl.BindTexture(gl.TEXTURE_2D, normTex)

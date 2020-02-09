@@ -1,6 +1,10 @@
 package geometry
 
 import (
+	"bytes"
+	"encoding/base64"
+	"encoding/gob"
+
 	"../shader"
 	"../texture"
 	"github.com/go-gl/mathgl/mgl32"
@@ -73,9 +77,33 @@ type ObjectBuffers struct {
 // VertexValues : struct for holding vertex specific values
 type VertexValues struct {
 	Vertices []float32
-	normals  []float32
-	uvs      []float32
-	faces    []uint32
+	Normals  []float32
+	Uvs      []float32
+	Faces    []uint32
+}
+
+func (v *VertexValues) Serialize() string {
+	b := bytes.Buffer{}
+	e := gob.NewEncoder(&b)
+
+	err := e.Encode(v)
+	if err != nil {
+		panic(err)
+	}
+	return base64.StdEncoding.EncodeToString(b.Bytes())
+}
+
+func (v *VertexValues) Deserialize(value string) error {
+	by, err := base64.StdEncoding.DecodeString(value)
+	if err != nil {
+		return err
+	}
+	b := bytes.Buffer{}
+
+	b.Write(by)
+	d := gob.NewDecoder(&b)
+	err = d.Decode(&v)
+	return err
 }
 
 // Uniforms : struct for holding all uniforms
