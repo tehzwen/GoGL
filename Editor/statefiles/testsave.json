@@ -455,27 +455,6 @@
             },
             {
                 "name": "bunny0",
-                "material": {
-                    "diffuse": [
-                        0.5882,
-                        0.0,
-                        0.5882
-                    ],
-                    "ambient": [
-                        1,
-                        1,
-                        1
-                    ],
-                    "specular": [
-                        0,
-                        0,
-                        0
-                    ],
-                    "n": 10.000002,
-                    "shaderType": 3,
-                    "alpha": 1,
-                    "diffuseMap": "Piney.jpg"
-                },
                 "type": "mesh",
                 "position": [
                     6,
@@ -483,9 +462,9 @@
                     -5
                 ],
                 "scale": [
-                    0.01,
-                    0.01,
-                    0.01
+                    0.5,
+                    0.5,
+                    0.5
                 ],
                 "diffuseTexture": null,
                 "normalTexture": null,
@@ -508,7 +487,7 @@
                     1
                 ],
                 "parent": null,
-                "model": "mydoomguy2.obj"
+                "model": "bunny.obj"
             }
         ],
         "pointLights": [

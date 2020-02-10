@@ -296,7 +296,6 @@ class Cube {
             this.model.rotation = this.initialTransform.rotation;
         }
 
-        console.warn(this.model.rotation);
         this.lightingShader();
     }
 }

@@ -4,30 +4,8 @@ import { Cube, PointLight, Plane, Model, DirectionalLight } from "./objects/inde
 
 var currentlyRendered = 0;
 var state = {
-    saveFile: "rayTest.json"
+    saveFile: "testsave.json"
 };
-
-const shadowDepthVertShader =
-    `#version 300 es
-    layout (location = 0) in vec3 vertexPosition;
-    uniform mat4 uModelMatrix;
-    uniform mat4 lightSpaceMatrix;
-
-    void main() {
-        gl_Position = lightSpaceMatrix * uModelMatrix * vec4(vertexPosition, 1.0);
-    }
-    `;
-
-const shadowDepthFragShader =
-    `#version 300 es
-    precision mediump float;
-    out vec4 fragColor;
-    uniform vec3 diffuseVal;
-
-    void main() {
-        fragColor = vec4(diffuseVal, 1.0);
-    }
-    `;
 
 if (window.location.pathname.indexOf("main.html") !== -1) {
     window.onload = () => {
@@ -35,11 +13,16 @@ if (window.location.pathname.indexOf("main.html") !== -1) {
         state.height = window.innerHeight;
         state.renderedText = document.getElementById("renderedNumText");
         state.renderedText.style.color = "white";
+        state.loadingBar = {
+            parent: document.getElementById("loadingBar"),
+            child: document.getElementById("loadingBarProgress")
+        }
 
         //add event listener to canvas resize
         window.addEventListener("resize", (e) => {
             state.width = window.innerWidth;
             state.height = window.innerHeight;
+            state.gl.viewport(0, 0, state.width, state.height);
         })
 
         parseSceneFile("./statefiles/" + state.saveFile, state, main);
@@ -58,7 +41,6 @@ function addObject(type, url = null) {
         testCube.vertShader = state.vertShaderSample;
         testCube.fragShader = state.fragShaderSample;
         testCube.setup();
-
         addObjectToScene(state, testCube);
         UI.createSceneGui(state);
     }
@@ -79,9 +61,7 @@ function createModalFromMesh(mesh, object) {
 }
 
 function main() {
-    //document.body.appendChild( stats.dom );
     const canvas = document.querySelector("#glCanvas");
-
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
@@ -94,11 +74,6 @@ function main() {
             'Check to see you are using a <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API#WebGL_2_2" class="alert-link">modern browser</a>.');
         return;
     }
-
-    let depthShaderProgram = initShaderProgram(gl, shadowDepthVertShader, shadowDepthFragShader);
-    let depthShaderProgramInfo = initShaderUniforms(gl, depthShaderProgram, ["uProjectionMatrix", "uViewMatrix", "uModelMatrix", "diffuseVal"], ["vertexPosition"]);
-    depthShaderProgramInfo.program = depthShaderProgram;
-    state.depthShaderProgramInfo = depthShaderProgramInfo;
 
     state = {
         ...state,
@@ -127,7 +102,7 @@ function main() {
     //iterate through the level's objects and add them
     state.level.objects.map((object) => {
         if (object.type === "mesh") {
-            parseOBJFileToJSON(object.model, object, createModalFromMesh);
+            parseOBJFileToJSON("./models/" + object.model, object, createModalFromMesh);
         } else if (object.type === "cube") {
             let tempCube = new Cube(gl, object);
             tempCube.setup();
@@ -150,40 +125,6 @@ function main() {
         state.directionalLights.push(tempDirLight);
         UI.createSceneGui(state);
     })
-
-    const depthTexture = gl.createTexture();
-    const depthTextureSize = 1024;
-    gl.bindTexture(gl.TEXTURE_2D, depthTexture);
-    gl.texImage2D(
-        gl.TEXTURE_2D,      // target
-        0,                  // mip level
-        gl.DEPTH_COMPONENT32F, // internal format
-        depthTextureSize,   // width
-        depthTextureSize,   // height
-        0,                  // border
-        gl.DEPTH_COMPONENT, // format
-        gl.FLOAT,    // type
-        null);              // data
-
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-    state.depthTexture = depthTexture;
-
-    const depthFramebuffer = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, depthFramebuffer);
-    gl.framebufferTexture2D(
-        gl.FRAMEBUFFER,       // target
-        gl.DEPTH_ATTACHMENT,  // attachment point
-        gl.TEXTURE_2D,        // texture target
-        state.depthTexture,         // texture
-        0);
-
-
-    state.depthFramebuffer = depthFramebuffer;
-    state.depthTextureSize = depthTextureSize;
 
     //setup mouse click listener
     /*
@@ -239,8 +180,6 @@ function startRendering(gl, state) {
 
 
         if (state.numberOfObjectsToLoad <= state.objects.length) {
-            //console.log(state.numberOfObjectsToLoad, state.objects.length);
-
             if (!state.initialRender) {
                 drawScene(gl, deltaTime, state);
                 state.initialRender = true;
@@ -294,7 +233,6 @@ function startRendering(gl, state) {
             state.renderedText.innerHTML = "Rendered: " + currentlyRendered;
             currentlyRendered = 0;
         } else {
-            //console.error(state.objects.length)
             drawScene(gl, deltaTime, state);
         }
         // Request another frame when this one is done
@@ -313,94 +251,12 @@ function startRendering(gl, state) {
  * @purpose Iterate through game objects and render the objects aswell as update uniforms
  */
 function drawScene(gl, deltaTime, state) {
-
     console.log("rendering!")
     gl.enable(gl.DEPTH_TEST); // Enable depth testing
     gl.depthFunc(gl.LEQUAL); // Near things obscure far things
     gl.enable(gl.CULL_FACE);
-    
-    let lightProjectionMatrix = mat4.create();
-    let lightWorldMatrix = mat4.create();
-    var lightSpaceMatrix = mat4.create();
-
-    if (state.shadowsOn) {
-        gl.bindFramebuffer(gl.FRAMEBUFFER, state.depthFramebuffer);
-        gl.viewport(0, 0, state.depthTextureSize, state.depthTextureSize);
-        gl.clear(gl.DEPTH_BUFFER_BIT);
-        state.objects.forEach((object) => {
-            if (object.loaded) {
-                gl.useProgram(state.depthShaderProgramInfo.program);
-                //use our basic depth shader code here for a shader program
-
-                const settings = {
-                    cameraX: 6,
-                    cameraY: 12,
-                    posX: 0,
-                    posY: 2,
-                    posZ: 0,
-                    targetX: 0,
-                    targetY: 0,
-                    targetZ: -1,
-                    projWidth: 10,
-                    projHeight: 10,
-                    perspective: false,
-                    fieldOfView: 120,
-                    bias: -0.006,
-                };
-                //console.log(state.directionalLights[0])
-                mat4.lookAt(
-                    lightWorldMatrix,
-                    vec3.fromValues(state.directionalLights[0].position[0], state.directionalLights[0].position[1], state.directionalLights[0].position[2]),
-                    state.directionalLights[0].direction,
-                    [0, 1, 0]
-                )
-                //mat4.perspective(lightProjectionMatrix, settings.fieldOfView * Math.PI / 180.0, 1, 0.5, 100);
-                mat4.ortho(lightProjectionMatrix, -settings.projWidth, settings.projWidth, -settings.projHeight, settings.projHeight, 1, 7.5);
-
-                //create the lightSpaceMatrix
-                mat4.mul(lightSpaceMatrix, lightProjectionMatrix, lightWorldMatrix);
-                gl.uniformMatrix4fv(gl.getUniformLocation(state.depthShaderProgramInfo.program, "lightSpaceMatrix"), false, lightSpaceMatrix);
-                gl.uniform3fv(gl.getUniformLocation(state.depthShaderProgramInfo.program, "diffuseVal"), object.material.diffuse);
-
-                //mat4.invert(lightWorldMatrix, lightWorldMatrix);
-                //mat4.mul(lightSpaceMatrix, lightProjectionMatrix, lightWorldMatrix);
-
-
-                var modelMatrix = mat4.create();
-                var negCentroid = vec3.fromValues(0.0, 0.0, 0.0);
-                vec3.negate(negCentroid, object.centroid);
-                mat4.translate(modelMatrix, modelMatrix, object.model.position);
-                mat4.translate(modelMatrix, modelMatrix, object.centroid);
-                mat4.mul(modelMatrix, modelMatrix, object.model.rotation);
-                mat4.translate(modelMatrix, modelMatrix, negCentroid);
-                mat4.scale(modelMatrix, modelMatrix, object.model.scale);
-
-                if (object.parent) {
-                    let parent = getObject(state, object.parent);
-                    mat4.mul(modelMatrix, parent.modelMatrix, modelMatrix);
-                }
-
-                //gl.uniform3fv(object.programInfo.uniformLocations.uReverseLightDirection, lightWorldMatrix.slice(8, 11));
-                gl.uniformMatrix4fv(gl.getUniformLocation(state.depthShaderProgramInfo.program, "uModelMatrix"), false, modelMatrix);
-                gl.bindVertexArray(object.buffers.vao);
-
-                const offset = 0; // Number of elements to skip before starting
-
-                //if its a mesh then we don't use an index buffer and use drawArrays instead of drawElements
-                if (object.type === "mesh") {
-                    gl.drawArrays(gl.TRIANGLES, offset, object.buffers.numVertices / 3);
-                } else {
-                    gl.drawElements(gl.TRIANGLES, object.buffers.numVertices, gl.UNSIGNED_SHORT, offset);
-                }
-            }
-        })
-
-    }
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, state.width, state.height);
-
-    //RENDER THE SCENE NOW HERE NORMALLY
-
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -425,18 +281,6 @@ function drawScene(gl, deltaTime, state) {
                     gl.depthFunc(gl.LEQUAL); // Near things obscure far things
                     gl.clearDepth(1.0);
                 }
-
-                //let textureMatrix = mat4.create();
-                //mat4.identity(textureMatrix);
-                //mat4.translate(textureMatrix, textureMatrix, vec3.fromValues(0.5, 0.5, 0.5));
-                //mat4.scale(textureMatrix, textureMatrix, vec3.fromValues(0.5, 0.5, 0.5));
-                //mat4.multiply(textureMatrix, textureMatrix, lightProjectionMatrix);
-                //might need to get inverse of light world matrix here but for now lets not and see what happens
-                //let invLightWorldMat = mat4.create();
-                //mat4.invert(invLightWorldMat, lightWorldMatrix);
-                //mat4.multiply(textureMatrix, textureMatrix, invLightWorldMat);
-
-                gl.uniformMatrix4fv(object.programInfo.uniformLocations.textureMatrix, false, lightSpaceMatrix);
 
                 gl.activeTexture(gl.TEXTURE0);
                 gl.uniform1i(object.programInfo.uniformLocations.projectedTexture, 0);
@@ -504,7 +348,6 @@ function drawScene(gl, deltaTime, state) {
 
                 gl.uniformMatrix4fv(object.programInfo.uniformLocations.uModelMatrix, false, modelMatrix);
                 gl.uniformMatrix4fv(object.programInfo.uniformLocations.normalMatrix, false, normalMatrix);
-                //console.log(object)
                 gl.uniform3fv(object.programInfo.uniformLocations.diffuseVal, object.material.diffuse);
                 gl.uniform3fv(object.programInfo.uniformLocations.ambientVal, object.material.ambient);
                 gl.uniform3fv(object.programInfo.uniformLocations.specularVal, object.material.specular);

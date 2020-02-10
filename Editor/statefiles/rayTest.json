@@ -244,7 +244,7 @@
                     1,
                     1
                 ],
-                "model":"models/free_grass.obj",
+                "model":"free_grass.obj",
                 "collide": true,
                 "parent": null
             }

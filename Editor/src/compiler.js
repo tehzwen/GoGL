@@ -6,7 +6,7 @@ window.onload = () => {
     const compilationText = document.getElementById("compilationOutput")
     console.log(sceneFile);
 
-    buildCommand = exec("make -C ../Renderer/", function (err, stdout, stderr) {
+    buildCommand = exec("cd ../Renderer/;go build", function (err, stdout, stderr) {
         if (err) {
             // should have err.code here?  
             console.error(err);
@@ -17,6 +17,7 @@ window.onload = () => {
 
     buildCommand.on('exit', function (code) {
         // exit code is code
+        console.warn("CODE ", code)
 
         if (code === 0) {
             let tempText = document.createElement('p');
@@ -32,7 +33,7 @@ window.onload = () => {
             compilationText.appendChild(tempText)
         }
 
-        runCommand = exec("../Renderer/GoGL " + sceneFile, (err, stdout, stderr) => {
+        runCommand = exec("../Renderer/Renderer " + sceneFile, (err, stdout, stderr) => {
             if (stderr) {
                 console.error(stderr);
             }

@@ -2,8 +2,6 @@ import state from './main.js';
 
 setup();
 
-var saveFile = "testsave.json"
-
 function setup() {
     //listeners for header button presses
     document.getElementById('saveButton').addEventListener('click', () => {
@@ -15,9 +13,28 @@ function setup() {
     document.getElementById('launchButton').addEventListener('click', () => {
         document.location.href = "compiler.html?scene=" + __dirname + "/statefiles/" + state.saveFile
     })
+
+    const { remote } = require('electron')
+    const { Menu, MenuItem } = remote
+
+    const menu = new Menu()
+    menu.append(new MenuItem({ label: 'MenuItem1', click() { console.log('item 1 clicked') } }))
+
+    //this shows a popup menu item on right click, can use this with buttons eventually or something
+    // window.addEventListener('contextmenu', (e) => {
+    //     e.preventDefault()
+    //     menu.popup({ window: remote.getCurrentWindow() })
+    //   }, false)
 }
 
 function createSceneGui(state) {
+    let loadingProgress = ((state.objects.length/state.numberOfObjectsToLoad) * 100);
+    state.loadingBar.child.style.width = loadingProgress + "%";
+
+    if (loadingProgress === 100) {
+        state.loadingBar.parent.style.display = "none";
+    }
+
     //get objects first
     let sideNav = document.getElementById("objectsNav");
     sideNav.innerHTML = "";
@@ -57,7 +74,6 @@ function createSceneGui(state) {
             objectName.addEventListener('click', () => {
                 displayObjectValues(object, state);
             });
-
             parentChildrenDiv.appendChild(objectName);
         }
     });
@@ -154,7 +170,6 @@ function handleTypeSelectChange(event) {
  * @param {Game Object to manipulate} object 
  */
 function displayObjectValues(object, state) {
-    console.log(object)
     let position;
     if (object.type !== "directionalLight") {
         position = object.model.position;
