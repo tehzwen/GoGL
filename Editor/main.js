@@ -1,10 +1,13 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, Menu } = require('electron')
+const { app, BrowserWindow, Menu, dialog } = require('electron')
 const path = require('path')
-
-var fs = require('fs');
-
+const fs = require('fs')
 const isMac = process.platform === 'darwin'
+
+
+// Keep a global reference of the window object, if you don't, the window will
+// be closed automatically when the JavaScript object is garbage collected.
+let mainWindow
 
 const template = [
   // { role: 'appMenu' }
@@ -27,10 +30,17 @@ const template = [
     label: 'File',
     submenu: [
       isMac ? { role: 'close' } : { role: 'quit' },
-      // {label:"Test",
-      // click(){
-      //   console.log("here")
-      // }}
+      {
+        label: "Open Scene",
+        id: "sceneOpen",
+        click(menuItem, browserWindow, event) {
+          dialog.showOpenDialog({
+            properties: ['openFile']
+          }).then((data) => {
+            browserWindow.webContents.send("sceneOpen", { data })
+          })
+        }
+      }
     ]
   },
   // { role: 'editMenu' }
@@ -56,10 +66,10 @@ const template = [
           ]
         }
       ] : [
-        { role: 'delete' },
-        { type: 'separator' },
-        { role: 'selectAll' }
-      ])
+          { role: 'delete' },
+          { type: 'separator' },
+          { role: 'selectAll' }
+        ])
     ]
   },
   // { role: 'viewMenu' }
@@ -89,8 +99,8 @@ const template = [
         { type: 'separator' },
         { role: 'window' }
       ] : [
-        { role: 'close' }
-      ])
+          { role: 'close' }
+        ])
     ]
   },
   {
@@ -107,11 +117,6 @@ const template = [
   }
 ]
 const menu = Menu.buildFromTemplate(template)
-
-
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
-let mainWindow
 
 function createWindow() {
 
@@ -143,7 +148,7 @@ function createWindow() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', function() {
+app.on('ready', function () {
   Menu.setApplicationMenu(menu)
   createWindow();
 })

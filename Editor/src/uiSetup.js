@@ -14,11 +14,11 @@ function setup() {
         document.location.href = "compiler.html?scene=" + __dirname + "/statefiles/" + state.saveFile
     })
 
-    const { remote } = require('electron')
-    const { Menu, MenuItem } = remote
+    // const { remote } = require('electron')
+    // const { Menu, MenuItem } = remote
 
-    const menu = new Menu()
-    menu.append(new MenuItem({ label: 'MenuItem1', click() { console.log('item 1 clicked') } }))
+    // const menu = new Menu()
+    // menu.append(new MenuItem({ label: 'MenuItem1', click() { console.log('item 1 clicked') } }))
 
     //this shows a popup menu item on right click, can use this with buttons eventually or something
     // window.addEventListener('contextmenu', (e) => {

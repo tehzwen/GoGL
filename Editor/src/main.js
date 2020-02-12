@@ -9,6 +9,13 @@ var state = {
 
 if (window.location.pathname.indexOf("main.html") !== -1) {
     window.onload = () => {
+        const { ipcRenderer } = require('electron')
+        ipcRenderer.on('sceneOpen', (event, arg) => {
+            if (arg.data) {
+                console.log(arg.data.filePaths[0]);
+            }
+        })
+
         state.width = window.innerWidth;
         state.height = window.innerHeight;
         state.renderedText = document.getElementById("renderedNumText");
