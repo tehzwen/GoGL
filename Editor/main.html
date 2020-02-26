@@ -38,7 +38,7 @@
       </div>
 
     <!-- This is a container for our content -->
-    <div class="row">
+    <div id="mainWindow" class="row">
         <div class="col-8">
             <div class="mx-auto text-center">
                 <!-- This is our canvas for the example -->
@@ -46,7 +46,7 @@
                 <canvas tabindex="1" id="glCanvas" width="100%" height="100%"></canvas>
             </div>
         </div>
-        <div class="col-1 column-transparent">
+        <div id="sceneObjectsContainer" class="col-1 column-transparent">
             <div class="mx-auto text-center my-5">
                 <h3>Scene</h3>
             </div>
@@ -60,6 +60,28 @@
             <div class="mx-auto text-center" id="selectedObject">
             </div>
             
+        </div>
+        <div id="addModal" class="my-modal" style="left:25%; top:40%; display:none">
+            <div class="row">
+                <div class="col" style="text-align:center">
+                    <h4>Add New Object</h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label for="objectTypes">Object Type: </label>
+                    <select id="objectTypes">
+                        <option value="cube">Cube</option>
+                        <option value="plane">Plane</option>
+                        <option value="mesh">Mesh</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <button class="btn btn-primary" id="addObjectButton">Add</button>
+                </div>
+            </div>
         </div>
         <!-- 
         <div class="col">

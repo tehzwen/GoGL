@@ -56,7 +56,7 @@ window.onload = () => {
                 compilationText.appendChild(tempText)
             }
 
-            runCommand = exec("../Renderer/Renderer " + sceneFile, (err, stdout, stderr) => {
+            runCommand = exec("cd ../Renderer/ ; ./Renderer " + sceneFile, (err, stdout, stderr) => {
                 if (stderr) {
                     console.error(stderr);
                 }

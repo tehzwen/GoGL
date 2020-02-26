@@ -1,6 +1,8 @@
 import myMath from "./mymath/index.js";
 import UI from "./uiSetup.js";
 import { Cube, PointLight, Plane, Model, DirectionalLight } from "./objects/index.js";
+const electron = require('electron')
+const Menu = electron.remote.Menu;
 
 var currentlyRendered = 0;
 var state = {
@@ -9,13 +11,14 @@ var state = {
 
 if (window.location.pathname.indexOf("main.html") !== -1) {
     window.onload = () => {
+        UI.setup(state);
         const { ipcRenderer } = require('electron')
         ipcRenderer.on('sceneOpen', (event, arg) => {
             if (arg.data) {
-                console.log(arg.data.filePaths[0]);
                 state.saveFile = arg.data.filePaths[0];
                 state.objects = [];
                 parseSceneFile(state.saveFile, state, main);
+                UI.setup(state);
             }
         })
 
@@ -27,6 +30,26 @@ if (window.location.pathname.indexOf("main.html") !== -1) {
             parent: document.getElementById("loadingBar"),
             child: document.getElementById("loadingBarProgress")
         }
+
+        const WebViewMenu = Menu.buildFromTemplate([{
+            label: 'Add Object', click() {
+                let addModal = document.getElementById("addModal");
+                addModal.style.display = "inline";
+                //add event listener for the add button
+                document.getElementById("addObjectButton").addEventListener("click", (e) => {
+                    //check the value of the object type select
+                    let objectTypeDropdown = document.getElementById("objectTypes");
+                    let objectType = objectTypeDropdown.options[objectTypeDropdown.selectedIndex].value;
+                    addObject(objectType);                    
+                    addModal.style.display = 'none';
+                    state.render = true;
+                })
+            }
+        }]);
+
+        document.getElementById("sceneObjectsContainer").addEventListener("contextmenu", (e) => {
+            WebViewMenu.popup(electron.remote.getCurrentWindow());
+        })
 
         //add event listener to canvas resize
         window.addEventListener("resize", (e) => {
@@ -46,14 +69,43 @@ if (window.location.pathname.indexOf("main.html") !== -1) {
  * @purpose **WIP** Adds a new object to the scene from using the gui to add said object //move to helpers
  */
 function addObject(type, url = null) {
-    if (type === "Cube") {
-        let testCube = new Cube(state.gl, "Cube", null, [0.1, 0.1, 0.1], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], 10, 1.0);
-        testCube.vertShader = state.vertShaderSample;
-        testCube.fragShader = state.fragShaderSample;
+    if (type === "cube") {
+        //TODO : Add custom "create default cube" methods for cleaner code
+        let testCube = new Cube(state.gl,
+            {
+                name: "addCube",
+                parent: null,
+                type: "cube",
+                collide: false,
+                material: {
+                    diffuse: [
+                        0.5882,
+                        0.5882,
+                        0.5882
+                    ],
+                    ambient: [
+                        1,
+                        1,
+                        1
+                    ],
+                    specular: [
+                        0,
+                        0,
+                        0
+                    ],
+                    n: 10.000002,
+                    shaderType: 1,
+                    alpha: 1,
+
+                },
+                scale: [1.0, 1.0, 1.0],
+                position: [0.0, 0.0, 0.0]
+            });
         testCube.setup();
         addObjectToScene(state, testCube);
         UI.createSceneGui(state);
     }
+    //TODO: add plane and mesh types
 }
 
 function createModalFromMesh(mesh, object) {

@@ -91,3 +91,13 @@ h3{
 h6{
     color:#eb8634 !important;
 }
+
+.my-modal{
+    position: absolute;
+    height: 200px;
+    width: 300px;
+    border-radius: 50px;
+    background-color: rgb(93, 93, 94);
+    justify-content: center;
+    text-align: center;
+}
