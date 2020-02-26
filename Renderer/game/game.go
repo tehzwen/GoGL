@@ -12,7 +12,7 @@ import (
 var angle = 0.0
 var walkSpeed float64 = 1
 var runSpeed float64 = 5
-var lightToMove *geometry.Light
+var lightToMove *geometry.PointLight
 
 var cube3 geometry.Geometry
 
@@ -22,7 +22,7 @@ var err error
 // Start : initialize our values for our game here
 func Start(state *geometry.State) {
 	fmt.Printf("Started!\n")
-	lightToMove = &state.Lights[0]
+	lightToMove = &state.PointLights[0]
 	cube3, err = scene.GetObjectFromScene(state, "testCube3")
 
 	if err != nil {
@@ -52,9 +52,6 @@ func Update(state *geometry.State, deltaTime float64) {
 	speed := deltaTime * walkSpeed
 
 	lightToMove.Move = false
-	if state.Keys[glfw.KeyLeftShift] {
-		speed *= runSpeed
-	}
 
 	// 	if state.Keys[glfw.Key5] {
 	// 		rot := mgl32.HomogRotate3D(float32(angle), mgl32.Vec3{0, 1, 0})
@@ -63,13 +60,6 @@ func Update(state *geometry.State, deltaTime float64) {
 
 	rot := mgl32.HomogRotate3D(float32(angle), mgl32.Vec3{0, 1, 0})
 	cube3.SetRotation(rot)
-	// 	if state.Keys[glfw.Key1] {
-	// 		cube3.AddForce(mgl32.Vec3{0.5 * float32(deltaTime), 0.0, 0.0})
-	// 	}
-
-	// 	if state.Keys[glfw.Key2] {
-	// 		cube3.AddForce(mgl32.Vec3{-0.5 * float32(deltaTime), 0.0, 0.0})
-	// 	}
 
 	if state.Keys[glfw.KeyQ] {
 		lightToMove.Position[2] += 0.1
@@ -91,10 +81,14 @@ func Update(state *geometry.State, deltaTime float64) {
 		lightToMove.Move = true
 	}
 
-	if state.Keys[glfw.KeyT] {
-		if lightToMove.Constant > 0 {
-			lightToMove.Constant -= 0.025
-		}
+	// if state.Keys[glfw.KeyT] {
+	// 	if lightToMove.Constant > 0 {
+	// 		lightToMove.Constant -= 0.025
+	// 	}
+	// }
+
+	if state.Keys[glfw.KeyLeftShift] {
+		speed *= runSpeed
 	}
 
 	if state.Keys[glfw.KeyLeft] {

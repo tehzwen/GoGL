@@ -62,6 +62,15 @@ func (s *BlinnNoTexture) Setup() {
 		samplerCube depthMap;
 	};
 
+	struct DirectionalLight {
+		float strength;
+		vec3 color;
+		vec3 direction;
+		vec3 position;
+		mat4 lightSpaceMatrix;
+		sampler2D depthMap;
+	};
+
 	in vec3 oFragPosition;
 	in vec3 normalInterp;
 	in vec3 oNormal;
@@ -72,11 +81,12 @@ func (s *BlinnNoTexture) Setup() {
 	uniform vec3 specularVal;
 	uniform float nVal;
 	uniform float Alpha;
-	uniform int numLights;
+	uniform int numPointLights;
+	uniform int numDirLights;
 	uniform PointLight pointLights[MAX_LIGHTS];
+	uniform DirectionalLight dirLight;
 
 	out vec4 frag_colour;
-
 
 	// array of offset direction for sampling
 	vec3 gridSamplingDisk[20] = vec3[]
@@ -88,7 +98,7 @@ func (s *BlinnNoTexture) Setup() {
 		vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
 	);
 
-	float ShadowCalculation(vec3 fragPos, PointLight light)
+	float PointShadowCalculation(vec3 fragPos, PointLight light)
 	{
 		vec3 fragToLight = fragPos - light.position;
 		float far_plane = 25.0;
@@ -112,9 +122,36 @@ func (s *BlinnNoTexture) Setup() {
 		return shadow;
 	}
 
+	float DirShadowCalculation(DirectionalLight light)
+	{
+		vec4 fragPosLightSpace = vec4(oFragPosition, 1.0) * light.lightSpaceMatrix;
+		vec3 pos = fragPosLightSpace.xyz * 0.5 + 0.5;
+		//vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+		//projCoords = projCoords * 0.5 + 0.5; 
+		//float currentDepth = projCoords.z;
+		//float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;
+		//return shadow;
+		float closestDepth = texture(light.depthMap, pos.xy).r;
+		return closestDepth < pos.z ? 0.0 : 1.0;
+		
+	}
+
+	vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir)
+	{
+		float shadow = DirShadowCalculation(light);
+		vec3 lightDir = normalize(light.direction);
+		float diff = max(dot(normal, lightDir), 0.0);
+		vec3 reflectDir = reflect(-lightDir, normal);
+		float spec = pow(max(dot(viewDir, reflectDir), 0.0), nVal);
+		vec3 ambient = light.color * ambientVal * diffuseVal;
+		vec3 diffuse = light.color * diff * diffuseVal;
+		vec3 specular = light.color * specularVal * spec;
+		return (shadow * (diffuse + specular) + ambient);
+	}
+
 	vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir) 
 	{
-		float shadow = ShadowCalculation(oFragPosition, light);
+		float shadow = PointShadowCalculation(oFragPosition, light);
 		vec3 lightDir = normalize(light.position - fragPos);
 		// diffuse shading
 		float diff = max(dot(lightDir, normal), 0.0);
@@ -131,15 +168,15 @@ func (s *BlinnNoTexture) Setup() {
 		vec3 diffuse  = light.color  * diff * diffuseVal;
 		vec3 specular = vec3(0,0,0);
 
-		if (diff < 0.0f) {
-			specular = light.color * specularVal * spec;
-			specular *= attenuation;
-		}
+
+		specular = light.color * specularVal * spec;
+		specular *= attenuation;
+
 		
 		ambient  *= attenuation;
 		diffuse  *= attenuation;
 		
-		return (ambient + diffuse + specular) * (1.0 - shadow);
+		return (ambient + (1.0 - shadow) * (diffuse + specular));
 	}
 
 	void main() {
@@ -147,9 +184,10 @@ func (s *BlinnNoTexture) Setup() {
 		vec3 result = vec3(0,0,0);
 		vec3 viewDir = normalize(oCamPosition - oFragPosition);
 
-		for (int i = 0; i < numLights; i++) {
+		for (int i = 0; i < numPointLights; i++) {
 			result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir);
 		}
+		//result += CalcDirLight(dirLight, normal, viewDir);
 
 		if (Alpha < 1.0) {
 			frag_colour = vec4(result, Alpha);

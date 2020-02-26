@@ -83,7 +83,8 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 	uniform vec3 ambientVal;
 	uniform vec3 specularVal;
 	uniform float nVal;
-	uniform int numLights;
+	uniform int numPointLights;
+	uniform int numDirLights;
 	uniform float Alpha;
 	uniform sampler2D uDiffuseTexture;
 	uniform sampler2D uNormalTexture;
@@ -157,10 +158,10 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 	void main() {
 
 		vec3 regularNormal = normalize(normalInterp);
-		vec3 normal = texture(uNormalTexture, -oUV).xyz;
-		normal = 2.0 * normal - 1.0;
-		normal = normal * vec3(5.0, 5.0, 5.0);
-		vec3 biTangent = cross(oNormal, oBitangent);
+		vec3 normal = texture(uNormalTexture, oUV).xyz;
+		normal = normalize(2.0 * normal - 1.0);
+		//normal = normal * vec3(5.0, 5.0, 5.0);
+		vec3 biTangent = normalize(cross(oNormal, oBitangent));
 		mat3 nMatrix = mat3(oBitangent, biTangent, oNormal);
 		normal = normalize(nMatrix * normal);
 		vec3 result = vec3(0,0,0);
@@ -168,7 +169,7 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 
 		vec4 texColor = texture(uDiffuseTexture, oUV);
 
-		for (int i = 0; i < numLights; i++) {
+		for (int i = 0; i < numPointLights; i++) {
 			result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir, texColor.xyz);
 		}
 
@@ -176,7 +177,6 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 			discard;
 		}
 		frag_colour = vec4(result, Alpha);
-		//frag_colour = vec4(vec3(normal), Alpha);
 	}
 	` + "\x00"
 }

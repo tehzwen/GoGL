@@ -174,7 +174,7 @@
                     ],
                     "n": 100,
                     "alpha": 1,
-                    "shaderType": 4
+                    "shaderType": 1
                 },
                 "type": "cube",
                 "position": [
@@ -236,7 +236,7 @@
                 "type": "mesh",
                 "position": [
                     3,
-                    -1,
+                    0,
                     3
                 ],
                 "scale": [
@@ -244,46 +244,34 @@
                     1,
                     1
                 ],
-                "model":"free_grass.obj",
+                "model": "bunny.obj",
                 "collide": true,
                 "parent": null
             }
         ],
         "pointLights": [
+        ],
+        "directionalLights": [
             {
+                "name": "dirLight1",
                 "colour": [
                     1,
                     1,
                     1
                 ],
-                "position": [
-                    -1,
-                    5,
-                    -2
+                "position" : [
+                    2,
+                    6,
+                    0
                 ],
-                "strength": 4,
-                "quadratic": 0.035,
-                "linear": 0.035,
-                "constant": 1
-            },
-            {
-                "colour": [
-                    1,
-                    1,
-                    1
+                "direction": [
+                    0,
+                    0,
+                    0
                 ],
-                "position": [
-                    1,
-                    5,
-                    2
-                ],
-                "strength": 4,
-                "quadratic": 0.035,
-                "linear": 0.035,
-                "constant": 1
+                "strength": 2
             }
         ],
-        "directionalLights": [],
         "settings": {}
     }
 ]

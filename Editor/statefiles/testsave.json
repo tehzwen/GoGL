@@ -301,7 +301,7 @@
                         0.8,
                         0.8
                     ],
-                    "n": 10,
+                    "n": 300,
                     "alpha": 1,
                     "shaderType": 1
                 },
@@ -462,9 +462,9 @@
                     -5
                 ],
                 "scale": [
-                    0.5,
-                    0.5,
-                    0.5
+                    0.05,
+                    0.05,
+                    0.05
                 ],
                 "diffuseTexture": null,
                 "normalTexture": null,
@@ -487,7 +487,7 @@
                     1
                 ],
                 "parent": null,
-                "model": "bunny.obj"
+                "model": "sponza.obj"
             }
         ],
         "pointLights": [
@@ -508,7 +508,8 @@
                 "constant": 1
             }
         ],
-        "directionalLights": [],
+        "directionalLights": [
+        ],
         "settings": {}
     }
 ]

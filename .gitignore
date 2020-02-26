@@ -1,6 +1,6 @@
 /Editor/node_modules
 /Renderer/GoGL
-/Renderer/Renderer
+/Renderer/Renderer.*
 /Renderer/.DS_Store
 /Renderer/game/.cache/
 /Editor/models

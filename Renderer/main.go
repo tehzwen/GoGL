@@ -48,24 +48,6 @@ func main() {
 	keys = make(map[glfw.Key]bool)
 	buttons = make(map[glfw.MouseButton]bool)
 	mouseMovement = make(map[string]float64)
-
-	// vVal := geometry.VertexValues{
-	// 	Vertices: []float32{1.0, 0.0, 0.0},
-	// 	Normals:  []float32{1.0, 0.0, 0.0},
-	// 	Uvs:      []float32{0.0, 0.5},
-	// }
-
-	//b64 := vVal.Serialize()
-	// b64 := common.ReadB64("test.dat")
-	//common.WriteB64("./game/.cache/test.dat", b64)
-	// newVal := geometry.VertexValues{}
-	// err := newVal.Deserialize(b64)
-
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// fmt.Println("WHAT WE READ!? ", newVal)
-
 	mouseMovement["sensitivity"] = 1.2
 
 	state := geometry.State{
@@ -77,7 +59,7 @@ func main() {
 			Yaw:      90,
 			Roll:     0,
 		},
-		Lights:         []geometry.Light{},
+		PointLights:    []geometry.PointLight{},
 		Objects:        []geometry.Geometry{},
 		Keys:           make(map[glfw.Key]bool),
 		LoadedObjects:  0,
@@ -102,13 +84,19 @@ func main() {
 	game.Start(&state) //main logic start
 	fmt.Println("PID: ", os.Getpid())
 	gl.GenFramebuffers(1, &state.DepthFBO)
-	//iterate through lights and create depth maps for each
-	for l := 0; l < len(state.Lights); l++ {
-		state.Lights[l].LightViewMatrices = geometry.CreateLightSpaceTransforms(state.Lights[l], 0.5, 25, 1024, 1024)
-		state.Lights[l].DepthMap = geometry.CreateCubeDepthMap(1024, 1024)
+
+	//iterate through pointlights and create depth maps for each
+	for l := 0; l < len(state.PointLights); l++ {
+		state.PointLights[l].CreateLightSpaceTransforms(0.5, 25, 1024, 1024)
+		state.PointLights[l].CreateCubeDepthMap(1024, 1024)
 	}
 
-	//setup shadow shader program
+	for l := 0; l < len(state.DirectionalLights); l++ {
+		state.DirectionalLights[l].CreateLightSpaceTransforms(1.0, 7.5)
+		state.DirectionalLights[l].CreateDirectionalDepthMap(1024, 1024)
+	}
+
+	//setup pointlightshadow shader program
 	shadowShaderVals := make(map[string]bool)
 	shadowShaderVals["uModelMatrix"] = true
 	shadowShaderVals["aPosition"] = true
@@ -116,12 +104,23 @@ func main() {
 	shadowShaderVals["lightPos"] = true
 	shadShader := &shader.OmniDirectionalShadow{}
 	shadShader.Setup()
-	shadowProgramInfo := geometry.ProgramInfo{}
-	shadowProgramInfo.Program = geometry.InitOpenGL(shadShader.GetVertShader(), shadShader.GetFragShader(), shadShader.GetGeometryShader())
+	pointLightShadowProgramInfo := geometry.ProgramInfo{}
+	pointLightShadowProgramInfo.Program = geometry.InitOpenGL(shadShader.GetVertShader(), shadShader.GetFragShader(), shadShader.GetGeometryShader())
 	shadowProgAttribs := geometry.Attributes{}
 	shadowProgAttribs.SetPosition(0)
-	shadowProgramInfo.SetAttributes(shadowProgAttribs)
-	geometry.SetupAttributesMap(&shadowProgramInfo, shadowShaderVals)
+	pointLightShadowProgramInfo.SetAttributes(shadowProgAttribs)
+	geometry.SetupAttributesMap(&pointLightShadowProgramInfo, shadowShaderVals)
+
+	shadowShaderVals["shadowMatrices"] = false
+	shadowShaderVals["lightPos"] = false
+	shadowShaderVals["lightSpaceMatrix"] = true
+
+	dirShadShader := &shader.DirectionalShadow{}
+	dirShadShader.Setup()
+	dirLightShadowProgramInfo := geometry.ProgramInfo{}
+	dirLightShadowProgramInfo.Program = geometry.InitOpenGL(dirShadShader.GetVertShader(), dirShadShader.GetFragShader(), dirShadShader.GetGeometryShader())
+	dirLightShadowProgramInfo.SetAttributes(shadowProgAttribs)
+	geometry.SetupAttributesMap(&dirLightShadowProgramInfo, shadowShaderVals)
 
 	for !window.ShouldClose() {
 		if state.LoadedObjects == len(state.Objects) {
@@ -163,14 +162,15 @@ func main() {
 			if thread {
 				MultithreadRender(window, &state)
 			} else {
-				draw(window, &state, &shadowProgramInfo)
+				draw(window, &state, &pointLightShadowProgramInfo, &dirLightShadowProgramInfo)
 			}
 		}
 	}
 	fmt.Println("Program ended successfully!")
 }
 
-func draw(window *glfw.Window, state *geometry.State, shadowProgramInfo *geometry.ProgramInfo) {
+//TODO make cleaner pass of shadow programinfos
+func draw(window *glfw.Window, state *geometry.State, pointLightShadowProgramInfo, dirLightShadowProgramInfo *geometry.ProgramInfo) {
 	gl.Enable(gl.DEPTH_TEST)
 	gl.Enable(gl.CULL_FACE)
 	gl.Enable(gl.FRAMEBUFFER_SRGB)
@@ -185,17 +185,29 @@ func draw(window *glfw.Window, state *geometry.State, shadowProgramInfo *geometr
 
 	glfw.PollEvents()
 
-	//going to have to render depth for each light here
-
-	for l := 0; l < len(state.Lights); l++ {
-		geometry.BindDepthMap(state, &state.Lights[l])
+	//going to have to render depth for each pointlight here
+	for l := 0; l < len(state.PointLights); l++ {
+		state.PointLights[l].BindDepthMap(state)
 		gl.Viewport(0, 0, 1024, 1024)
 		gl.BindFramebuffer(gl.FRAMEBUFFER, state.DepthFBO)
 		gl.Clear(gl.DEPTH_BUFFER_BIT)
 		for x := 0; x < len(state.Objects); x++ {
-			ShadowRender(state, state.Objects[x], shadowProgramInfo, &state.Lights[l])
+			state.PointLights[l].ShadowRender(state, state.Objects[x], pointLightShadowProgramInfo)
 		}
 		gl.FramebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, 0, 0)
+		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+	}
+
+	//Depth draw directional lights
+	for l := 0; l < len(state.DirectionalLights); l++ {
+		state.DirectionalLights[l].BindDepthMap(state)
+		gl.Viewport(0, 0, 1024, 1024)
+		gl.BindFramebuffer(gl.FRAMEBUFFER, state.DepthFBO)
+		gl.Clear(gl.DEPTH_BUFFER_BIT)
+		for x := 0; x < len(state.Objects); x++ {
+			state.DirectionalLights[l].ShadowRender(state, state.Objects[x], dirLightShadowProgramInfo)
+		}
+		gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, 0, 0)
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 	}
 
@@ -207,69 +219,6 @@ func draw(window *glfw.Window, state *geometry.State, shadowProgramInfo *geometr
 		ClassicRender(state, state.Objects[i])
 	}
 	window.SwapBuffers()
-}
-
-func ShadowRender(state *geometry.State, object geometry.Geometry, shadowProgramInfo *geometry.ProgramInfo, light *geometry.Light) {
-	gl.UseProgram(shadowProgramInfo.Program)
-	currentModel, err := object.GetModel()
-
-	if err != nil {
-		//throw an error
-		fmt.Printf("ERROR getting model!")
-	}
-	_, _, parent := object.GetDetails()
-	currentCentroid := object.GetCentroid()
-	currentVertices := object.GetVertices()
-	currentBuffers := object.GetBuffers()
-	modelMatrix := mgl32.Ident4()
-
-	//move to centroid
-	centroidMat := mgl32.Translate3D(currentCentroid[0], currentCentroid[1], currentCentroid[2])
-	modelMatrix = modelMatrix.Mul4(centroidMat)
-
-	//rotation
-	modelMatrix = modelMatrix.Mul4(currentModel.Rotation)
-
-	//position
-	positionMat := mgl32.Translate3D(currentModel.Position[0], currentModel.Position[1], currentModel.Position[2])
-	modelMatrix = modelMatrix.Mul4(positionMat)
-
-	//negative centroid
-	negCent := mgl32.Translate3D(-currentCentroid[0], -currentCentroid[1], -currentCentroid[2])
-	modelMatrix = modelMatrix.Mul4(negCent)
-
-	//scale
-	modelMatrix = geometry.ScaleM4(modelMatrix, currentModel.Scale)
-
-	if parent != "" {
-		parentObj := geometry.GetSceneObject(parent, (*state))
-		if parentObj != nil {
-			parentMMatrix, err := parentObj.GetModelMatrix()
-			if err == nil {
-				modelMatrix = modelMatrix.Mul4(parentMMatrix)
-			}
-		} else {
-			fmt.Println("ERROR GETTING PARENT OBJECT")
-		}
-	}
-	if light.Move {
-		light.LightViewMatrices = geometry.CreateLightSpaceTransforms((*light), 0.5, 25, 1024, 1024)
-	}
-
-	for i := 0; i < 6; i++ {
-		gl.UniformMatrix4fv(gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str(strings.Join([]string{"shadowMatrices[", strconv.Itoa(i)}, "")+"]\x00")), 1, false, &light.LightViewMatrices[i][0])
-	}
-
-	gl.UniformMatrix4fv(gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str("uModelMatrix\x00")), 1, false, &modelMatrix[0])
-	gl.Uniform3fv(gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str("lightPos\x00")), 1, &light.Position[0])
-	gl.BindVertexArray(currentBuffers.Vao)
-
-	if object.GetType() != "mesh" {
-		gl.DrawElements(gl.TRIANGLES, int32(len(currentVertices.Vertices)), gl.UNSIGNED_INT, gl.Ptr(nil))
-	} else {
-		gl.DrawArrays(gl.TRIANGLES, 0, int32(len(currentVertices.Vertices)))
-	}
-	gl.BindVertexArray(0)
 }
 
 //Classic non threaded render
@@ -303,7 +252,7 @@ func ClassicRender(state *geometry.State, object geometry.Geometry) {
 	var fovy = float32(60 * math.Pi / 180)
 	var aspect = float32(globals.Width / globals.Height)
 	var near = float32(0.1)
-	var far = float32(100.0)
+	var far = float32(1000.0)
 
 	projection := mgl32.Perspective(fovy, aspect, near, far)
 	//create a camfront value
@@ -387,8 +336,10 @@ func ClassicRender(state *geometry.State, object geometry.Geometry) {
 	gl.Uniform1fv(currentProgramInfo.UniformLocations.NVal, 1, &currentMaterial.N)
 	gl.Uniform1fv(currentProgramInfo.UniformLocations.Alpha, 1, &currentMaterial.Alpha)
 
-	num := int32(len(state.Lights))
-	gl.Uniform1iv(currentProgramInfo.UniformLocations.NumLights, 1, &num)
+	numPointLights := int32(len(state.PointLights))
+	gl.Uniform1iv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("numPointLights\x00")), 1, &numPointLights)
+	numDirLights := int32(len(state.DirectionalLights))
+	gl.Uniform1iv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("numDirLights\x00")), 1, &numDirLights)
 
 	diffuseTexture := object.GetDiffuseTexture()
 	normalTexture := object.GetNormalTexture()
@@ -408,16 +359,38 @@ func ClassicRender(state *geometry.State, object geometry.Geometry) {
 		gl.Uniform1i(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("uNormalTexture\x00")), int32(normTex))
 	}
 
-	for i := 0; i < len(state.Lights); i++ {
-		gl.Uniform3fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].position\x00")), 1, &state.Lights[i].Position[0])
-		gl.Uniform3fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].color\x00")), 1, &state.Lights[i].Colour[0])
-		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].strength\x00")), 1, &state.Lights[i].Strength)
-		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].constant\x00")), 1, &state.Lights[i].Constant)
-		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].linear\x00")), 1, &state.Lights[i].Linear)
-		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].quadratic\x00")), 1, &state.Lights[i].Quadratic)
-		gl.ActiveTexture(gl.TEXTURE0 + state.Lights[i].DepthMap)
-		gl.BindTexture(gl.TEXTURE_CUBE_MAP, state.Lights[i].DepthMap)
-		gl.Uniform1i(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].depthMap\x00")), int32(state.Lights[i].DepthMap))
+	for i := 0; i < len(state.PointLights); i++ {
+		gl.Uniform3fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].position\x00")), 1, &state.PointLights[i].Position[0])
+		gl.Uniform3fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].color\x00")), 1, &state.PointLights[i].Colour[0])
+		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].strength\x00")), 1, &state.PointLights[i].Strength)
+		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].constant\x00")), 1, &state.PointLights[i].Constant)
+		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].linear\x00")), 1, &state.PointLights[i].Linear)
+		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].quadratic\x00")), 1, &state.PointLights[i].Quadratic)
+		gl.ActiveTexture(gl.TEXTURE0 + state.PointLights[i].DepthMap)
+		gl.BindTexture(gl.TEXTURE_CUBE_MAP, state.PointLights[i].DepthMap)
+		gl.Uniform1i(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].depthMap\x00")), int32(state.PointLights[i].DepthMap))
+	}
+
+	// for i := 0; i < len(state.DirectionalLights); i++ {
+	// 	gl.Uniform3fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"dirLights[", strconv.Itoa(i)}, "")+"].direction\x00")), 1, &state.DirectionalLights[i].Direction[0])
+	// 	gl.Uniform3fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"dirLights[", strconv.Itoa(i)}, "")+"].color\x00")), 1, &state.DirectionalLights[i].Colour[0])
+	// 	gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"dirLights[", strconv.Itoa(i)}, "")+"].strength\x00")), 1, &state.DirectionalLights[i].Strength)
+	// 	gl.UniformMatrix4fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"dirLights[", strconv.Itoa(i)}, "")+"].lightSpaceMatrix\x00")), 1, false, &state.DirectionalLights[i].LightViewMatrix[0])
+	// 	gl.ActiveTexture(gl.TEXTURE0 + state.DirectionalLights[i].DepthMap)
+	// 	gl.BindTexture(gl.TEXTURE_2D, state.DirectionalLights[i].DepthMap)
+	// 	gl.Uniform1i(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"dirLights[", strconv.Itoa(i)}, "")+"].depthMap\x00")), int32(state.DirectionalLights[i].DepthMap))
+	// }
+
+	if numDirLights > 0 {
+		gl.Uniform3fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("dirLight.direction\x00")), 1, &state.DirectionalLights[0].Direction[0])
+		gl.Uniform3fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("dirLight.color\x00")), 1, &state.DirectionalLights[0].Colour[0])
+		gl.Uniform3fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("dirLight.position\x00")), 1, &state.DirectionalLights[0].Position[0])
+		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("dirLight.strength\x00")), 1, &state.DirectionalLights[0].Strength)
+		gl.UniformMatrix4fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("dirLight.lightSpaceMatrix\x00")), 1, false, &state.DirectionalLights[0].LightViewMatrix[0])
+		gl.ActiveTexture(gl.TEXTURE0 + state.DirectionalLights[0].DepthMap)
+		gl.BindTexture(gl.TEXTURE_2D, state.DirectionalLights[0].DepthMap)
+		gl.Uniform1i(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("dirLight.depthMap\x00")), int32(state.DirectionalLights[0].DepthMap))
+
 	}
 
 	gl.BindVertexArray(currentBuffers.Vao)

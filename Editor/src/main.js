@@ -13,6 +13,9 @@ if (window.location.pathname.indexOf("main.html") !== -1) {
         ipcRenderer.on('sceneOpen', (event, arg) => {
             if (arg.data) {
                 console.log(arg.data.filePaths[0]);
+                state.saveFile = arg.data.filePaths[0];
+                state.objects = [];
+                parseSceneFile(state.saveFile, state, main);
             }
         })
 

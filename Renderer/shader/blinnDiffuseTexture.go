@@ -43,7 +43,7 @@ func (s *BlinnDiffuseTexture) Setup() {
 		oNormal = normalize((uModelMatrix * vec4(aNormal, 1.0)).xyz);
 		normalInterp = vec3(normalMatrix * vec4(aNormal, 0.0));
 		oFragPosition = (uModelMatrix * vec4(aPosition, 1.0)).xyz;
-		oUV = aUV;
+		oUV = -aUV;
 		oCamPosition =  (uViewMatrix * vec4(cameraPosition, 1.0)).xyz;
 		gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0); 
 	}
@@ -77,7 +77,8 @@ func (s *BlinnDiffuseTexture) Setup() {
 	uniform vec3 specularVal;
 	uniform float nVal;
 	uniform float Alpha;
-	uniform int numLights;
+	uniform int numPointLights;
+	uniform int numDirLights;
 	uniform sampler2D uDiffuseTexture;
 	uniform PointLight pointLights[MAX_LIGHTS];
 
@@ -153,7 +154,7 @@ func (s *BlinnDiffuseTexture) Setup() {
 
 		vec4 texColor = texture(uDiffuseTexture, oUV);
 
-		for (int i = 0; i < numLights; i++) {
+		for (int i = 0; i < numPointLights; i++) {
 			result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir, texColor.xyz);
 		}
 

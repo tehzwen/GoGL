@@ -2,7 +2,6 @@ package geometry
 
 import (
 	"errors"
-	"fmt"
 
 	"../shader"
 	"../texture"
@@ -387,8 +386,6 @@ func (c *Cube) Setup(mat Material, mod Model, name string, collide bool) error {
 			panic(err)
 		}
 		c.diffuseTexture = texture0
-
-		fmt.Println("HERE ", c.diffuseTexture.GetHandle())
 
 		SetupAttributesMap(&c.programInfo, shaderVals)
 		c.buffers.Vao = CreateTriangleVAO(&c.programInfo, c.vertexValues.Vertices, c.vertexValues.Normals, c.vertexValues.Uvs, nil, nil, c.vertexValues.Faces)

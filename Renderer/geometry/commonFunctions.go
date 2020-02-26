@@ -49,28 +49,16 @@ type SceneObject struct {
 	Collide        bool      `json:"collide"`
 }
 
-// PointLight - struct for a pointlight in the scene
-type PointLight struct {
-	Name      string    `json:"name"`
-	Position  []float32 `json:"position"`
-	Parent    string    `json:"parent"`
-	Colour    []float32 `json:"colour"`
-	Strength  float32   `json:"strength"`
-	Quadratic float32   `json:"quadratic"`
-	Linear    float32   `json:"linear"`
-	Constant  float32   `json:"constant"`
-	DepthMap  uint32
-}
-
 // Settings - WIP
 type Settings struct {
 }
 
 // Scene - Struct for holding allthe info about the current scene
 type Scene struct {
-	Objects  []SceneObject `json:"objects"`
-	Lights   []PointLight  `json:"pointLights"`
-	Settings Settings      `json:"settings"`
+	Objects           []SceneObject      `json:"objects"`
+	PointLights       []PointLight       `json:"pointLights"`
+	DirectionalLights []DirectionalLight `json:"directionalLights"`
+	Settings          Settings           `json:"settings"`
 }
 
 // RotateY - rotates a vec3 by an angle around another vec3
@@ -379,16 +367,26 @@ func ParseJSONFile(filePath string, state *State) {
 		}
 	}
 
-	for j := 0; j < len(scene[0].Lights); j++ {
-		tempLight := Light{
-			Colour:    scene[0].Lights[j].Colour,
-			Strength:  scene[0].Lights[j].Strength,
-			Position:  scene[0].Lights[j].Position,
-			Quadratic: scene[0].Lights[j].Quadratic,
-			Linear:    scene[0].Lights[j].Linear,
-			Constant:  scene[0].Lights[j].Constant,
+	for j := 0; j < len(scene[0].PointLights); j++ {
+		tempLight := PointLight{
+			Colour:    scene[0].PointLights[j].Colour,
+			Strength:  scene[0].PointLights[j].Strength,
+			Position:  scene[0].PointLights[j].Position,
+			Quadratic: scene[0].PointLights[j].Quadratic,
+			Linear:    scene[0].PointLights[j].Linear,
+			Constant:  scene[0].PointLights[j].Constant,
 		}
-		state.Lights = append(state.Lights, tempLight)
+		state.PointLights = append(state.PointLights, tempLight)
+	}
+
+	for l := 0; l < len(scene[0].DirectionalLights); l++ {
+		tempLight := DirectionalLight{
+			Colour:    scene[0].DirectionalLights[l].Colour,
+			Strength:  scene[0].DirectionalLights[l].Strength,
+			Direction: scene[0].DirectionalLights[l].Direction,
+			Position:  scene[0].DirectionalLights[l].Position,
+		}
+		state.DirectionalLights = append(state.DirectionalLights, tempLight)
 	}
 }
 

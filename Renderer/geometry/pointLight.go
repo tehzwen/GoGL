@@ -3,13 +3,29 @@ package geometry
 import (
 	"fmt"
 	"math"
+	"strconv"
+	"strings"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-func CreateCubeDepthMap(width, height int32) uint32 {
+// PointLight - struct for a pointlight in the scene
+type PointLight struct {
+	Name              string    `json:"name"`
+	Position          []float32 `json:"position"`
+	Parent            string    `json:"parent"`
+	Colour            []float32 `json:"colour"`
+	Strength          float32   `json:"strength"`
+	Quadratic         float32   `json:"quadratic"`
+	Linear            float32   `json:"linear"`
+	Constant          float32   `json:"constant"`
+	DepthMap          uint32
+	LightViewMatrices []mgl32.Mat4
+	Move              bool
+}
 
+func (light *PointLight) CreateCubeDepthMap(width, height int32) {
 	var depthCubeMap uint32
 	gl.GenTextures(1, &depthCubeMap)
 	gl.BindTexture(gl.TEXTURE_CUBE_MAP, depthCubeMap)
@@ -24,11 +40,10 @@ func CreateCubeDepthMap(width, height int32) uint32 {
 	gl.TexImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, gl.DEPTH_COMPONENT, 1024, 1024, 0, gl.DEPTH_COMPONENT, gl.FLOAT, nil)
 	gl.TexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.DEPTH_COMPONENT, 1024, 1024, 0, gl.DEPTH_COMPONENT, gl.FLOAT, nil)
 	gl.TexImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.DEPTH_COMPONENT, 1024, 1024, 0, gl.DEPTH_COMPONENT, gl.FLOAT, nil)
-
-	return depthCubeMap
+	light.DepthMap = depthCubeMap
 }
 
-func BindDepthMap(state *State, light *Light) {
+func (light *PointLight) BindDepthMap(state *State) {
 	gl.FramebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, 0, 0)
 	gl.BindFramebuffer(gl.FRAMEBUFFER, state.DepthFBO)
 	gl.FramebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, light.DepthMap, 0)
@@ -45,7 +60,7 @@ func BindDepthMap(state *State, light *Light) {
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 }
 
-func CreateLightSpaceTransforms(light Light, near, far float32, width, height float32) []mgl32.Mat4 {
+func (light *PointLight) CreateLightSpaceTransforms(near, far float32, width, height float32) {
 	aspect := float32(width) / float32(height)
 	shadowProj := mgl32.Perspective(90*math.Pi/180, aspect, near, far)
 
@@ -80,5 +95,68 @@ func CreateLightSpaceTransforms(light Light, near, far float32, width, height fl
 	final6 := shadowProj.Mul4(lookAt6)
 	shadowTransforms = append(shadowTransforms, final6)
 
-	return shadowTransforms
+	light.LightViewMatrices = shadowTransforms
+}
+
+func (light *PointLight) ShadowRender(state *State, object Geometry, shadowProgramInfo *ProgramInfo) {
+	gl.UseProgram(shadowProgramInfo.Program)
+	currentModel, err := object.GetModel()
+
+	if err != nil {
+		//throw an error
+		fmt.Printf("ERROR getting model!")
+	}
+	_, _, parent := object.GetDetails()
+	currentCentroid := object.GetCentroid()
+	currentVertices := object.GetVertices()
+	currentBuffers := object.GetBuffers()
+	modelMatrix := mgl32.Ident4()
+
+	//move to centroid
+	centroidMat := mgl32.Translate3D(currentCentroid[0], currentCentroid[1], currentCentroid[2])
+	modelMatrix = modelMatrix.Mul4(centroidMat)
+
+	//rotation
+	modelMatrix = modelMatrix.Mul4(currentModel.Rotation)
+
+	//position
+	positionMat := mgl32.Translate3D(currentModel.Position[0], currentModel.Position[1], currentModel.Position[2])
+	modelMatrix = modelMatrix.Mul4(positionMat)
+
+	//negative centroid
+	negCent := mgl32.Translate3D(-currentCentroid[0], -currentCentroid[1], -currentCentroid[2])
+	modelMatrix = modelMatrix.Mul4(negCent)
+
+	//scale
+	modelMatrix = ScaleM4(modelMatrix, currentModel.Scale)
+
+	if parent != "" {
+		parentObj := GetSceneObject(parent, (*state))
+		if parentObj != nil {
+			parentMMatrix, err := parentObj.GetModelMatrix()
+			if err == nil {
+				modelMatrix = modelMatrix.Mul4(parentMMatrix)
+			}
+		} else {
+			fmt.Println("ERROR GETTING PARENT OBJECT")
+		}
+	}
+	if light.Move {
+		light.CreateLightSpaceTransforms(0.5, 25, 1024, 1024)
+	}
+
+	for i := 0; i < 6; i++ {
+		gl.UniformMatrix4fv(gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str(strings.Join([]string{"shadowMatrices[", strconv.Itoa(i)}, "")+"]\x00")), 1, false, &light.LightViewMatrices[i][0])
+	}
+
+	gl.UniformMatrix4fv(gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str("uModelMatrix\x00")), 1, false, &modelMatrix[0])
+	gl.Uniform3fv(gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str("lightPos\x00")), 1, &light.Position[0])
+	gl.BindVertexArray(currentBuffers.Vao)
+
+	if object.GetType() != "mesh" {
+		gl.DrawElements(gl.TRIANGLES, int32(len(currentVertices.Vertices)), gl.UNSIGNED_INT, gl.Ptr(nil))
+	} else {
+		gl.DrawArrays(gl.TRIANGLES, 0, int32(len(currentVertices.Vertices)))
+	}
+	gl.BindVertexArray(0)
 }
