@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <title>Nostromo Engine</title>
     <link rel="shortcut icon" href="favicon.ico" />
-    <link rel="stylesheet" type="text/css" href="./style/bootstrap.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="./style/style.css">
 </head>
 
@@ -20,10 +20,10 @@
             <a class="nav-link" href="editor.html">Editor</a>
         </li>
         <li class="nav-item">
-            <button id="saveButton" class="btn btn-outline-primary btn-block btn-lg">Save</button>
+            <button id="saveButton" class="btn btn-outline-primary btn-block btn-md">Save</button>
         </li>
         <li class="nav-item">
-            <button id="launchButton" class="btn btn-outline-primary btn-block btn-lg">Compile & Run</button>
+            <button id="launchButton" class="btn btn-outline-primary btn-block btn-md">Compile & Run</button>
         </li>
     </ul>
     <!-- This is for displaying errors caused by our JavaScript -->
@@ -35,7 +35,7 @@
     </div>
     <div id="loadingBar" style="text-align: center; width: 50%; position: absolute; left:25%; top: 50%; z-index: 9999999;" class="progress progress-success">
         <div id="loadingBarProgress" class="bar" style="width: 0%; background-color: rgb(30, 130, 197);">Loading...</div>
-      </div>
+    </div>
 
     <!-- This is a container for our content -->
     <div id="mainWindow" class="row">
@@ -59,38 +59,53 @@
             </div>
             <div class="mx-auto text-center" id="selectedObject">
             </div>
-            
+
         </div>
         <div id="addModal" class="my-modal" style="left:25%; top:40%; display:none">
-            <div class="row">
-                <div class="col" style="text-align:center">
-                    <h4>Add New Object</h4>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col">
-                    <label for="objectTypes">Object Type: </label>
-                    <select id="objectTypes">
-                        <option value="cube">Cube</option>
-                        <option value="plane">Plane</option>
-                        <option value="mesh">Mesh</option>
-                    </select>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col">
-                    <button class="btn btn-primary" id="addObjectButton">Add</button>
+            <div class="container">
+                <div class="align-items-center">
+                    <div class="row" style="margin-top: 5px;">
+                        <div class="col">
+                            <label class="orange-text" for="objectTypes">Object Type</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <select id="objectTypes">
+                                <option value="cube">Cube</option>
+                                <option value="plane">Plane</option>
+                                <option value="mesh">Mesh</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 5px;">
+                        <div class="col">
+                            <input type="file" style="display: none;" accept=".obj" id="objectFileInput" />
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 5px;">
+                        <div class="col">
+                            <label class="orange-text" for="objectTypes">Object Name</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <input id="objectNameInput" placeholder="object name.." />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <button style="width: 100px; margin-top:10px; text-transform: none;" class="btn btn-primary" id="addObjectButton">Add</button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <button style="width: 100px; margin-top:10px; text-transform: none;" class="btn btn-danger" id="cancelAddButton">Cancel</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <!-- 
-        <div class="col">
-            <div class="mx-auto text-center my-5">
-                <h3>Add Objects</h3>
-            </div>
-            <div class="mx-auto text-center" id="addObjectsNav">
-            </div>
-        </div> -->
     </div>
 
     <!-- This is a third party library for matrix math needed for WebGL calculations -->

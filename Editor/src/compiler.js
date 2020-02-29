@@ -12,8 +12,6 @@ window.onload = () => {
         sceneFile = sceneFile.split("/").join("\\");
         psCommand = spawn("powershell.exe", ['./src/windowsBuild.ps1 "' + sceneFile + '"']);
         psCommand.stdout.on("data", (data) => {
-           // console.log(data.toString())
-
             let splitData = data.toString().split('\n');
             splitData.pop() //take off the newline character
             splitData.map((data) => {
@@ -22,6 +20,21 @@ window.onload = () => {
                     let currTime = new Date();
                     tempText.innerHTML = currTime.toLocaleTimeString() + "<b> " + data + "</b>";
                     tempText.classList = "orange-text";
+                    compilationText.appendChild(tempText)
+                    compilationText.scrollTop = compilationText.scrollHeight; //causes output to auto scroll down
+                }
+            });
+        })
+
+        psCommand.stderr.on("data", (data) => {
+            let splitData = data.toString().split('\n');
+            splitData.pop() //take off the newline character
+            splitData.map((data) => {
+                let tempText = document.createElement('p');
+                if (tempText) {
+                    let currTime = new Date();
+                    tempText.innerHTML = currTime.toLocaleTimeString() + "<b> " + data + "</b>";
+                    tempText.style.color = 'red';
                     compilationText.appendChild(tempText)
                     compilationText.scrollTop = compilationText.scrollHeight; //causes output to auto scroll down
                 }

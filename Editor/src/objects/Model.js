@@ -9,7 +9,7 @@ class Model {
         this.loaded = false;
         this.modelName = object.model;
         this.parentTransform = object.parentTransform ? object.parentTransform : null;
-        this.initialTransform = { position: object.position, scale: object.scale, rotation:object.rotation };
+        this.initialTransform = { position: object.position, scale: object.scale, rotation: object.rotation };
         this.material = object.mtl ? object.mtl : object.material;
         this.collide = object.collide;
         this.model = {
@@ -176,6 +176,12 @@ class Model {
                     console.error(err);
                 })
         }
+    }
+
+    delete() {
+        Object.keys(this.buffers.attributes).forEach((key) => {
+            this.gl.deleteBuffer(this.buffers.attributes[key]);
+        })
     }
 }
 

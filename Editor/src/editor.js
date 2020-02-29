@@ -1,10 +1,10 @@
+import UI from "./uiSetup.js";
 const fs = require('fs')
 const gameFilesPath = __dirname + "/../Renderer/game/"
 const exec = require('child_process').exec;
 
 window.onload = () => {
     state = {};
-
     //set the size of the parent div to the client height
     document.getElementById('editorParent').style.height = document.body.clientHeight * 1.5 + "vh";
 

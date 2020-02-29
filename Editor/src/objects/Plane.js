@@ -243,6 +243,13 @@ class Plane {
             this.model.rotation = this.initialTransform.rotation;
         }
     }
+
+    delete() {
+        Object.keys(this.buffers.attributes).forEach((key) => {
+            this.gl.deleteBuffer(this.buffers.attributes[key]);
+        })
+        this.gl.deleteBuffer(this.buffers.indicies);
+    }
 }
 
 export default Plane;

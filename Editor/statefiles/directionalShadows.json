@@ -78,8 +78,7 @@
                 "model": null
             }
         ],
-        "pointLights": [
-        ],
+        "pointLights": [],
         "directionalLights": [
             {
                 "name": "dirLight1",
@@ -100,6 +99,12 @@
                 ]
             }
         ],
-        "settings": {}
+        "settings": {
+            "backgroundColor": [
+                0.5,
+                0.5,
+                0.5
+            ]
+        }
     }
 ]

@@ -1,7 +1,6 @@
-import state from './main.js';
+const _ = require('lodash')
 
 function setup(newState) {
-    console.log(newState)
     //listeners for header button presses
     document.getElementById('saveButton').addEventListener('click', () => {
         if (!document.location.href.includes("editor")) {
@@ -10,7 +9,6 @@ function setup(newState) {
     })
 
     document.getElementById('launchButton').addEventListener('click', () => {
-        //
         document.location.href = "compiler.html?scene=" + __dirname + "/statefiles/" + newState.saveFile
     })
 }
@@ -28,7 +26,6 @@ function createSceneGui(state) {
     sideNav.innerHTML = "";
 
     state.objects.forEach((object) => {
-
         if (!object.parent) {
             let objectElement = document.createElement("div");
             let childrenDiv = document.createElement("div");
@@ -81,48 +78,6 @@ function createSceneGui(state) {
         objectElement.appendChild(childrenDiv);
         sideNav.appendChild(objectElement);
     })
-
-    //camera stuff here TODO
-    /*
-        let camera = state.camera;
-        let objectElement = document.createElement("div");
-        let objectName = document.createElement("h5");
-        objectName.classList = "object-link";
-        objectName.innerHTML = camera.name;
-    
-        objectName.addEventListener('click', () => {
-            let objectModel = {
-                model: { ...camera },
-                name: camera.name
-            }
-    
-            displayObjectValues(objectModel);
-        });
-    
-        objectElement.appendChild(objectName);
-        sideNav.appendChild(objectElement); */
-
-    /*
-    let addNav = document.getElementById("addObjectsNav");
-    addNav.innerHTML = "";
-    let objectTypeSelect = document.createElement("select");
-    objectTypeSelect.classList = "form-control";
-    objectTypeSelect.addEventListener('change', (event) => {
-        handleTypeSelectChange(event);
-    })
-
-    createSelectionOptions(["Cube", "Mesh"], objectTypeSelect);
-
-    let addNewButton = document.createElement("button");
-    addNewButton.innerHTML = "New Object";
-    addNewButton.classList = "btn btn-primary";
-    addNewButton.addEventListener('click', () => {
-        addObject(objectTypeSelect.value);
-    });
-
-    addNav.appendChild(objectTypeSelect);
-    addNav.appendChild(addNewButton); */
-
 }
 
 function createSelectionOptions(optionsArr, selectObj) {
@@ -245,11 +200,57 @@ function displayObjectValues(object, state) {
     positionalInputDiv.appendChild(objectPositionY);
     positionalInputDiv.appendChild(prependDivZ);
     positionalInputDiv.appendChild(objectPositionZ);
-    selectedObjectDiv.appendChild(createHeader(`<i>${object.name}</i>`, "h3"));
+    //create input with the name of the object and add listener to onChange set the name of the object accordingly
+    let nameInput = document.createElement('input');
+    nameInput.value = object.name;
+    nameInput.style.textAlign = 'center'
+    nameInput.addEventListener('input', (e) => {
+        //change the children's parent name aswell
+        state.objects.forEach((o) => {
+            if (o.parent === object.name) {
+                o.parent = e.target.value;
+            }
+        })
+        object.name = e.target.value;
+    })
+    nameInput.addEventListener('focusout', (e) => {
+        createSceneGui(state);
+    })
+
+    //add a delete button to remove this object from the scene
+    let deleteButton = document.createElement("button");
+    deleteButton.classList = "btn btn-danger";
+    deleteButton.innerHTML = "Delete"
+    deleteButton.style.marginTop = '15px';
+    deleteButton.addEventListener('click', () => {
+        if (object.type !== "mesh") {
+            let deleteIndex = _.findIndex(state.objects, (o) => {
+                return o.name === object.name;
+            })
+            state.objects.splice(deleteIndex, 1);
+            state.numberOfObjectsToLoad--;
+            state.render = true;
+            createSceneGui(state);
+            object.delete()
+        } else {
+            let deleteIndexes = _.map(_.keys(_.pickBy(state.objects, { modelName: object.modelName })), Number)
+            for (let i = 0; i < deleteIndexes.length; i++) {
+                state.objects[deleteIndexes[(deleteIndexes.length - 1) - i]].delete();
+                state.objects.splice(deleteIndexes[(deleteIndexes.length - 1) - i], 1);
+                state.numberOfObjectsToLoad--;
+                state.render = true;
+                createSceneGui(state);
+            }
+        }
+    })
+
+    selectedObjectDiv.appendChild(nameInput);
     selectedObjectDiv.appendChild(createHeader("Position", "h4"));
     selectedObjectDiv.appendChild(positionalInputDiv);
     selectedObjectDiv.appendChild(createHeader("Rotation", "h4"));
-    selectedObjectDiv.appendChild(displayRotationValues(object, state))
+    selectedObjectDiv.appendChild(displayRotationValues(object, state));
+    selectedObjectDiv.appendChild(createHeader("Scale", "h4"));
+    selectedObjectDiv.appendChild(displayScaleValues(object, state));
 
 
     if (object.type !== "light") {
@@ -260,7 +261,97 @@ function displayObjectValues(object, state) {
     } else {
         //for light, we want to change its color not diffuse material
     }
+
+    selectedObjectDiv.appendChild(deleteButton);
 }
+
+/**
+ * Purpose: Function creates a ui row for editing the scale of 
+ * a selected scene object
+ * @param {Scene object to be edited/displayed} object 
+ * @param {State object containing all objects} state 
+ */
+function displayScaleValues(object, state) {
+    let rotationalInputDiv = document.createElement("div");
+    rotationalInputDiv.classList = "input-group";
+
+    let prependDivX = document.createElement("div");
+    prependDivX.classList = "input-group-prepend";
+
+    prependDivX.innerHTML = `
+        <span class="input-group-text">X</span>
+        `;
+    let prependDivY = prependDivX.cloneNode(true);
+    prependDivY.innerHTML = `
+        <span class="input-group-text">Y</span>
+        `;
+
+    let prependDivZ = prependDivX.cloneNode(true);
+    prependDivZ.innerHTML = `
+        <span class="input-group-text">Z</span>
+        `;
+
+    //X scale
+    let objectScaleX = document.createElement("input");
+    objectScaleX.type = "number";
+    objectScaleX.classList = "form-control";
+    objectScaleX.value = 0;
+    objectScaleX.addEventListener('input', (event) => {
+        if (event.target.value > 0) {
+            //grow
+            object.scale([1.5, 1.0, 1.0]);
+        } else {
+            //shrink
+            object.scale([0.5, 1.0, 1.0]);
+        }
+        objectScaleX.value = 0;
+        state.render = true;
+    })
+
+    //Y scale
+    let objectScaleY = document.createElement("input");
+    objectScaleY.type = "number";
+    objectScaleY.classList = "form-control";
+    objectScaleY.value = 0;
+    objectScaleY.addEventListener('input', (event) => {
+        if (event.target.value > 0) {
+            //grow
+            object.scale([1.0, 1.5, 1.0]);
+        } else {
+            //shrink
+            object.scale([1.0, 0.5, 1.0]);
+        }
+        objectScaleX.value = 0;
+        state.render = true;
+    })
+
+    //Z scale
+    let objectScaleZ = document.createElement("input");
+    objectScaleZ.type = "number";
+    objectScaleZ.classList = "form-control";
+    objectScaleZ.value = 0;
+    objectScaleZ.addEventListener('input', (event) => {
+        if (event.target.value > 0) {
+            //grow
+            object.scale([1.0, 1.0, 1.5]);
+        } else {
+            //shrink
+            object.scale([1.0, 1.0, 0.5]);
+        }
+        objectScaleX.value = 0;
+        state.render = true;
+    })
+
+    rotationalInputDiv.appendChild(prependDivX);
+    rotationalInputDiv.appendChild(objectScaleX);
+    rotationalInputDiv.appendChild(prependDivY);
+    rotationalInputDiv.appendChild(objectScaleY);
+    rotationalInputDiv.appendChild(prependDivZ);
+    rotationalInputDiv.appendChild(objectScaleZ);
+
+    return rotationalInputDiv;
+}
+
 
 /**
  * Purpose: Function creates a ui row for editing the rotation of 

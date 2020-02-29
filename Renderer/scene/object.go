@@ -14,5 +14,5 @@ func GetObjectFromScene(state *geometry.State, name string) (geometry.Geometry, 
 		}
 	}
 
-	return nil, errors.New("No object found")
+	return nil, errors.New("No object found of name: " + name)
 }

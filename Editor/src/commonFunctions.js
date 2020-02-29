@@ -409,6 +409,7 @@ function parseSceneFile(file, state, cb) {
         .then((jData) => {
             state.level = jData[0];
             state.numberOfObjectsToLoad = jData[0].objects.length;
+            state.settings = jData[0].settings;
             cb();
         })
         .catch((err) => {
@@ -422,9 +423,7 @@ function createSceneFile(state, filename) {
             objects: [],
             pointLights: [],
             directionalLights: [],
-            settings: {
-
-            }
+            settings: state.settings
         }];
 
     //objects first

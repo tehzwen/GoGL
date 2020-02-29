@@ -249,8 +249,7 @@
                 "parent": null
             }
         ],
-        "pointLights": [
-        ],
+        "pointLights": [],
         "directionalLights": [
             {
                 "name": "dirLight1",
@@ -259,7 +258,7 @@
                     1,
                     1
                 ],
-                "position" : [
+                "position": [
                     2,
                     6,
                     0
@@ -272,6 +271,12 @@
                 "strength": 2
             }
         ],
-        "settings": {}
+        "settings": {
+            "backgroundColor": [
+                0.5,
+                0.5,
+                0.5
+            ]
+        }
     }
 ]

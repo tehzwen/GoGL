@@ -150,7 +150,7 @@ class Cube {
         xVal *= scaleVec[0];
         yVal *= scaleVec[1];
         zVal *= scaleVec[2];
-        
+
         //need to scale bounding box
         this.boundingBox = scaleBoundingBox(this.boundingBox, scaleVec);
         this.centroid = vec3.fromValues(cenX, cenY, cenZ);
@@ -297,6 +297,13 @@ class Cube {
         }
 
         this.lightingShader();
+    }
+
+    delete() {
+        Object.keys(this.buffers.attributes).forEach((key) => {
+            this.gl.deleteBuffer(this.buffers.attributes[key]);
+        })
+        this.gl.deleteBuffer(this.buffers.indicies);
     }
 }
 

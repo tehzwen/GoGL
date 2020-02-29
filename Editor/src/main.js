@@ -31,26 +31,6 @@ if (window.location.pathname.indexOf("main.html") !== -1) {
             child: document.getElementById("loadingBarProgress")
         }
 
-        const WebViewMenu = Menu.buildFromTemplate([{
-            label: 'Add Object', click() {
-                let addModal = document.getElementById("addModal");
-                addModal.style.display = "inline";
-                //add event listener for the add button
-                document.getElementById("addObjectButton").addEventListener("click", (e) => {
-                    //check the value of the object type select
-                    let objectTypeDropdown = document.getElementById("objectTypes");
-                    let objectType = objectTypeDropdown.options[objectTypeDropdown.selectedIndex].value;
-                    addObject(objectType);                    
-                    addModal.style.display = 'none';
-                    state.render = true;
-                })
-            }
-        }]);
-
-        document.getElementById("sceneObjectsContainer").addEventListener("contextmenu", (e) => {
-            WebViewMenu.popup(electron.remote.getCurrentWindow());
-        })
-
         //add event listener to canvas resize
         window.addEventListener("resize", (e) => {
             state.width = window.innerWidth;
@@ -59,6 +39,44 @@ if (window.location.pathname.indexOf("main.html") !== -1) {
         })
 
         parseSceneFile("./statefiles/" + state.saveFile, state, main);
+
+        //create popup for adding a new object
+        const WebViewMenu = Menu.buildFromTemplate([{
+            label: 'Add Object', click() {
+                let addModal = document.getElementById("addModal");
+                addModal.style.display = "inline";
+                let objectTypeDropdown = document.getElementById("objectTypes");
+                let fileLocation = document.getElementById("objectFileInput");
+                //add event for type mesh to add file input
+                objectTypeDropdown.addEventListener('input', (e) => {
+                    if (e.target.value === 'mesh') {
+                        fileLocation.style.display = 'inline';
+                    } else {
+                        fileLocation.style.display = 'none';
+                    }
+                })
+
+                //add event listener for the add button
+                document.getElementById("addObjectButton").addEventListener("click", (e) => {
+                    //check the value of the object type select
+                    let objectType = objectTypeDropdown.options[objectTypeDropdown.selectedIndex].value;
+                    console.log(fileLocation.files[0])
+                    addObject(objectType, document.getElementById("objectNameInput").value, fileLocation.files[0].name);
+                    addModal.style.display = 'none';
+                    state.render = true;
+                })
+
+                //add event listener for the cancel button
+                document.getElementById("cancelAddButton").addEventListener("click", (e) => {
+                    addModal.style.display = "none";
+                })
+            }
+        }]);
+
+        //attach popup to sceneobjects container
+        document.getElementById("sceneObjectsContainer").addEventListener("contextmenu", (e) => {
+            WebViewMenu.popup(electron.remote.getCurrentWindow());
+        })
     }
 }
 
@@ -68,42 +86,58 @@ if (window.location.pathname.indexOf("main.html") !== -1) {
  * @param {string - url of the model being added to the game} url 
  * @purpose **WIP** Adds a new object to the scene from using the gui to add said object //move to helpers
  */
-function addObject(type, url = null) {
+function addObject(type, name, url = null) {
+    let defaultMat = {
+        diffuse: [0.5882, 0.5882, 0.5882],
+        ambient: [1, 1, 1],
+        specular: [0, 0, 0],
+        n: 10.000002,
+        shaderType: 1,
+        alpha: 1,
+    }
     if (type === "cube") {
         //TODO : Add custom "create default cube" methods for cleaner code
-        let testCube = new Cube(state.gl,
+        let tempCube = new Cube(state.gl,
             {
-                name: "addCube",
+                name: name,
                 parent: null,
                 type: "cube",
                 collide: false,
-                material: {
-                    diffuse: [
-                        0.5882,
-                        0.5882,
-                        0.5882
-                    ],
-                    ambient: [
-                        1,
-                        1,
-                        1
-                    ],
-                    specular: [
-                        0,
-                        0,
-                        0
-                    ],
-                    n: 10.000002,
-                    shaderType: 1,
-                    alpha: 1,
-
-                },
+                material: defaultMat,
                 scale: [1.0, 1.0, 1.0],
                 position: [0.0, 0.0, 0.0]
             });
-        testCube.setup();
-        addObjectToScene(state, testCube);
+        tempCube.setup();
+        addObjectToScene(state, tempCube);
         UI.createSceneGui(state);
+    } else if (type === "plane") {
+        let tempPlane = new Plane(state.gl,
+            {
+                name: name,
+                parent: null,
+                type: "plane",
+                collide: false,
+                material: defaultMat,
+                scale: [1.0, 1.0, 1.0],
+                position: [0.0, 0.0, 0.0]
+            });
+        tempPlane.setup();
+        console.log(tempPlane);
+        addObjectToScene(state, tempPlane);
+        UI.createSceneGui(state);
+    } else if (type === "mesh") {
+        //prompt file load
+        parseOBJFileToJSON("./models/" + url, {
+            name: name,
+            parent: null,
+            type: "mesh",
+            model: url,
+            collide: false,
+            material: defaultMat,
+            scale: [1.0, 1.0, 1.0],
+            position: [0.0, 0.0, 0.0]
+        }, createModalFromMesh);
+
     }
     //TODO: add plane and mesh types
 }
@@ -319,7 +353,7 @@ function drawScene(gl, deltaTime, state) {
     gl.enable(gl.CULL_FACE);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, state.width, state.height);
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clearColor(state.settings.backgroundColor[0], state.settings.backgroundColor[1], state.settings.backgroundColor[2], 1.0)
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     var sortedObjects = state.objects.slice().sort((a, b) => {
