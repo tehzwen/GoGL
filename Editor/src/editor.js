@@ -1,4 +1,3 @@
-import UI from "./uiSetup.js";
 const fs = require('fs')
 const gameFilesPath = __dirname + "/../Renderer/game/"
 const exec = require('child_process').exec;

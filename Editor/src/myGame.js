@@ -116,41 +116,23 @@ function printForwardVector(state, important = null) {
 }
 
 function moveForward(state) {
-    let inverseView = mat4.create(), forwardVector = vec3.fromValues(0, 0, 0), camerafrontVector = vec3.fromValues(0, 0, 0), cameraPositionVector = vec3.fromValues(0, 0, 0);
-
-    mat4.invert(inverseView, state.viewMatrix);
+    let forwardVector = vec3.fromValues(0, 0, 0), cameraPositionVector = vec3.fromValues(0, 0, 0);
     //forward vector from the viewmatrix
-    forwardVector = vec3.fromValues(inverseView[2], -inverseView[6], -inverseView[10]);
-
-    vec3.normalize(forwardVector, forwardVector);
+    forwardVector = vec3.fromValues(-state.viewMatrix[2], -state.viewMatrix[6], -state.viewMatrix[10]);
     vec3.scale(forwardVector, forwardVector, (state.deltaTime * moveSpeed));
-
     cameraPositionVector = vec3.fromValues(state.camera.position[0], state.camera.position[1], state.camera.position[2]);
-    camerafrontVector = vec3.fromValues(state.camera.front[0], state.camera.front[1], state.camera.front[2]);
-
     vec3.add(cameraPositionVector, cameraPositionVector, forwardVector);
-    vec3.add(camerafrontVector, cameraPositionVector, forwardVector);
-
-    state.camera.position = [cameraPositionVector[0], state.camera.position[1], cameraPositionVector[2]];
+    state.camera.position = [cameraPositionVector[0], cameraPositionVector[1], cameraPositionVector[2]];
 }
 
 function moveBackward(state) {
-    let inverseView = mat4.create(), forwardVector = vec3.fromValues(0, 0, 0), camerafrontVector = vec3.fromValues(0, 0, 0), cameraPositionVector = vec3.fromValues(0, 0, 0);
-
-    mat4.invert(inverseView, state.viewMatrix);
+    let forwardVector = vec3.fromValues(0, 0, 0), cameraPositionVector = vec3.fromValues(0, 0, 0);
     //forward vector from the viewmatrix
-    forwardVector = vec3.fromValues(-inverseView[2], inverseView[6], inverseView[10]);
-    vec3.normalize(forwardVector, forwardVector);
-
-    vec3.normalize(forwardVector, forwardVector);
+    forwardVector = vec3.fromValues(state.viewMatrix[2], state.viewMatrix[6], state.viewMatrix[10]);
     vec3.scale(forwardVector, forwardVector, (state.deltaTime * moveSpeed));
-
     cameraPositionVector = vec3.fromValues(state.camera.position[0], state.camera.position[1], state.camera.position[2]);
-    camerafrontVector = vec3.fromValues(state.camera.front[0], state.camera.front[1], state.camera.front[2]);
-
     vec3.add(cameraPositionVector, cameraPositionVector, forwardVector);
-
-    state.camera.position = [cameraPositionVector[0], state.camera.position[1], cameraPositionVector[2]];
+    state.camera.position = [cameraPositionVector[0], cameraPositionVector[1], cameraPositionVector[2]];
 }
 
 function moveLeft(state) {

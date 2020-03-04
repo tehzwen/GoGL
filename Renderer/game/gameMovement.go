@@ -14,7 +14,6 @@ func MoveForward(state *geometry.State, deltaTime float64) {
 	forwardVector = forwardVector.Mul(float32(deltaTime))
 
 	state.Camera.Position = state.Camera.Position.Add(mgl32.Vec3{-forwardVector[0], -forwardVector[1], -forwardVector[2]})
-	state.Camera.Center = state.Camera.Center.Add(mgl32.Vec3{-forwardVector[0], -forwardVector[1], -forwardVector[2]})
 }
 
 func MoveBackward(state *geometry.State, deltaTime float64) {
@@ -22,7 +21,6 @@ func MoveBackward(state *geometry.State, deltaTime float64) {
 	forwardVector = forwardVector.Mul(float32(deltaTime))
 
 	state.Camera.Position = state.Camera.Position.Add(mgl32.Vec3{forwardVector[0], forwardVector[1], forwardVector[2]})
-	state.Camera.Center = state.Camera.Center.Add(mgl32.Vec3{forwardVector[0], forwardVector[1], forwardVector[2]})
 }
 
 func MoveLeft(state *geometry.State, deltaTime float64) {

@@ -23,7 +23,7 @@ var err error
 func Start(state *geometry.State) {
 	fmt.Printf("Started!\n")
 	lightToMove = &state.PointLights[0]
-	cube3, err = scene.GetObjectFromScene(state, "darkred")
+	cube3, err = scene.GetObjectFromScene(state, "yellowcube")
 
 	if err != nil {
 		panic(err)
@@ -36,14 +36,14 @@ func Start(state *geometry.State) {
 	// 	}
 
 	// 	//we can set an event listener for when this object collides
-	// 	cube3.SetOnCollide(func(box geometry.BoundingBox) {
-	// 		fmt.Println("Cube collision!")
-	// 		//cube3.SetForce(mgl32.Vec3{0, 0, 0})
-	// 		currentForce := cube3.GetForce()
-	// 		//reduce the force by a small margin due to collision
-	// 		currentForce = currentForce.Mul(0.9)
-	// 		cube3.SetForce(mgl32.Vec3{-currentForce[0], -currentForce[1], -currentForce[2]})
-	// 	})
+	cube3.SetOnCollide(func(box geometry.BoundingBox) {
+		fmt.Println("Cube collision!")
+		cube3.SetForce(mgl32.Vec3{0, 0, 0})
+		currentForce := cube3.GetForce()
+		//reduce the force by a small margin due to collision
+		currentForce = currentForce.Mul(0.9)
+		cube3.SetForce(mgl32.Vec3{-currentForce[0], -currentForce[1], -currentForce[2]})
+	})
 
 }
 
