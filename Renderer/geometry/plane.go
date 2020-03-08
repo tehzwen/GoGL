@@ -285,7 +285,7 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 			normal:   1,
 			uv:       2,
 		}
-		texture0, err := texture.NewTextureFromFile("../Editor/"+p.material.DiffuseTexture,
+		texture0, err := texture.NewTextureFromFile("../Editor/materials/"+p.material.DiffuseTexture,
 			gl.REPEAT, gl.REPEAT)
 
 		if err != nil {
@@ -327,14 +327,14 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 			bitangent: 4,
 		}
 		//load diffuse texture
-		texture0, err := texture.NewTextureFromFile("../Editor/"+p.material.DiffuseTexture,
+		texture0, err := texture.NewTextureFromFile("../Editor/materials/"+p.material.DiffuseTexture,
 			gl.REPEAT, gl.REPEAT)
 
 		if err != nil {
 			panic(err)
 		}
 		//load normal texture
-		texture1, err := texture.NewTextureFromFile("../Editor/"+p.material.NormalTexture,
+		texture1, err := texture.NewTextureFromFile("../Editor/materials/"+p.material.NormalTexture,
 			gl.REPEAT, gl.REPEAT)
 
 		if err != nil {

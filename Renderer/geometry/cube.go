@@ -379,7 +379,7 @@ func (c *Cube) Setup(mat Material, mod Model, name string, collide bool) error {
 			normal:   1,
 			uv:       2,
 		}
-		texture0, err := texture.NewTextureFromFile("../Editor/"+c.material.DiffuseTexture,
+		texture0, err := texture.NewTextureFromFile("../Editor/materials/"+c.material.DiffuseTexture,
 			gl.REPEAT, gl.REPEAT)
 
 		if err != nil {
@@ -423,14 +423,14 @@ func (c *Cube) Setup(mat Material, mod Model, name string, collide bool) error {
 		}
 
 		//load diffuse texture
-		texture0, err := texture.NewTextureFromFile("../Editor/"+c.material.DiffuseTexture,
+		texture0, err := texture.NewTextureFromFile("../Editor/materials/"+c.material.DiffuseTexture,
 			gl.REPEAT, gl.REPEAT)
 
 		if err != nil {
 			panic(err)
 		}
 		//load normal texture
-		texture1, err := texture.NewTextureFromFile("../Editor/"+c.material.NormalTexture,
+		texture1, err := texture.NewTextureFromFile("../Editor/materials/"+c.material.NormalTexture,
 			gl.REPEAT, gl.REPEAT)
 
 		if err != nil {

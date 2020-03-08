@@ -60,8 +60,12 @@ if (window.location.pathname.indexOf("main.html") !== -1) {
                 document.getElementById("addObjectButton").addEventListener("click", (e) => {
                     //check the value of the object type select
                     let objectType = objectTypeDropdown.options[objectTypeDropdown.selectedIndex].value;
-                    console.log(fileLocation.files[0])
-                    addObject(objectType, document.getElementById("objectNameInput").value, fileLocation.files[0].name);
+                    if (objectType === "mesh") {
+                        addObject(objectType, document.getElementById("objectNameInput").value, fileLocation.files[0].name);
+                    } else {
+                        addObject(objectType, document.getElementById("objectNameInput").value);
+                    }
+
                     addModal.style.display = 'none';
                     state.render = true;
                 })
@@ -138,8 +142,21 @@ function addObject(type, name, url = null) {
             position: [0.0, 0.0, 0.0]
         }, createModalFromMesh);
 
+    } else if (type === "light") {
+        state.pointLights.push(
+            new PointLight(state.gl, {
+                name,
+                position: [0, 0, 0],
+                colour: [1, 1, 1],
+                strength: 1,
+                quadratic: 0.035,
+                linear: 0.09,
+                constant: 1
+            })
+        );
+        state.render = true;
+        UI.createSceneGui(state);
     }
-    //TODO: add plane and mesh types
 }
 
 function createModalFromMesh(mesh, object) {
@@ -182,15 +199,6 @@ function main() {
         keyboard: {},
         mouse: { sensitivity: 0.2 },
         gameStarted: false,
-        camera: {
-            name: 'camera',
-            position: vec3.fromValues(6, 6, 0),
-            front: vec3.fromValues(0.0, 0.0, 1.0),
-            up: vec3.fromValues(0.0, 1.0, 0.0),
-            pitch: 0,
-            yaw: 90, //works when the camera front is 0, 0, 1 to start
-            roll: 0
-        },
         samplerExists: 0,
         samplerNormExists: 0
     };
@@ -472,16 +480,19 @@ function drawScene(gl, deltaTime, state) {
                     gl.bindVertexArray(object.buffers.vao);
 
                     // check for diffuse texture and apply it
-                    if (object.model.texture != null) {
-                        gl.activeTexture(gl.TEXTURE0 + 1);
-                        gl.uniform1i(object.programInfo.uniformLocations.uTexture, 1);
+                    if (object.model.texture != null && object.material.shaderType > 1) {
+                        // if (object.name === "floorPlane") {
+                        //     console.log(object)
+                        // }
+                        gl.activeTexture(gl.TEXTURE0);
+                        gl.uniform1i(object.programInfo.uniformLocations.uTexture, 0);
                         gl.bindTexture(gl.TEXTURE_2D, object.model.texture);
                     }
 
                     //check for normal texture and apply it
-                    if (object.model.textureNorm != null) {
-                        gl.activeTexture(gl.TEXTURE0 + 2);
-                        gl.uniform1i(object.programInfo.uniformLocations.uTextureNorm, 2);
+                    if (object.model.textureNorm != null && object.material.shaderType > 3) {
+                        gl.activeTexture(gl.TEXTURE0 + 1);
+                        gl.uniform1i(object.programInfo.uniformLocations.uTextureNorm, 1);
                         gl.bindTexture(gl.TEXTURE_2D, object.model.textureNorm);
                     }
 

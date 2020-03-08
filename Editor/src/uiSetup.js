@@ -42,7 +42,8 @@ function createSceneGui(state) {
                     displayObjectValues(object, state);
                 } else {
                     childrenDiv.className = "collapse";
-                    displayObjectValues(null);
+                    displayObjectValues(object, state);
+                    //displayObjectValues(null);
                 }
             });
 
@@ -63,6 +64,22 @@ function createSceneGui(state) {
         }
     });
 
+    state.pointLights.forEach((object) => {
+        let objectElement = document.createElement("div");
+        let childrenDiv = document.createElement("div");
+        let objectName = document.createElement("h5");
+        objectName.className = "object-link";
+        objectName.innerHTML = object.name;
+
+        objectName.addEventListener('click', () => {
+            displayPointLightValues(object, state);
+        });
+
+        objectElement.appendChild(objectName);
+        objectElement.appendChild(childrenDiv);
+        sideNav.appendChild(objectElement);
+    })
+
     state.directionalLights.forEach((object) => {
         let objectElement = document.createElement("div");
         let childrenDiv = document.createElement("div");
@@ -78,6 +95,76 @@ function createSceneGui(state) {
         objectElement.appendChild(childrenDiv);
         sideNav.appendChild(objectElement);
     })
+}
+
+function displayPointLightValues(object, state) {
+    let selectedObjectDiv = document.getElementById("selectedObject");
+    selectedObjectDiv.name = object.name;
+    selectedObjectDiv.innerHTML = "";
+    let nameInput = document.createElement('input');
+    nameInput.value = object.name;
+    nameInput.style.textAlign = 'center'
+    nameInput.addEventListener('input', (e) => {
+        //change the children's parent name aswell
+        state.objects.forEach((o) => {
+            if (o.parent === object.name) {
+                o.parent = e.target.value;
+            }
+        })
+        object.name = e.target.value;
+    })
+    nameInput.addEventListener('focusout', (e) => {
+        createSceneGui(state);
+    })
+
+    let positionalInputDiv = displayPositionalValues(object.position, object, state);
+
+    //create input for color of light
+    let colorPicker = document.createElement("input");
+    colorPicker.type = "color";
+    colorPicker.classList = "form-control";
+    colorPicker.value = rgbToHex(object.colour);
+    colorPicker.addEventListener('change', (event) => {
+        let newColor = hexToRGB(event.target.value);
+        object.colour = newColor;
+        state.render = true;
+    });
+
+
+    //create input for light strength
+    let strengthInput = document.createElement("input");
+    strengthInput.type = "number";
+    strengthInput.value = object.strength;
+    strengthInput.style.textAlign = 'center';
+    strengthInput.addEventListener("input", (e) => {
+        object.strength = parseInt(e.target.value);
+        state.render = true;
+    })
+
+    //add a delete button to remove this object from the scene
+    let deleteDiv = document.createElement("div");
+    let deleteButton = document.createElement("button");
+    deleteButton.classList = "btn btn-danger";
+    deleteButton.innerHTML = "Delete"
+    deleteButton.style.marginTop = '15px';
+    deleteButton.addEventListener('click', () => {
+        let lightIndex = _.findIndex(state.pointLights, { name: object.name })
+        state.pointLights.splice(lightIndex, 1);
+        state.render = true;
+        createSceneGui(state);
+        selectedObjectDiv.innerHTML = "";
+    });
+
+
+    selectedObjectDiv.appendChild(nameInput);
+    selectedObjectDiv.appendChild(createHeader("Position", "h4"));
+    selectedObjectDiv.appendChild(positionalInputDiv);
+    selectedObjectDiv.appendChild(createHeader("Color", "h4"));
+    selectedObjectDiv.appendChild(colorPicker);
+    selectedObjectDiv.appendChild(createHeader("Strength", "h4"));
+    selectedObjectDiv.appendChild(strengthInput);
+    deleteDiv.appendChild(deleteButton);
+    selectedObjectDiv.appendChild(deleteDiv);
 }
 
 function createSelectionOptions(optionsArr, selectObj) {
@@ -113,13 +200,6 @@ function handleTypeSelectChange(event) {
  * @param {Game Object to manipulate} object 
  */
 function displayObjectValues(object, state) {
-    let position;
-    if (object.type !== "directionalLight") {
-        position = object.model.position;
-    } else {
-        position = object.position;
-    }
-
     if (!object) {
         let selectedObjectDiv = document.getElementById("selectedObject");
         selectedObjectDiv.innerHTML = "";
@@ -127,8 +207,70 @@ function displayObjectValues(object, state) {
     }
 
     let selectedObjectDiv = document.getElementById("selectedObject");
+    selectedObjectDiv.name = object.name;
     selectedObjectDiv.innerHTML = "";
 
+    let positionalInputDiv = displayPositionalValues(object.model.position, object, state);
+    //create input with the name of the object and add listener to onChange set the name of the object accordingly
+    let nameInput = document.createElement('input');
+    nameInput.value = object.name;
+    nameInput.style.textAlign = 'center'
+    nameInput.addEventListener('input', (e) => {
+        //change the children's parent name aswell
+        state.objects.forEach((o) => {
+            if (o.parent === object.name) {
+                o.parent = e.target.value;
+            }
+        })
+        object.name = e.target.value;
+    })
+    nameInput.addEventListener('focusout', (e) => {
+        createSceneGui(state);
+    })
+
+    //add a delete button to remove this object from the scene
+    let deleteButton = document.createElement("button");
+    deleteButton.classList = "btn btn-danger";
+    deleteButton.innerHTML = "Delete"
+    deleteButton.style.marginTop = '15px';
+    deleteButton.addEventListener('click', () => {
+        if (object.type !== "mesh") {
+            let deleteIndex = _.findIndex(state.objects, (o) => {
+                return o.name === object.name;
+            })
+            state.objects.splice(deleteIndex, 1);
+            state.numberOfObjectsToLoad--;
+            state.render = true;
+            createSceneGui(state);
+            object.delete()
+            selectedObjectDiv.innerHTML = "";
+        } else {
+            let deleteIndexes = _.map(_.keys(_.pickBy(state.objects, { modelName: object.modelName })), Number)
+            for (let i = 0; i < deleteIndexes.length; i++) {
+                state.objects[deleteIndexes[(deleteIndexes.length - 1) - i]].delete();
+                state.objects.splice(deleteIndexes[(deleteIndexes.length - 1) - i], 1);
+                state.numberOfObjectsToLoad--;
+                state.render = true;
+                createSceneGui(state);
+                selectedObjectDiv.innerHTML = "";
+            }
+        }
+    })
+
+    selectedObjectDiv.appendChild(nameInput);
+    selectedObjectDiv.appendChild(createHeader("Position", "h4"));
+    selectedObjectDiv.appendChild(positionalInputDiv);
+    selectedObjectDiv.appendChild(createHeader("Rotation", "h4"));
+    selectedObjectDiv.appendChild(displayRotationValues(object, state));
+    selectedObjectDiv.appendChild(createHeader("Scale", "h4"));
+    selectedObjectDiv.appendChild(displayScaleValues(object, state));
+
+    //create material ui elements
+    createMaterialUI(state, object, selectedObjectDiv);
+    selectedObjectDiv.appendChild(deleteButton);
+}
+
+function displayPositionalValues(position, object, state) {
     let positionalInputDiv = document.createElement("div");
     positionalInputDiv.classList = "input-group";
 
@@ -181,18 +323,6 @@ function displayObjectValues(object, state) {
         <span class="input-group-text">Z</span>
         `;
 
-
-    //diffuse color picker
-    let diffuseColorPicker = document.createElement("input");
-    diffuseColorPicker.type = "color";
-    diffuseColorPicker.classList = "form-control";
-    diffuseColorPicker.value = "#ffffff";
-    diffuseColorPicker.addEventListener('change', (event) => {
-        let newColor = hexToRGB(event.target.value);
-        object.material.diffuse = newColor;
-        state.render = true;
-    });
-
     //add all the elements in
     positionalInputDiv.appendChild(prependDivX);
     positionalInputDiv.appendChild(objectPositionX);
@@ -200,70 +330,116 @@ function displayObjectValues(object, state) {
     positionalInputDiv.appendChild(objectPositionY);
     positionalInputDiv.appendChild(prependDivZ);
     positionalInputDiv.appendChild(objectPositionZ);
-    //create input with the name of the object and add listener to onChange set the name of the object accordingly
-    let nameInput = document.createElement('input');
-    nameInput.value = object.name;
-    nameInput.style.textAlign = 'center'
-    nameInput.addEventListener('input', (e) => {
-        //change the children's parent name aswell
-        state.objects.forEach((o) => {
-            if (o.parent === object.name) {
-                o.parent = e.target.value;
-            }
-        })
-        object.name = e.target.value;
-    })
-    nameInput.addEventListener('focusout', (e) => {
-        createSceneGui(state);
-    })
 
-    //add a delete button to remove this object from the scene
-    let deleteButton = document.createElement("button");
-    deleteButton.classList = "btn btn-danger";
-    deleteButton.innerHTML = "Delete"
-    deleteButton.style.marginTop = '15px';
-    deleteButton.addEventListener('click', () => {
-        if (object.type !== "mesh") {
-            let deleteIndex = _.findIndex(state.objects, (o) => {
-                return o.name === object.name;
-            })
-            state.objects.splice(deleteIndex, 1);
-            state.numberOfObjectsToLoad--;
-            state.render = true;
-            createSceneGui(state);
-            object.delete()
-        } else {
-            let deleteIndexes = _.map(_.keys(_.pickBy(state.objects, { modelName: object.modelName })), Number)
-            for (let i = 0; i < deleteIndexes.length; i++) {
-                state.objects[deleteIndexes[(deleteIndexes.length - 1) - i]].delete();
-                state.objects.splice(deleteIndexes[(deleteIndexes.length - 1) - i], 1);
-                state.numberOfObjectsToLoad--;
-                state.render = true;
-                createSceneGui(state);
-            }
-        }
+    return positionalInputDiv;
+}
+
+
+function createMaterialUI(state, object, mainDiv) {
+    let texturesDiv = document.createElement("div");
+    let materialTitle = document.createElement("h3");
+    materialTitle.innerHTML = "Material";
+    materialTitle.style.marginTop = "25px";
+
+    let diffuseNameTitle = document.createElement("p");
+    diffuseNameTitle.innerHTML = object.model.diffuseTexture;
+    diffuseNameTitle.classList = "orange-text";
+    let normalNameTitle = document.createElement("p");
+    normalNameTitle.innerHTML = object.model.normalTexture;
+    normalNameTitle.classList = "orange-text";
+
+    let diffuseInput = document.createElement("input");
+    diffuseInput.type = "file";
+    diffuseInput.id = "diffuseMaterialInput";
+    //event listener for adding diffuse texture
+    diffuseInput.addEventListener('input', (e) => {
+        object.model.texture = getTextures(state.gl, e.target.files[0].name);
+        object.model.diffuseTexture = e.target.files[0].name;
+        diffuseNameTitle.innerHTML = e.target.files[0].name;
     })
 
-    selectedObjectDiv.appendChild(nameInput);
-    selectedObjectDiv.appendChild(createHeader("Position", "h4"));
-    selectedObjectDiv.appendChild(positionalInputDiv);
-    selectedObjectDiv.appendChild(createHeader("Rotation", "h4"));
-    selectedObjectDiv.appendChild(displayRotationValues(object, state));
-    selectedObjectDiv.appendChild(createHeader("Scale", "h4"));
-    selectedObjectDiv.appendChild(displayScaleValues(object, state));
+    let normalInput = document.createElement("input");
+    normalInput.type = "file";
+    normalInput.id = "normalMaterialInput";
 
+    normalInput.addEventListener('input', (e) => {
+        object.model.textureNorm = getTextures(state.gl, e.target.files[0].name);
+        object.model.normalTexture = e.target.files[0].name;
+        normalNameTitle.innerHTML = e.target.files[0].name;
+    })
 
-    if (object.type !== "light") {
-        let diffuseTitle = document.createElement("h4");
-        diffuseTitle.innerHTML = "Diffuse Color";
-        selectedObjectDiv.appendChild(diffuseTitle);
-        selectedObjectDiv.appendChild(diffuseColorPicker);
-    } else {
-        //for light, we want to change its color not diffuse material
+    if (object.material.shaderType === 3) {
+        texturesDiv.append(diffuseNameTitle);
+        texturesDiv.append(diffuseInput);
+    } else if (object.material.shaderType === 4) {
+        texturesDiv.append(diffuseNameTitle);
+        texturesDiv.append(diffuseInput);
+        texturesDiv.append(normalNameTitle);
+        texturesDiv.append(normalInput);
     }
 
-    selectedObjectDiv.appendChild(deleteButton);
+    //create select dropdown for materials
+    let matTypeDropdown = document.createElement("select")
+    matTypeDropdown.addEventListener('change', (e) => {
+        //check if the material has a texture applied to it already or not
+        let numShaderType = parseInt(e.target.value);
+        if (numShaderType === 0 || numShaderType === 1) {
+            object.material.shaderType = numShaderType;
+            object.reset();
+            state.render = true;
+            diffuseNameTitle.style.display = 'none';
+            normalNameTitle.style.display = 'none';
+            diffuseInput.style.display = 'none';
+            normalInput.style.display = 'none';
+        } else if (numShaderType === 3) {
+            //create input showing diffuse texture
+            object.material.shaderType = numShaderType;
+            object.reset();
+            state.render = true;
+            diffuseNameTitle.style.display = 'inline';
+            normalNameTitle.style.display = 'none';
+            diffuseInput.style.display = 'inline';
+            normalInput.style.display = 'none';
+        } else if (numShaderType === 4) {
+            object.material.shaderType = numShaderType;
+            object.reset();
+            state.render = true;
+            diffuseNameTitle.style.display = 'inline';
+            normalNameTitle.style.display = 'inline';
+            diffuseInput.style.display = 'inline';
+            normalInput.style.display = 'inline';
+        }
+    })
+    let options = [{ text: "2D", value: 0 }, { text: "Flat Blinn", value: 1 }, { text: "Texture Blinn", value: 3 }, { text: "Normal & Diffuse", value: 4 }];
+    options.forEach((opt) => {
+        let tempOption = document.createElement("option");
+        tempOption.value = opt.value;
+        tempOption.innerHTML = opt.text;
+        matTypeDropdown.appendChild(tempOption);
+    });
+    matTypeDropdown.value = object.material.shaderType;
+
+    //diffuse color picker
+    let diffuseTitle = document.createElement("h4");
+    diffuseTitle.style.marginTop = "15px";
+    diffuseTitle.innerHTML = "Diffuse Color";
+    let diffuseColorPicker = document.createElement("input");
+    diffuseColorPicker.type = "color";
+    diffuseColorPicker.classList = "form-control";
+    diffuseColorPicker.value = rgbToHex(object.material.diffuse);
+    diffuseColorPicker.addEventListener('change', (event) => {
+        let newColor = hexToRGB(event.target.value);
+        object.material.diffuse = newColor;
+        state.render = true;
+    });
+
+    mainDiv.appendChild(materialTitle);
+    mainDiv.appendChild(matTypeDropdown);
+    mainDiv.appendChild(diffuseTitle);
+    mainDiv.appendChild(diffuseColorPicker);
+    mainDiv.appendChild(texturesDiv);
 }
+
 
 /**
  * Purpose: Function creates a ui row for editing the scale of 

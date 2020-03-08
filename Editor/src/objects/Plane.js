@@ -39,10 +39,10 @@ class Plane {
                 0, -1, 0,
                 0, -1, 0, // top
             ],
-            diffuseTexture: object.diffuseTexture ? object.diffuseTexture : null,
-            normalTexture: object.normalTexture ? object.normalTexture : null,
-            texture: object.diffuseTexture ? getTextures(glContext, object.diffuseTexture) : null,
-            textureNorm: object.normalTexture ? getTextures(glContext, object.normalTexture) : null,
+            diffuseTexture: object.diffuseTexture ? object.diffuseTexture : "default.png",
+            normalTexture: object.normalTexture ? object.normalTexture : "defaultNorm.png",
+            texture: object.diffuseTexture ? getTextures(glContext, object.diffuseTexture) : getTextures(glContext, "default.png"),
+            textureNorm: object.normalTexture ? getTextures(glContext, object.normalTexture) : getTextures(glContext, "defaultNorm.png"),
             buffers: null,
             modelMatrix: mat4.create(),
             position: vec3.fromValues(0.0, 0.0, 0.0),
@@ -189,9 +189,7 @@ class Plane {
         const bitangents = new Float32Array(this.model.bitangents);
 
         var vertexArrayObject = this.gl.createVertexArray();
-
         this.gl.bindVertexArray(vertexArrayObject);
-
         this.buffers;
 
         if (this.material.shaderType === 1) {
@@ -204,11 +202,12 @@ class Plane {
                 indicies: initIndexBuffer(this.gl, indices),
                 numVertices: indices.length
             }
-        } else if (this.material.shaderType === 2) {
+        } else if (this.material.shaderType === 3) {
             this.buffers = {
                 vao: vertexArrayObject,
                 attributes: {
                     position: initPositionAttribute(this.gl, this.programInfo, positions),
+                    normal: initNormalAttribute(this.gl, this.programInfo, normals),
                     uv: initTextureCoords(this.gl, this.programInfo, textureCoords),
                 },
                 indicies: initIndexBuffer(this.gl, indices),
@@ -230,6 +229,21 @@ class Plane {
             }
         }
         this.loaded = true;
+    }
+
+    reset() {
+        this.gl.disableVertexAttribArray(this.buffers.vao);
+        this.model.position = vec3.fromValues(0.0, 0.0, 0.0);
+        this.model.rotation = mat4.create();
+        this.model.scale = vec3.fromValues(1.0, 1.0, 1.0);
+        this.model.uvs = [
+            0.0, 0.0,
+            5.0, 0.0,
+            5.0, 5.0,
+            0.0, 5.0,
+        ]
+        this.setup();
+        this.gl.enableVertexAttribArray(this.buffers.vao);
     }
 
     setup() {

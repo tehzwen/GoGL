@@ -300,7 +300,7 @@ function loadJSONFile(cb, filePath) {
 }
 
 function getTextures(gl, imgPath) {
-    if (imgPath) {
+    if ("./materials/" + imgPath) {
         var texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
@@ -321,7 +321,7 @@ function getTextures(gl, imgPath) {
             );
         }
 
-        image.src = imgPath;
+        image.src = "./materials/" + imgPath;
         return texture;
     }
 }
@@ -397,6 +397,16 @@ function hexToRGB(hex) {
     return [r / 255, g / 255, b / 255];
 }
 
+function componentToHex(c) {
+    let val = Math.floor(c * 255);
+    let hex = val.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+}
+
+function rgbToHex(rgb) {
+    return "#" + componentToHex(rgb[0]) + componentToHex(rgb[1]) + componentToHex(rgb[2]);
+}
+
 function parseSceneFile(file, state, cb) {
     state.pointLights = [];
     state.objects = [];
@@ -410,6 +420,29 @@ function parseSceneFile(file, state, cb) {
             state.level = jData[0];
             state.numberOfObjectsToLoad = jData[0].objects.length;
             state.settings = jData[0].settings;
+            //create camera if it exists, otherwise set to default
+            if (jData[0].settings.camera) {
+                state.camera = {
+                    name: jData[0].settings.camera.name,
+                    position: vec3.fromValues(jData[0].settings.camera.position[0], jData[0].settings.camera.position[1], jData[0].settings.camera.position[2]),
+                    front: vec3.fromValues(jData[0].settings.camera.front[0], jData[0].settings.camera.front[1], jData[0].settings.camera.front[2]),
+                    up: vec3.fromValues(jData[0].settings.camera.up[0], jData[0].settings.camera.up[1], jData[0].settings.camera.up[2]),
+                    pitch: jData[0].settings.camera.pitch,
+                    yaw: jData[0].settings.camera.yaw,
+                    roll: jData[0].settings.camera.pitch.roll
+                }
+            } else {
+                state.camera = {
+                    name: 'camera',
+                    position: vec3.fromValues(0, 0, 0),
+                    front: vec3.fromValues(0.0, 0.0, 1.0),
+                    up: vec3.fromValues(0.0, 1.0, 0.0),
+                    pitch: 0,
+                    yaw: 90, //works when the camera front is 0, 0, 1 to start
+                    roll: 0
+                }
+            }
+
             cb();
         })
         .catch((err) => {
@@ -461,10 +494,9 @@ function createSceneFile(state, filename) {
         }
     });
 
-    console.log(state)
-
     state.pointLights.forEach((light) => {
         totalState[0].pointLights.push({
+            name: light.name,
             colour: [light.colour[0], light.colour[1], light.colour[2]],
             position: light.position,
             strength: light.strength,
