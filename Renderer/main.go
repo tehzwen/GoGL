@@ -26,10 +26,6 @@ var buttons map[glfw.MouseButton]bool
 var mouseMovement map[string]float64
 var objectsToRender chan geometry.RenderObject
 
-const (
-	thread = false
-)
-
 func main() {
 	runtime.LockOSThread()
 
@@ -158,12 +154,8 @@ func main() {
 				//state.Camera.Center = Rotation
 			}
 			mouseMovement["move"] = 0
+			draw(window, &state, &pointLightShadowProgramInfo, &dirLightShadowProgramInfo)
 
-			if thread {
-				MultithreadRender(window, &state)
-			} else {
-				draw(window, &state, &pointLightShadowProgramInfo, &dirLightShadowProgramInfo)
-			}
 		}
 	}
 	fmt.Println("Program ended successfully!")
@@ -216,6 +208,9 @@ func draw(window *glfw.Window, state *geometry.State, pointLightShadowProgramInf
 	gl.Viewport(0, 0, int32(globals.Width), int32(globals.Height))
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	for i := 0; i < len(state.Objects); i++ {
+		if state.Objects[i].GetBoundingBox().Collide {
+			collisionTest(state, state.Objects[i])
+		}
 		ClassicRender(state, state.Objects[i])
 	}
 	window.SwapBuffers()
@@ -427,9 +422,9 @@ func initGlfw() *glfw.Window {
 	return window
 }
 
-func collisionTest(state *geometry.State, object geometry.RenderObject) {
-	currentName, _, _ := object.CurrentObject.GetDetails()
-	currBox := object.CurrentObject.GetBoundingBox()
+func collisionTest(state *geometry.State, object geometry.Geometry) {
+	currentName, _, _ := object.GetDetails()
+	currBox := object.GetBoundingBox()
 
 	//iterate through all collidable objects
 	for x := 0; x < len(state.Objects); x++ {
@@ -444,17 +439,17 @@ func collisionTest(state *geometry.State, object geometry.RenderObject) {
 
 			collide := geometry.Intersect(box, currBox)
 			if collide && currBox.CollisionBody != name {
-				object.CurrentObject.SetBoundingBox(geometry.BoundingBox{
+				object.SetBoundingBox(geometry.BoundingBox{
 					Max:            currBox.Max,
 					Min:            currBox.Min,
 					Collide:        currBox.Collide,
 					CollisionCount: currBox.CollisionCount + 1,
 					CollisionBody:  name,
 				})
-				object.CurrentObject.OnCollide(box)
+				object.OnCollide(box)
 
 			} else if currBox.CollisionBody == name {
-				object.CurrentObject.SetBoundingBox(geometry.BoundingBox{
+				object.SetBoundingBox(geometry.BoundingBox{
 					Max:            currBox.Max,
 					Min:            currBox.Min,
 					Collide:        currBox.Collide,

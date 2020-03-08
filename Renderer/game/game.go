@@ -37,7 +37,6 @@ func Start(state *geometry.State) {
 
 	// 	//we can set an event listener for when this object collides
 	cube3.SetOnCollide(func(box geometry.BoundingBox) {
-		fmt.Println("Cube collision!")
 		cube3.SetForce(mgl32.Vec3{0, 0, 0})
 		currentForce := cube3.GetForce()
 		//reduce the force by a small margin due to collision
