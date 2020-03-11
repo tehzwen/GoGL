@@ -6,6 +6,7 @@ window.onload = () => {
     const urlParams = new URLSearchParams(window.location.search);
     let sceneFile = urlParams.get('scene');
     const compilationText = document.getElementById("compilationOutput")
+    compilationText.style.height = screen.height - 200 + 'px';
     console.log(sceneFile);
 
     if (window.navigator.userAgent.indexOf("Windows") !== -1) {

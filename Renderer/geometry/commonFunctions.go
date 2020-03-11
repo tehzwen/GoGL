@@ -51,6 +51,8 @@ type SceneObject struct {
 
 // Settings - WIP
 type Settings struct {
+	Cam             Camera    `json:"camera"`
+	BackgroundColor []float32 `json:"backgroundColor"`
 }
 
 // Scene - Struct for holding allthe info about the current scene
@@ -263,6 +265,8 @@ func ParseJSONFile(filePath string, state *State) {
 		panic(err)
 	}
 
+	state.Settings = scene[0].Settings
+
 	for i := 0; i < len(scene[0].Objects); i++ {
 		if scene[0].Objects[i].ObjectType == "cube" {
 			fmt.Println(scene[0].Objects[i].Name, " loading....")
@@ -297,12 +301,24 @@ func ParseJSONFile(filePath string, state *State) {
 			}
 			for x := 0; x < len(objects); x++ {
 				for j := 0; j < len(objects[x].Materials); j++ {
+					tempModelObject := ModelObject{
+						MTLPresent: true,
+					}
+					var parsedMaterial parser.ParsedMaterial
 
-					//fmt.Println("verts: ", len(objects[x].Geometry.Vertices), " normals: ", len(objects[x].Geometry.Normals), " uvs: ", len(objects[x].Geometry.UVs))
-					//fmt.Println("Start: ", objects[x].Materials[j].Start, " End: ", objects[x].Materials[j].End)
+					//check for regular texture first
+					if scene[0].Objects[i].DiffuseTexture != "" {
+						tempModelObject.MTLPresent = false
+						parsedMaterial.Kd = scene[0].Objects[i].Material.Diffuse
+						parsedMaterial.Ka = scene[0].Objects[i].Material.Ambient
+						parsedMaterial.Ks = scene[0].Objects[i].Material.Specular
+						parsedMaterial.Ns = scene[0].Objects[i].Material.N
+						parsedMaterial.D = scene[0].Objects[i].Material.Alpha
+						parsedMaterial.MapKD = scene[0].Objects[i].DiffuseTexture
 
-					parsedMaterial := parser.ParseMTLFile(objects[x].Materials[j].MTLLib, objects[x].Materials[j].Name)
-					tempModelObject := ModelObject{}
+					} else {
+						parsedMaterial = parser.ParseMTLFile(objects[x].Materials[j].MTLLib, objects[x].Materials[j].Name)
+					}
 
 					if len(objects[x].Geometry.UVs) > 0 {
 						tempModelObject.SetVertexValues(objects[x].Geometry.Vertices[objects[x].Materials[j].Start*3:objects[x].Materials[j].End*3],
@@ -315,9 +331,7 @@ func ParseJSONFile(filePath string, state *State) {
 					}
 
 					tempName := scene[0].Objects[i].Name
-
 					rot := CreateMat4FromArray(scene[0].Objects[i].Rotation)
-
 					tempModel := Model{
 						Position: mgl32.Vec3{scene[0].Objects[i].Position[0], scene[0].Objects[i].Position[1], scene[0].Objects[i].Position[2]},
 						Scale:    mgl32.Vec3{scene[0].Objects[i].Scale[0], scene[0].Objects[i].Scale[1], scene[0].Objects[i].Scale[2]},
@@ -332,7 +346,6 @@ func ParseJSONFile(filePath string, state *State) {
 					}
 
 					tempModel.Rotation = rot
-
 					tempMaterial := Material{
 						Diffuse:  parsedMaterial.Kd,
 						Ambient:  parsedMaterial.Ka,

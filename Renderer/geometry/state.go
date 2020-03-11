@@ -20,15 +20,16 @@ type State struct {
 	ShadowMatrices    []mgl32.Mat4
 	CurrentTexUnit    uint32
 	DepthFBO          uint32
+	Settings          Settings
 }
 
 // Camera : struct for holding info about the camera
 type Camera struct {
-	Up       mgl32.Vec3
-	Center   mgl32.Vec3
-	Position mgl32.Vec3
-	Front    mgl32.Vec3
-	Pitch    float32
-	Yaw      float32
-	Roll     float32
+	Name     string     `json:"name"`
+	Up       mgl32.Vec3 `json:"up"`
+	Position mgl32.Vec3 `json:"position"`
+	Front    mgl32.Vec3 `json:"front"`
+	Pitch    float32    `json:"pitch"`
+	Yaw      float32    `json:"yaw"`
+	Roll     float32    `json:"roll"`
 }

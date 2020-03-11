@@ -1,4 +1,5 @@
 const _ = require('lodash')
+import { Cube, PointLight, Plane, Model, DirectionalLight } from "./objects/index.js";
 
 function setup(newState) {
     //listeners for header button presses
@@ -23,8 +24,11 @@ function createSceneGui(state) {
 
     //get objects first
     let sideNav = document.getElementById("objectsNav");
+    sideNav.style.overflowY = 'auto';
+    sideNav.style.height = screen.height - 500 + 'px';
+    //sideNav.style.width = screen.width/14 + 'px';
     sideNav.innerHTML = "";
-
+    
     state.objects.forEach((object) => {
         if (!object.parent) {
             let objectElement = document.createElement("div");
@@ -117,7 +121,7 @@ function displayPointLightValues(object, state) {
         createSceneGui(state);
     })
 
-    let positionalInputDiv = displayPositionalValues(object.position, object, state);
+    let positionalInputDiv = displayPositionalValues(object, state);
 
     //create input for color of light
     let colorPicker = document.createElement("input");
@@ -210,7 +214,7 @@ function displayObjectValues(object, state) {
     selectedObjectDiv.name = object.name;
     selectedObjectDiv.innerHTML = "";
 
-    let positionalInputDiv = displayPositionalValues(object.model.position, object, state);
+    let positionalInputDiv = displayPositionalValues(object, state);
     //create input with the name of the object and add listener to onChange set the name of the object accordingly
     let nameInput = document.createElement('input');
     nameInput.value = object.name;
@@ -247,13 +251,69 @@ function displayObjectValues(object, state) {
         } else {
             let deleteIndexes = _.map(_.keys(_.pickBy(state.objects, { modelName: object.modelName })), Number)
             for (let i = 0; i < deleteIndexes.length; i++) {
-                state.objects[deleteIndexes[(deleteIndexes.length - 1) - i]].delete();
-                state.objects.splice(deleteIndexes[(deleteIndexes.length - 1) - i], 1);
-                state.numberOfObjectsToLoad--;
-                state.render = true;
-                createSceneGui(state);
-                selectedObjectDiv.innerHTML = "";
+                if (state.objects[deleteIndexes[(deleteIndexes.length - 1) - i]].name === object.name
+                    || [deleteIndexes[(deleteIndexes.length - 1) - i]].parent === object.name) {
+                    state.objects[deleteIndexes[(deleteIndexes.length - 1) - i]].delete();
+                    state.objects.splice(deleteIndexes[(deleteIndexes.length - 1) - i], 1);
+                    state.numberOfObjectsToLoad--;
+                    state.render = true;
+                    createSceneGui(state);
+                    selectedObjectDiv.innerHTML = "";
+                }
             }
+        }
+    })
+
+    let copyButton = document.createElement("button");
+    copyButton.classList = "btn btn-info";
+    copyButton.innerHTML = "Copy";
+    copyButton.style.marginTop = '15px';
+    copyButton.addEventListener('click', () => {
+        if (object.type === "cube") {
+            let newObject = new Cube(state.gl, {
+                name: object.name + " (copy)",
+                parent: object.parent,
+                type: object.type,
+                collide: object.collide,
+                material: { ...object.material },
+                scale: [object.model.scale[0], object.model.scale[1], object.model.scale[2]],
+                rotation: [...object.model.rotation],
+                position: [object.model.position[0], object.model.position[1], object.model.position[2]],
+                diffuseTexture: object.model.diffuseTexture,
+                normalTexture: object.model.normalTexture
+            });
+            newObject.setup();
+            state.objects.push(newObject);
+            createSceneGui(state);
+        } else if (object.type === "mesh") {
+            parseOBJFileToJSON("./models/" + object.modelName, {
+                name: object.name + " (copy)",
+                parent: object.parent,
+                type: object.type,
+                model: object.modelName,
+                material: { ...object.material },
+                collide: object.collide,
+                scale: [object.model.scale[0], object.model.scale[1], object.model.scale[2]],
+                rotation: [...object.model.rotation],
+                position: [object.model.position[0], object.model.position[1], object.model.position[2]],
+
+            }, state.modelMethod);
+        } else if (object.type === "plane") {
+            let newObject = new Plane(state.gl, {
+                name: object.name + " (copy)",
+                parent: object.parent,
+                type: object.type,
+                collide: object.collide,
+                material: { ...object.material },
+                scale: [object.model.scale[0], object.model.scale[1], object.model.scale[2]],
+                rotation: [...object.model.rotation],
+                position: [object.model.position[0], object.model.position[1], object.model.position[2]],
+                diffuseTexture: object.model.diffuseTexture,
+                normalTexture: object.model.normalTexture
+            });
+            newObject.setup();
+            state.objects.push(newObject);
+            createSceneGui(state);
         }
     })
 
@@ -268,9 +328,11 @@ function displayObjectValues(object, state) {
     //create material ui elements
     createMaterialUI(state, object, selectedObjectDiv);
     selectedObjectDiv.appendChild(deleteButton);
+    selectedObjectDiv.appendChild(copyButton);
 }
 
-function displayPositionalValues(position, object, state) {
+function displayPositionalValues(object, state) {
+    let position = object.type === "pointLight" ? object.position : object.model.position;
     let positionalInputDiv = document.createElement("div");
     positionalInputDiv.classList = "input-group";
 
@@ -278,7 +340,12 @@ function displayPositionalValues(position, object, state) {
     let objectPositionX = document.createElement("input");
     objectPositionX.type = "number";
     objectPositionX.addEventListener('input', (event) => {
-        object.translate([event.target.value - position[0], 0, 0]);
+        //object.translate([event.target.value - position[0], 0, 0]);
+        if (object.type === "pointLight") {
+            object.position = [parseFloat(event.target.value), object.position[1], object.position[2]];
+        } else {
+            object.model.position = [parseFloat(event.target.value), object.model.position[1], object.model.position[2]];
+        }
         state.render = true;
     })
     objectPositionX.id = object.name + "-positionX";
@@ -289,7 +356,11 @@ function displayPositionalValues(position, object, state) {
     let objectPositionY = document.createElement("input");
     objectPositionY.type = "number";
     objectPositionY.addEventListener('input', (event) => {
-        object.translate([0, event.target.value - position[1], 0]);
+        if (object.type === "pointLight") {
+            object.position = [object.position[0], parseFloat(event.target.value), object.position[2]];
+        } else {
+            object.model.position = [object.model.position[0], parseFloat(event.target.value), object.model.position[2]];
+        }
         state.render = true;
     })
     objectPositionY.id = object.name + "-positionY";
@@ -300,7 +371,12 @@ function displayPositionalValues(position, object, state) {
     let objectPositionZ = document.createElement("input");
     objectPositionZ.type = "number";
     objectPositionZ.addEventListener('input', (event) => {
-        object.translate([0, 0, event.target.value - position[2]])
+        if (object.type === "pointLight") {
+            object.position = [object.position[0], object.position[1], parseFloat(event.target.value)];
+
+        } else {
+            object.model.position = [object.model.position[0], object.model.position[1], parseFloat(event.target.value)];
+        }
         state.render = true;
     })
     objectPositionZ.id = object.name + "-positionZ";
@@ -368,15 +444,10 @@ function createMaterialUI(state, object, mainDiv) {
         normalNameTitle.innerHTML = e.target.files[0].name;
     })
 
-    if (object.material.shaderType === 3) {
-        texturesDiv.append(diffuseNameTitle);
-        texturesDiv.append(diffuseInput);
-    } else if (object.material.shaderType === 4) {
-        texturesDiv.append(diffuseNameTitle);
-        texturesDiv.append(diffuseInput);
-        texturesDiv.append(normalNameTitle);
-        texturesDiv.append(normalInput);
-    }
+    diffuseNameTitle.style.display = object.material.shaderType < 2 ? 'none' : 'inline-block';
+    normalNameTitle.style.display = object.material.shaderType < 4 ? 'none' : 'inline-block';
+    diffuseInput.style.display = object.material.shaderType < 2 ? 'none' : 'inline-block';
+    normalInput.style.display = object.material.shaderType < 4 ? 'none' : 'inline-block';
 
     //create select dropdown for materials
     let matTypeDropdown = document.createElement("select")
@@ -392,22 +463,26 @@ function createMaterialUI(state, object, mainDiv) {
             diffuseInput.style.display = 'none';
             normalInput.style.display = 'none';
         } else if (numShaderType === 3) {
+            if (!object.model.diffuseTexture) {
+                object.model.diffuseTexture = "default.png";
+                object.model.texture = getTextures(state.gl, "default.png");
+            }
             //create input showing diffuse texture
             object.material.shaderType = numShaderType;
             object.reset();
             state.render = true;
-            diffuseNameTitle.style.display = 'inline';
+            diffuseNameTitle.style.display = 'inline-block';
             normalNameTitle.style.display = 'none';
-            diffuseInput.style.display = 'inline';
+            diffuseInput.style.display = 'inline-block';
             normalInput.style.display = 'none';
         } else if (numShaderType === 4) {
             object.material.shaderType = numShaderType;
             object.reset();
             state.render = true;
-            diffuseNameTitle.style.display = 'inline';
-            normalNameTitle.style.display = 'inline';
-            diffuseInput.style.display = 'inline';
-            normalInput.style.display = 'inline';
+            diffuseNameTitle.style.display = 'inline-block';
+            normalNameTitle.style.display = 'inline-block';
+            diffuseInput.style.display = 'inline-block';
+            normalInput.style.display = 'inline-block';
         }
     })
     let options = [{ text: "2D", value: 0 }, { text: "Flat Blinn", value: 1 }, { text: "Texture Blinn", value: 3 }, { text: "Normal & Diffuse", value: 4 }];
@@ -432,7 +507,10 @@ function createMaterialUI(state, object, mainDiv) {
         object.material.diffuse = newColor;
         state.render = true;
     });
-
+    texturesDiv.append(diffuseNameTitle);
+    texturesDiv.append(diffuseInput);
+    texturesDiv.append(normalNameTitle);
+    texturesDiv.append(normalInput);
     mainDiv.appendChild(materialTitle);
     mainDiv.appendChild(matTypeDropdown);
     mainDiv.appendChild(diffuseTitle);
@@ -448,8 +526,8 @@ function createMaterialUI(state, object, mainDiv) {
  * @param {State object containing all objects} state 
  */
 function displayScaleValues(object, state) {
-    let rotationalInputDiv = document.createElement("div");
-    rotationalInputDiv.classList = "input-group";
+    let scaleInputDiv = document.createElement("div");
+    scaleInputDiv.classList = "input-group";
 
     let prependDivX = document.createElement("div");
     prependDivX.classList = "input-group-prepend";
@@ -476,9 +554,11 @@ function displayScaleValues(object, state) {
         if (event.target.value > 0) {
             //grow
             object.scale([1.5, 1.0, 1.0]);
+            state.render = true;
         } else {
             //shrink
             object.scale([0.5, 1.0, 1.0]);
+            state.render = true;
         }
         objectScaleX.value = 0;
         state.render = true;
@@ -493,11 +573,13 @@ function displayScaleValues(object, state) {
         if (event.target.value > 0) {
             //grow
             object.scale([1.0, 1.5, 1.0]);
+            state.render = true;
         } else {
             //shrink
             object.scale([1.0, 0.5, 1.0]);
+            state.render = true;
         }
-        objectScaleX.value = 0;
+        objectScaleY.value = 0;
         state.render = true;
     })
 
@@ -514,18 +596,18 @@ function displayScaleValues(object, state) {
             //shrink
             object.scale([1.0, 1.0, 0.5]);
         }
-        objectScaleX.value = 0;
+        objectScaleZ.value = 0;
         state.render = true;
     })
 
-    rotationalInputDiv.appendChild(prependDivX);
-    rotationalInputDiv.appendChild(objectScaleX);
-    rotationalInputDiv.appendChild(prependDivY);
-    rotationalInputDiv.appendChild(objectScaleY);
-    rotationalInputDiv.appendChild(prependDivZ);
-    rotationalInputDiv.appendChild(objectScaleZ);
+    scaleInputDiv.appendChild(prependDivX);
+    scaleInputDiv.appendChild(objectScaleX);
+    scaleInputDiv.appendChild(prependDivY);
+    scaleInputDiv.appendChild(objectScaleY);
+    scaleInputDiv.appendChild(prependDivZ);
+    scaleInputDiv.appendChild(objectScaleZ);
 
-    return rotationalInputDiv;
+    return scaleInputDiv;
 }
 
 
@@ -561,7 +643,12 @@ function displayRotationValues(object, state) {
     objectRotationX.classList = "form-control";
     objectRotationX.value = 0;
     objectRotationX.addEventListener('input', (event) => {
-        mat4.rotateX(object.model.rotation, object.model.rotation, 1)
+        if (event.target.value > 0) {
+            mat4.rotateX(object.model.rotation, object.model.rotation, 0.261799)
+        } else {
+            mat4.rotateX(object.model.rotation, object.model.rotation, -0.261799)
+        }
+        objectRotationX.value = 0;
         state.render = true;
     })
 
@@ -571,7 +658,12 @@ function displayRotationValues(object, state) {
     objectRotationY.classList = "form-control";
     objectRotationY.value = 0;
     objectRotationY.addEventListener('input', (event) => {
-        mat4.rotateY(object.model.rotation, object.model.rotation, 1)
+        if (event.target.value > 0) {
+            mat4.rotateY(object.model.rotation, object.model.rotation, 0.261799)
+        } else {
+            mat4.rotateY(object.model.rotation, object.model.rotation, -0.261799)
+        }
+        objectRotationY.value = 0;
         state.render = true;
     })
 
@@ -581,7 +673,12 @@ function displayRotationValues(object, state) {
     objectRotationZ.classList = "form-control";
     objectRotationZ.value = 0;
     objectRotationZ.addEventListener('input', (event) => {
-        mat4.rotateZ(object.model.rotation, object.model.rotation, 1)
+        if (event.target.value > 0) {
+            mat4.rotateZ(object.model.rotation, object.model.rotation, 0.261799)
+        } else {
+            mat4.rotateZ(object.model.rotation, object.model.rotation, -0.261799)
+        }
+        objectRotationZ.value = 0;
         state.render = true;
     })
 

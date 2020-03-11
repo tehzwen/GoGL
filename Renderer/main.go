@@ -48,6 +48,7 @@ func main() {
 
 	state := geometry.State{
 		Camera: geometry.Camera{
+			Name:     "default",
 			Position: mgl32.Vec3{-1, 2.0, -3},
 			Front:    mgl32.Vec3{0, 0, 1.0},
 			Up:       mgl32.Vec3{0.0, 1.0, 0.0},
@@ -73,6 +74,11 @@ func main() {
 		geometry.ParseJSONFile("../Editor/statefiles/testsave.json", &state)
 	} else {
 		geometry.ParseJSONFile(argsWithoutProgram[0], &state)
+	}
+
+	//setup main camera
+	if state.Settings.Cam.Name != "" {
+		state.Camera = state.Settings.Cam
 	}
 
 	then := 0.0
@@ -166,7 +172,11 @@ func draw(window *glfw.Window, state *geometry.State, pointLightShadowProgramInf
 	gl.Enable(gl.DEPTH_TEST)
 	gl.Enable(gl.CULL_FACE)
 	gl.Enable(gl.FRAMEBUFFER_SRGB)
-	gl.ClearColor(0.1, 0.1, 0.1, 1.0)
+
+	if state.Settings.BackgroundColor != nil {
+		gl.ClearColor(state.Settings.BackgroundColor[0], state.Settings.BackgroundColor[1], state.Settings.BackgroundColor[2], 1.0)
+	}
+
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	// err := gl.GetError()
 

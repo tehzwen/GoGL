@@ -140,7 +140,7 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 		float attenuation = light.strength / (light.constant + light.linear * distance + 
 					light.quadratic * (distance * distance));    
 		// combine results
-		vec3 ambient  = light.color * ambientVal * diffuseVal * textureVal;
+		vec3 ambient  = ambientVal * textureVal;
 		vec3 diffuse  = light.color  * diff * diffuseVal * textureVal;
 		vec3 specular = vec3(0,0,0);
 
@@ -151,7 +151,6 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 		
 		ambient  *= attenuation;
 		//diffuse  *= attenuation;
-		
 		return (ambient + (1.0 - shadow) * (diffuse + specular));
 	}
 
@@ -160,7 +159,7 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 		vec3 regularNormal = normalize(normalInterp);
 		vec3 normal = texture(uNormalTexture, oUV).xyz;
 		normal = normalize(2.0 * normal - 1.0);
-		//normal = normal * vec3(5.0, 5.0, 5.0);
+		normal = normal * vec3(5.0, 5.0, 5.0);
 		vec3 biTangent = normalize(cross(oNormal, oBitangent));
 		mat3 nMatrix = mat3(oBitangent, biTangent, oNormal);
 		normal = normalize(nMatrix * normal);

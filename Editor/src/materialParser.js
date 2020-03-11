@@ -54,10 +54,9 @@ function parseMTL(mtlFile, mtlName, object, geometry, cb) {
                         material.diffuseMap = fileSplit[fileSplit.length - 1]
                     }
                 }
-                //console.warn(material)
             }
 
-            if (material.diffuseMap) {
+            if (object.diffuseTexture || material.diffuseMap) {
                 material.shaderType = 3;
             } else {
                 material.shaderType = 1;
@@ -72,6 +71,5 @@ function parseMTL(mtlFile, mtlName, object, geometry, cb) {
             } else {
                 console.error(err);
             }
-            
         })
 }

@@ -1,4 +1,4 @@
-var moveSpeed = 5;
+var moveSpeed = 10;
 
 function startGame(state) {
     let canvas = document.getElementById('glCanvas');

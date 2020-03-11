@@ -6,7 +6,8 @@ const Menu = electron.remote.Menu;
 
 var currentlyRendered = 0;
 var state = {
-    saveFile: "testsave.json"
+    saveFile: "testsave.json",
+    modelMethod: createModalFromMesh
 };
 
 if (window.location.pathname.indexOf("main.html") !== -1) {
@@ -160,6 +161,7 @@ function addObject(type, name, url = null) {
 }
 
 function createModalFromMesh(mesh, object) {
+    console.log(object)
     if (object.type === "mesh") {
         let tempMesh = new Model(state.gl, object, mesh);
         let testVal = tempMesh.setup();
@@ -394,7 +396,7 @@ function drawScene(gl, deltaTime, state) {
                 var fovy = 60.0 * Math.PI / 180.0; // Vertical field of view in radians
                 var aspect = state.canvas.clientWidth / state.canvas.clientHeight; // Aspect ratio of the canvas
                 var near = 0.1; // Near clipping plane
-                var far = 100.0; // Far clipping plane
+                var far = 1000.0; // Far clipping plane
                 gl.uniform1f(object.programInfo.uniformLocations.near_plane, near);
                 gl.uniform1f(object.programInfo.uniformLocations.far_plane, far);
 

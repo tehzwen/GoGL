@@ -299,8 +299,10 @@ function loadJSONFile(cb, filePath) {
         })
 }
 
-function getTextures(gl, imgPath) {
-    if ("./materials/" + imgPath) {
+function getTextures(gl, imgPath, mesh = false) {
+    let path = !mesh ? "./materials/" + imgPath : "./models/" + imgPath;
+
+    if (path) {
         var texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
@@ -321,7 +323,7 @@ function getTextures(gl, imgPath) {
             );
         }
 
-        image.src = "./materials/" + imgPath;
+        image.src = path;
         return texture;
     }
 }
@@ -364,6 +366,7 @@ function parseOBJFileToJSON(objFileURL, object, cb) {
                                 uvs,
                                 normals
                             }
+
                             parseMTL(mesh[j].materials[i].mtllib, mesh[j].materials[i].name, newObject, geometry, cb);
                         } else {
                             parentObj = newObject;

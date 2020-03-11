@@ -19,7 +19,8 @@ class Model {
             position: vec3.fromValues(0, 0, 0),
             rotation: mat4.create(),
             scale: vec3.fromValues(1, 1, 1),
-            texture: object.mtl && object.mtl.diffuseMap ? getTextures(glContext, "./models/" + object.mtl.diffuseMap) : null
+            diffuseTexture: object.diffuseTexture ? object.diffuseTexture : null,
+            texture: object.diffuseTexture ? getTextures(glContext, object.diffuseTexture ? object.diffuseTexture : "default.png") : getTextures(glContext, object.mtl.diffuseMap, true)
         };
         this.modelMatrix = mat4.create();
         this.lightingShader = this.lightingShader.bind(this);
@@ -176,6 +177,16 @@ class Model {
                     console.error(err);
                 })
         }
+    }
+
+    reset() {
+        this.gl.disableVertexAttribArray(this.buffers.vao);
+        this.gl.deleteProgram(this.programInfo.program);
+        this.model.position = vec3.fromValues(0.0, 0.0, 0.0);
+        this.model.rotation = mat4.create();
+        this.model.scale = vec3.fromValues(1.0, 1.0, 1.0);
+        this.setup();
+        this.gl.enableVertexAttribArray(this.buffers.vao);
     }
 
     delete() {

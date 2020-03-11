@@ -16,6 +16,7 @@ type ModelObject struct {
 	vertShader        string
 	shaderType        string
 	parent            string
+	MTLPresent        bool
 	boundingBox       BoundingBox
 	buffers           ObjectBuffers
 	programInfo       ProgramInfo
@@ -263,13 +264,24 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool) 
 				normal:   1,
 				uv:       2,
 			}
-			texture0, err := texture.NewTextureFromFile("../Editor/models/"+m.material.DiffuseTexture,
-				gl.REPEAT, gl.REPEAT)
 
-			if err != nil {
-				panic(err)
+			//check if its an mtl file or just a regular texture
+			if m.MTLPresent {
+				texture0, err := texture.NewTextureFromFile("../Editor/models/"+m.material.DiffuseTexture,
+					gl.REPEAT, gl.REPEAT)
+				if err != nil {
+					panic(err)
+				}
+				m.diffuseTexture = texture0
+			} else {
+				texture0, err := texture.NewTextureFromFile("../Editor/materials/"+m.material.DiffuseTexture,
+					gl.REPEAT, gl.REPEAT)
+				if err != nil {
+					panic(err)
+				}
+				m.diffuseTexture = texture0
 			}
-			m.diffuseTexture = texture0
+
 		} else {
 			bS := &shader.BlinnNoTexture{}
 			bS.Setup()
@@ -322,23 +334,45 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool) 
 			tangent:   3,
 			bitangent: 4,
 		}
-		//load diffuse texture
-		texture0, err := texture.NewTextureFromFile("../Editor/models/"+m.material.DiffuseTexture,
-			gl.REPEAT, gl.REPEAT)
 
-		if err != nil {
-			panic(err)
+		if m.MTLPresent {
+			//load diffuse texture
+			texture0, err := texture.NewTextureFromFile("../Editor/models/"+m.material.DiffuseTexture,
+				gl.REPEAT, gl.REPEAT)
+
+			if err != nil {
+				panic(err)
+			}
+			//load normal texture
+			texture1, err := texture.NewTextureFromFile("../Editor/models/"+m.material.NormalTexture,
+				gl.REPEAT, gl.REPEAT)
+
+			if err != nil {
+				panic(err)
+			}
+
+			m.diffuseTexture = texture0
+			m.normalTexture = texture1
+		} else {
+			//load diffuse texture
+			texture0, err := texture.NewTextureFromFile("../Editor/materials/"+m.material.DiffuseTexture,
+				gl.REPEAT, gl.REPEAT)
+
+			if err != nil {
+				panic(err)
+			}
+			//load normal texture
+			texture1, err := texture.NewTextureFromFile("../Editor/materials/"+m.material.NormalTexture,
+				gl.REPEAT, gl.REPEAT)
+
+			if err != nil {
+				panic(err)
+			}
+
+			m.diffuseTexture = texture0
+			m.normalTexture = texture1
 		}
-		//load normal texture
-		texture1, err := texture.NewTextureFromFile("../Editor/models/"+m.material.NormalTexture,
-			gl.REPEAT, gl.REPEAT)
 
-		if err != nil {
-			panic(err)
-		}
-
-		m.diffuseTexture = texture0
-		m.normalTexture = texture1
 		SetupAttributesMap(&m.programInfo, shaderVals)
 		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.Normals, m.vertexValues.Uvs, tangents, bitangents, m.vertexValues.Faces)
 	}
