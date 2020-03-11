@@ -6,7 +6,7 @@ import (
 	"../geometry"
 	"../scene"
 	"github.com/go-gl/glfw/v3.1/glfw"
-	"github.com/go-gl/mathgl/mgl32"
+	_ "github.com/go-gl/mathgl/mgl32"
 )
 
 var angle = 0.0
@@ -36,8 +36,8 @@ func Update(state *geometry.State, deltaTime float64) {
 
 	lightToMove.Move = false
 	
-	rot := mgl32.HomogRotate3D(float32(angle), mgl32.Vec3{0, 1, 0})
-	testcube.SetRotation(rot)
+	//rot := mgl32.HomogRotate3D(float32(angle), mgl32.Vec3{0, 1, 0})
+	//testcube.SetRotation(rot)
 
 	if state.Keys[glfw.KeyQ] {
 		lightToMove.Position[2] += 0.1

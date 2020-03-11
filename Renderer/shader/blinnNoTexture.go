@@ -170,11 +170,11 @@ func (s *BlinnNoTexture) Setup() {
 
 
 		specular = light.color * specularVal * spec;
-		specular *= attenuation;
+		//specular *= attenuation;
 
 		
 		ambient  *= attenuation;
-		diffuse  *= attenuation;
+		//diffuse  *= attenuation;
 		
 		return (ambient + (1.0 - shadow) * (diffuse + specular));
 	}

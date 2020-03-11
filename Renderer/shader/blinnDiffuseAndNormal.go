@@ -140,7 +140,7 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 		float attenuation = light.strength / (light.constant + light.linear * distance + 
 					light.quadratic * (distance * distance));    
 		// combine results
-		vec3 ambient  = ambientVal * textureVal;
+		vec3 ambient  = ambientVal * textureVal * diffuseVal;
 		vec3 diffuse  = light.color  * diff * diffuseVal * textureVal;
 		vec3 specular = vec3(0,0,0);
 

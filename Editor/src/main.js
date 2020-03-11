@@ -94,8 +94,8 @@ if (window.location.pathname.indexOf("main.html") !== -1) {
 function addObject(type, name, url = null) {
     let defaultMat = {
         diffuse: [0.5882, 0.5882, 0.5882],
-        ambient: [1, 1, 1],
-        specular: [0, 0, 0],
+        ambient: [0.3, 0.3, 0.3],
+        specular: [0.5, 0.5, 0.5],
         n: 10.000002,
         shaderType: 1,
         alpha: 1,
