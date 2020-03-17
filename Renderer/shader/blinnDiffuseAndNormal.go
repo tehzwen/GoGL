@@ -67,6 +67,7 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 		float constant;
 		float linear;
 		float quadratic; 
+		float farPlane;
 		vec3 color;
 		samplerCube depthMap;
 	};
@@ -105,19 +106,19 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 	float ShadowCalculation(vec3 fragPos, PointLight light)
 	{
 		vec3 fragToLight = fragPos - light.position;
-		float far_plane = 25.0;
+		//float far_plane = 50;
 		float currentDepth = length(fragToLight);
 
 		float shadow = 0.0;
-		float bias = 0.15;
+		float bias = 0.5;
 		int samples = 20;
 		float viewDistance = length(oCamPosition - fragPos);
-		float diskRadius = (1.0 + (viewDistance / far_plane)) /25.0;
+		float diskRadius = (1.0 + (viewDistance / light.farPlane)) /25.0;
 
 		for(int i = 0; i < samples; ++i)
 		{
 			float closestDepth = texture(light.depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
-			closestDepth *= far_plane;   // undo mapping [0;1]
+			closestDepth *= light.farPlane;   // undo mapping [0;1]
 			if(currentDepth - bias > closestDepth)
 				shadow += 1.0;
 		}
@@ -131,23 +132,21 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 		float shadow = ShadowCalculation(oFragPosition, light);
 		vec3 lightDir = normalize(light.position - fragPos);
 		// diffuse shading
-		float diff = max(dot(normal, lightDir), 0.0);
+		float diff = max(dot(normal, lightDir), 1.0);
 		// specular shading
 		vec3 reflectDir = reflect(lightDir, normal);
 		float spec = pow(max(dot(viewDir, reflectDir), 0.0), nVal);
 		// attenuation
 		float distance    = length(light.position - fragPos);
-		float attenuation = light.strength / (light.constant + light.linear * distance + 
+		float attenuation = light.strength / (light.constant + light.linear + 
 					light.quadratic * (distance * distance));    
+		
 		// combine results
 		vec3 ambient  = ambientVal * textureVal * diffuseVal;
 		vec3 diffuse  = light.color  * diff * diffuseVal * textureVal;
-		vec3 specular = vec3(0,0,0);
 
-		if (diff < 0.0f) {
-			specular = light.color * specularVal * spec * textureVal;
-			//specular *= attenuation;
-		}
+		vec3 specular = vec3(0,0,0);
+		specular = light.color * specularVal * spec * textureVal;
 		
 		ambient  *= attenuation;
 		//diffuse  *= attenuation;

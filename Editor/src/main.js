@@ -6,7 +6,7 @@ const Menu = electron.remote.Menu;
 
 var currentlyRendered = 0;
 var state = {
-    saveFile: "testsave.json",
+    saveFile: "hangerScene.json",
     modelMethod: createModalFromMesh
 };
 
@@ -152,7 +152,10 @@ function addObject(type, name, url = null) {
                 strength: 1,
                 quadratic: 0.035,
                 linear: 0.09,
-                constant: 1
+                constant: 1,
+                nearPlane: 0.5,
+                farPlane: 50,
+                shadow: true
             })
         );
         state.render = true;
@@ -161,7 +164,6 @@ function addObject(type, name, url = null) {
 }
 
 function createModalFromMesh(mesh, object) {
-    console.log(object)
     if (object.type === "mesh") {
         let tempMesh = new Model(state.gl, object, mesh);
         let testVal = tempMesh.setup();

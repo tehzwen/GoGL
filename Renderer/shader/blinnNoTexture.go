@@ -57,7 +57,8 @@ func (s *BlinnNoTexture) Setup() {
 		float strength;
 		float constant;
 		float linear;
-		float quadratic; 
+		float quadratic;
+		float farPlane;
 		vec3 color;
 		samplerCube depthMap;
 	};
@@ -101,7 +102,7 @@ func (s *BlinnNoTexture) Setup() {
 	float PointShadowCalculation(vec3 fragPos, PointLight light)
 	{
 		vec3 fragToLight = fragPos - light.position;
-		float far_plane = 25.0;
+		float far_plane = light.farPlane;
 		float currentDepth = length(fragToLight);
 
 		float shadow = 0.0;
@@ -154,7 +155,7 @@ func (s *BlinnNoTexture) Setup() {
 		float shadow = PointShadowCalculation(oFragPosition, light);
 		vec3 lightDir = normalize(light.position - fragPos);
 		// diffuse shading
-		float diff = max(dot(lightDir, normal), 0.0);
+		float diff = max(dot(lightDir, normal), 1.0);
 		// specular shading
 		vec3 reflectDir = reflect(lightDir, normal);
 		float spec = pow(max(dot(viewDir, reflectDir), 0.0), nVal);
@@ -163,18 +164,16 @@ func (s *BlinnNoTexture) Setup() {
 		float attenuation = light.strength / (light.constant + light.linear * distance + 
 					light.quadratic * (distance * distance));    
 		// combine results
-		//vec3 ambient  = light.color * ambientVal * diffuseVal;
-		vec3 ambient = 0.3 * light.color * diffuseVal;
+		vec3 ambient  = ambientVal * diffuseVal;
 		vec3 diffuse  = light.color  * diff * diffuseVal;
 		vec3 specular = vec3(0,0,0);
 
+		if (diff < 0.0) {
+			specular = light.color * specularVal * spec;
+		}
 
-		specular = light.color * specularVal * spec;
-		//specular *= attenuation;
-
-		
 		ambient  *= attenuation;
-		//diffuse  *= attenuation;
+		diffuse  *= attenuation;
 		
 		return (ambient + (1.0 - shadow) * (diffuse + specular));
 	}

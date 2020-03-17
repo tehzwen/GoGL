@@ -236,7 +236,6 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 		shaderVals["uViewMatrix"] = true
 		shaderVals["uModelMatrix"] = true
 		shaderVals["pointLights"] = true
-		shaderVals["numLights"] = true
 		shaderVals["cameraPosition"] = true
 
 		bS := &shader.BlinnNoTexture{}
@@ -272,7 +271,6 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 		shaderVals["uViewMatrix"] = true
 		shaderVals["uModelMatrix"] = true
 		shaderVals["pointLights"] = true
-		shaderVals["numLights"] = true
 		shaderVals["cameraPosition"] = true
 		shaderVals["uDiffuseTexture"] = true
 
@@ -308,7 +306,6 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 		shaderVals["uViewMatrix"] = true
 		shaderVals["uModelMatrix"] = true
 		shaderVals["pointLights"] = true
-		shaderVals["numLights"] = true
 		shaderVals["cameraPosition"] = true
 		shaderVals["uDiffuseTexture"] = true
 

@@ -63,13 +63,13 @@ func (s *OmniDirectionalShadow) Setup() {
 	in vec4 FragPos;
 
 	uniform vec3 lightPos;
+	uniform float farPlane;
 
 	void main() {
-		float far_plane = 25.0f;
 
 		//try with the first light in the array
 		float lightDistance = length(lightPos - FragPos.xyz);
-		lightDistance = lightDistance / far_plane;
+		lightDistance = lightDistance / farPlane;
 		gl_FragDepth = lightDistance;
 	}
 ` + "\x00"

@@ -381,15 +381,7 @@ func ParseJSONFile(filePath string, state *State) {
 	}
 
 	for j := 0; j < len(scene[0].PointLights); j++ {
-		tempLight := PointLight{
-			Colour:    scene[0].PointLights[j].Colour,
-			Strength:  scene[0].PointLights[j].Strength,
-			Position:  scene[0].PointLights[j].Position,
-			Quadratic: scene[0].PointLights[j].Quadratic,
-			Linear:    scene[0].PointLights[j].Linear,
-			Constant:  scene[0].PointLights[j].Constant,
-		}
-		state.PointLights = append(state.PointLights, tempLight)
+		state.PointLights = append(state.PointLights, scene[0].PointLights[j])
 	}
 
 	for l := 0; l < len(scene[0].DirectionalLights); l++ {
@@ -487,7 +479,6 @@ func CreateMat4FromArray(arr []float32) mgl32.Mat4 {
 		arr[4], arr[5], arr[6], arr[7],
 		arr[8], arr[9], arr[10], arr[11],
 		arr[12], arr[13], arr[14], arr[15]}
-
 }
 
 // VectorDistance - helper function for getting distance between 2 vectors

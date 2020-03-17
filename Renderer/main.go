@@ -71,7 +71,7 @@ func main() {
 	window.SetCursorPosCallback(MouseMoveHandler)
 
 	if len(argsWithoutProgram) <= 0 {
-		geometry.ParseJSONFile("../Editor/statefiles/testsave.json", &state)
+		geometry.ParseJSONFile("../Editor/statefiles/hangerScene.json", &state)
 	} else {
 		geometry.ParseJSONFile(argsWithoutProgram[0], &state)
 	}
@@ -89,7 +89,7 @@ func main() {
 
 	//iterate through pointlights and create depth maps for each
 	for l := 0; l < len(state.PointLights); l++ {
-		state.PointLights[l].CreateLightSpaceTransforms(0.5, 25, 1024, 1024)
+		state.PointLights[l].CreateLightSpaceTransforms(1024, 1024)
 		state.PointLights[l].CreateCubeDepthMap(1024, 1024)
 	}
 
@@ -273,33 +273,32 @@ func ClassicRender(state *geometry.State, object geometry.Geometry) {
 	//rotation
 	modelMatrix = modelMatrix.Mul4(currentModel.Rotation)
 
-	//position
-	positionMat := mgl32.Translate3D(currentModel.Position[0], currentModel.Position[1], currentModel.Position[2])
-	modelMatrix = modelMatrix.Mul4(positionMat)
-
 	//negative centroid
 	negCent := mgl32.Translate3D(-currentCentroid[0], -currentCentroid[1], -currentCentroid[2])
 	modelMatrix = modelMatrix.Mul4(negCent)
+	//position
+	positionMat := mgl32.Translate3D(currentModel.Position[0], currentModel.Position[1], currentModel.Position[2])
+	modelMatrix = modelMatrix.Mul4(positionMat)
 
 	//scale
 	modelMatrix = geometry.ScaleM4(modelMatrix, currentModel.Scale)
 
 	//camDist := geometry.VectorDistance(state.Camera.Position, currentModel.Position.Add(currentCentroid)) //calculate this for transparency
 
-	// if currentMaterial.Alpha < 1.0 {
-	// 	//name, _, _ := object.CurrentObject.GetDetails()
-	// 	//fmt.Println("here: ", name)
-	// 	gl.Enable(gl.BLEND)
-	// 	gl.Disable(gl.DEPTH_TEST)
-	// 	gl.BlendFunc(gl.ONE_MINUS_CONSTANT_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-	// 	gl.ClearDepth(float64(currentMaterial.Alpha))
-	// } else {
-	// 	gl.Enable(gl.DEPTH_TEST)
-	// 	gl.DepthMask(true)
-	// 	gl.Disable(gl.BLEND)
-	// 	gl.ClearDepth(1.0)
-	// 	gl.DepthFunc(gl.LEQUAL)
-	// }
+	if currentMaterial.Alpha < 1.0 {
+		// name, _, _ := object.CurrentObject.GetDetails()
+		// fmt.Println("here: ", name)
+		gl.Enable(gl.BLEND)
+		gl.Disable(gl.DEPTH_TEST)
+		gl.BlendFunc(gl.ONE_MINUS_CONSTANT_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+		gl.ClearDepth(float64(currentMaterial.Alpha))
+	} else {
+		gl.Enable(gl.DEPTH_TEST)
+		gl.DepthMask(true)
+		gl.Disable(gl.BLEND)
+		gl.ClearDepth(1.0)
+		gl.DepthFunc(gl.LEQUAL)
+	}
 
 	if parent != "" {
 		parentObj := geometry.GetSceneObject(parent, (*state))
@@ -371,6 +370,7 @@ func ClassicRender(state *geometry.State, object geometry.Geometry) {
 		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].constant\x00")), 1, &state.PointLights[i].Constant)
 		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].linear\x00")), 1, &state.PointLights[i].Linear)
 		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].quadratic\x00")), 1, &state.PointLights[i].Quadratic)
+		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].farPlane\x00")), 1, &state.PointLights[i].FarPlane)
 		gl.ActiveTexture(gl.TEXTURE0 + state.PointLights[i].DepthMap)
 		gl.BindTexture(gl.TEXTURE_CUBE_MAP, state.PointLights[i].DepthMap)
 		gl.Uniform1i(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].depthMap\x00")), int32(state.PointLights[i].DepthMap))

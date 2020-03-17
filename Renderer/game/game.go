@@ -22,7 +22,7 @@ var err error
 func Start(state *geometry.State) {
 	fmt.Printf("Started!\n")
 	lightToMove = &state.PointLights[0]
-	testcube, err = scene.GetObjectFromScene(state, "testcube")
+	testcube, err = scene.GetObjectFromScene(state, "container1")
 	
 	if err != nil {
 	    panic(err)

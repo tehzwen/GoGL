@@ -20,6 +20,9 @@ type PointLight struct {
 	Quadratic         float32   `json:"quadratic"`
 	Linear            float32   `json:"linear"`
 	Constant          float32   `json:"constant"`
+	FarPlane          float32   `json:"farPlane"`
+	NearPlane         float32   `json:"nearPlane"`
+	Shadow            bool      `json:"shadow"`
 	DepthMap          uint32
 	LightViewMatrices []mgl32.Mat4
 	Move              bool
@@ -60,9 +63,9 @@ func (light *PointLight) BindDepthMap(state *State) {
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 }
 
-func (light *PointLight) CreateLightSpaceTransforms(near, far float32, width, height float32) {
+func (light *PointLight) CreateLightSpaceTransforms(width, height float32) {
 	aspect := float32(width) / float32(height)
-	shadowProj := mgl32.Perspective(90*math.Pi/180, aspect, near, far)
+	shadowProj := mgl32.Perspective(90*math.Pi/180, aspect, light.NearPlane, light.FarPlane)
 
 	shadowTransforms := []mgl32.Mat4{}
 	lightPosition := mgl32.Vec3{light.Position[0], light.Position[1], light.Position[2]}
@@ -142,7 +145,7 @@ func (light *PointLight) ShadowRender(state *State, object Geometry, shadowProgr
 		}
 	}
 	if light.Move {
-		light.CreateLightSpaceTransforms(0.5, 25, 1024, 1024)
+		light.CreateLightSpaceTransforms(1024, 1024)
 	}
 
 	for i := 0; i < 6; i++ {
@@ -151,6 +154,7 @@ func (light *PointLight) ShadowRender(state *State, object Geometry, shadowProgr
 
 	gl.UniformMatrix4fv(gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str("uModelMatrix\x00")), 1, false, &modelMatrix[0])
 	gl.Uniform3fv(gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str("lightPos\x00")), 1, &light.Position[0])
+	gl.Uniform1fv(gl.GetUniformLocation(shadowProgramInfo.Program, gl.Str("farPlane\x00")), 1, &light.FarPlane)
 	gl.BindVertexArray(currentBuffers.Vao)
 
 	if object.GetType() != "mesh" {

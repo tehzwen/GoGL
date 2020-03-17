@@ -330,7 +330,6 @@ func (c *Cube) Setup(mat Material, mod Model, name string, collide bool) error {
 		shaderVals["uViewMatrix"] = true
 		shaderVals["uModelMatrix"] = true
 		shaderVals["pointLights"] = true
-		shaderVals["numLights"] = true
 		shaderVals["cameraPosition"] = true
 
 		bS := &shader.BlinnNoTexture{}
@@ -365,7 +364,6 @@ func (c *Cube) Setup(mat Material, mod Model, name string, collide bool) error {
 		shaderVals["uProjectionMatrix"] = true
 		shaderVals["uViewMatrix"] = true
 		shaderVals["uModelMatrix"] = true
-		shaderVals["numLights"] = true
 		shaderVals["cameraPosition"] = true
 		shaderVals["uDiffuseTexture"] = true
 		shaderVals["pointLights"] = true
@@ -401,7 +399,6 @@ func (c *Cube) Setup(mat Material, mod Model, name string, collide bool) error {
 		shaderVals["uProjectionMatrix"] = true
 		shaderVals["uViewMatrix"] = true
 		shaderVals["uModelMatrix"] = true
-		shaderVals["numLights"] = true
 		shaderVals["pointLights"] = true
 		shaderVals["cameraPosition"] = true
 		shaderVals["uDiffuseTexture"] = true

@@ -11,6 +11,9 @@ class PointLight {
         this.quadratic = object.quadratic;
         this.linear = object.linear;
         this.constant = object.constant;
+        this.nearPlane = object.nearPlane;
+        this.farPlane = object.farPlane;
+        this.shadow = object.shadow;
     }
 
     setup() {

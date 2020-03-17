@@ -20,7 +20,7 @@ class Model {
             rotation: mat4.create(),
             scale: vec3.fromValues(1, 1, 1),
             diffuseTexture: object.diffuseTexture ? object.diffuseTexture : null,
-            texture: object.diffuseTexture ? getTextures(glContext, object.diffuseTexture ? object.diffuseTexture : "default.png") : getTextures(glContext, object.mtl.diffuseMap, true)
+            texture: object.diffuseTexture ? getTextures(glContext, object.diffuseTexture) : object.mtl ? getTextures(glContext, object.mtl.diffuseMap, true) : getTextures(glContext, "default.png")
         };
         this.modelMatrix = mat4.create();
         this.lightingShader = this.lightingShader.bind(this);
