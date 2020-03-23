@@ -374,8 +374,8 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool) 
 		m.buffers.Vao = CreateTriangleVAO(&m.programInfo, m.vertexValues.Vertices, m.vertexValues.Normals, m.vertexValues.Uvs, tangents, bitangents, m.vertexValues.Faces)
 	}
 
+	m.centroid = CalculateCentroid(m.vertexValues.Vertices, m.Model.Scale)
 	m.boundingBox = GetBoundingBox(m.vertexValues.Vertices)
-
 	if collide {
 		m.boundingBox.Collide = true
 	} else {
@@ -387,7 +387,6 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool) 
 	m.Model.Position = mod.Position
 	m.boundingBox = TranslateBoundingBox(m.boundingBox, mod.Position)
 	m.Model.Rotation = mod.Rotation
-	m.centroid = CalculateCentroid(m.vertexValues.Vertices, m.Model.Scale)
 	m.onCollide = func(box BoundingBox) {}
 
 	return nil

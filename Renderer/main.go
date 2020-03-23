@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -89,8 +90,10 @@ func main() {
 
 	//iterate through pointlights and create depth maps for each
 	for l := 0; l < len(state.PointLights); l++ {
-		state.PointLights[l].CreateLightSpaceTransforms(1024, 1024)
-		state.PointLights[l].CreateCubeDepthMap(1024, 1024)
+		if state.PointLights[l].Shadow == 1 {
+			state.PointLights[l].CreateLightSpaceTransforms(1024, 1024)
+			state.PointLights[l].CreateCubeDepthMap(1024, 1024)
+		}
 	}
 
 	for l := 0; l < len(state.DirectionalLights); l++ {
@@ -189,15 +192,38 @@ func draw(window *glfw.Window, state *geometry.State, pointLightShadowProgramInf
 
 	//going to have to render depth for each pointlight here
 	for l := 0; l < len(state.PointLights); l++ {
-		state.PointLights[l].BindDepthMap(state)
-		gl.Viewport(0, 0, 1024, 1024)
-		gl.BindFramebuffer(gl.FRAMEBUFFER, state.DepthFBO)
-		gl.Clear(gl.DEPTH_BUFFER_BIT)
-		for x := 0; x < len(state.Objects); x++ {
-			state.PointLights[l].ShadowRender(state, state.Objects[x], pointLightShadowProgramInfo)
+		if state.PointLights[l].Shadow == 1 {
+			state.PointLights[l].BindDepthMap(state)
+			gl.Viewport(0, 0, 1024, 1024)
+			gl.BindFramebuffer(gl.FRAMEBUFFER, state.DepthFBO)
+			gl.Clear(gl.DEPTH_BUFFER_BIT)
+			for x := 0; x < len(state.Objects); x++ {
+				//check for the light's parent object here
+				name, _, _ := state.Objects[x].GetDetails()
+				if state.PointLights[l].Parent == name {
+					currentModel, err := state.Objects[x].GetModel()
+					if err != nil {
+						fmt.Printf("ERROR getting model!")
+					}
+					state.PointLights[l].Position = []float32{currentModel.Position[0], currentModel.Position[1], currentModel.Position[2]}
+				}
+				state.PointLights[l].ShadowRender(state, state.Objects[x], pointLightShadowProgramInfo)
+			}
+			gl.FramebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, 0, 0)
+			gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+		} else {
+			for x := 0; x < len(state.Objects); x++ {
+				//check for the light's parent object here
+				name, _, _ := state.Objects[x].GetDetails()
+				if state.PointLights[l].Parent == name {
+					currentModel, err := state.Objects[x].GetModel()
+					if err != nil {
+						fmt.Printf("ERROR getting model!")
+					}
+					state.PointLights[l].Position = []float32{currentModel.Position[0], currentModel.Position[1], currentModel.Position[2]}
+				}
+			}
 		}
-		gl.FramebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, 0, 0)
-		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 	}
 
 	//Depth draw directional lights
@@ -212,6 +238,31 @@ func draw(window *glfw.Window, state *geometry.State, pointLightShadowProgramInf
 		gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, 0, 0)
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 	}
+
+	//sort the objects
+	sort.Slice(state.Objects, func(a, b int) bool {
+		nameA, _, _ := state.Objects[a].GetDetails()
+		nameB, _, _ := state.Objects[b].GetDetails()
+		aModel, err := state.Objects[a].GetModel()
+		bModel, err := state.Objects[b].GetModel()
+		aBox := state.Objects[a].GetBoundingBox()
+		bBox := state.Objects[b].GetBoundingBox()
+
+		if err != nil {
+			panic(err)
+		}
+
+		aDist := geometry.VectorDistance(state.Camera.Position, aModel.Position.Add(aBox.Min))
+		bDist := geometry.VectorDistance(state.Camera.Position, bModel.Position.Add(bBox.Min))
+		//iLengthToCam := state.Camera.Position.Sub(iModel.Position)
+		if aDist > bDist {
+			return true
+		} else if bDist > aDist {
+			return false
+		} else {
+			return nameA > nameB
+		}
+	})
 
 	//try the classical render method
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
@@ -266,24 +317,35 @@ func ClassicRender(state *geometry.State, object geometry.Geometry) {
 	camPosition := []float32{state.Camera.Position[0], state.Camera.Position[1], state.Camera.Position[2]}
 	modelMatrix := mgl32.Ident4()
 
-	//move to centroid
-	centroidMat := mgl32.Translate3D(currentCentroid[0], currentCentroid[1], currentCentroid[2])
-	modelMatrix = modelMatrix.Mul4(centroidMat)
-
-	//rotation
-	modelMatrix = modelMatrix.Mul4(currentModel.Rotation)
-
-	//negative centroid
-	negCent := mgl32.Translate3D(-currentCentroid[0], -currentCentroid[1], -currentCentroid[2])
-	modelMatrix = modelMatrix.Mul4(negCent)
-	//position
-	positionMat := mgl32.Translate3D(currentModel.Position[0], currentModel.Position[1], currentModel.Position[2])
-	modelMatrix = modelMatrix.Mul4(positionMat)
-
-	//scale
-	modelMatrix = geometry.ScaleM4(modelMatrix, currentModel.Scale)
-
-	//camDist := geometry.VectorDistance(state.Camera.Position, currentModel.Position.Add(currentCentroid)) //calculate this for transparency
+	if object.GetType() == "mesh" {
+		//move to centroid
+		centroidMat := mgl32.Translate3D(currentCentroid[0], currentCentroid[1], currentCentroid[2])
+		modelMatrix = modelMatrix.Mul4(centroidMat)
+		//position
+		positionMat := mgl32.Translate3D(currentModel.Position[0], currentModel.Position[1], currentModel.Position[2])
+		modelMatrix = modelMatrix.Mul4(positionMat)
+		//negative centroid
+		negCent := mgl32.Translate3D(-currentCentroid[0], -currentCentroid[1], -currentCentroid[2])
+		modelMatrix = modelMatrix.Mul4(negCent)
+		//rotation
+		modelMatrix = modelMatrix.Mul4(currentModel.Rotation)
+		//scale
+		modelMatrix = geometry.ScaleM4(modelMatrix, currentModel.Scale)
+	} else {
+		//move to centroid
+		centroidMat := mgl32.Translate3D(currentCentroid[0], currentCentroid[1], currentCentroid[2])
+		modelMatrix = modelMatrix.Mul4(centroidMat)
+		//rotation
+		modelMatrix = modelMatrix.Mul4(currentModel.Rotation)
+		//position
+		positionMat := mgl32.Translate3D(currentModel.Position[0], currentModel.Position[1], currentModel.Position[2])
+		modelMatrix = modelMatrix.Mul4(positionMat)
+		//negative centroid
+		negCent := mgl32.Translate3D(-currentCentroid[0], -currentCentroid[1], -currentCentroid[2])
+		modelMatrix = modelMatrix.Mul4(negCent)
+		//scale
+		modelMatrix = geometry.ScaleM4(modelMatrix, currentModel.Scale)
+	}
 
 	if currentMaterial.Alpha < 1.0 {
 		// name, _, _ := object.CurrentObject.GetDetails()
@@ -311,10 +373,9 @@ func ClassicRender(state *geometry.State, object geometry.Geometry) {
 			fmt.Println("ERROR GETTING PARENT OBJECT")
 		}
 	}
-
+	object.SetModelMatrix(modelMatrix)
 	state.ViewMatrix = viewMatrix
 
-	object.SetModelMatrix(modelMatrix)
 	gl.UniformMatrix4fv(currentProgramInfo.UniformLocations.Projection, 1, false, &projection[0])
 	gl.UniformMatrix4fv(currentProgramInfo.UniformLocations.View, 1, false, &viewMatrix[0])
 	gl.Uniform3fv(currentProgramInfo.UniformLocations.CameraPosition, 1, &camPosition[0])
@@ -327,7 +388,7 @@ func ClassicRender(state *geometry.State, object geometry.Geometry) {
 	}
 
 	frustum := mymath.ConstructFrustrum(viewMatrix, projection)
-	testLen := object.GetBoundingBox().Max.LenSqr()
+	testLen := object.GetBoundingBox().Max.LenSqr() * object.GetBoundingBox().Max.LenSqr()
 	result := frustum.SphereIntersection(model.Position, testLen)
 
 	if !result {
@@ -349,7 +410,6 @@ func ClassicRender(state *geometry.State, object geometry.Geometry) {
 	normalTexture := object.GetNormalTexture()
 
 	if diffuseTexture != nil {
-
 		diffuseTex := diffuseTexture.GetHandle()
 		gl.ActiveTexture(gl.TEXTURE0 + diffuseTex)
 		gl.BindTexture(gl.TEXTURE_2D, diffuseTex)
@@ -371,6 +431,7 @@ func ClassicRender(state *geometry.State, object geometry.Geometry) {
 		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].linear\x00")), 1, &state.PointLights[i].Linear)
 		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].quadratic\x00")), 1, &state.PointLights[i].Quadratic)
 		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].farPlane\x00")), 1, &state.PointLights[i].FarPlane)
+		gl.Uniform1i(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].shadow\x00")), state.PointLights[i].Shadow)
 		gl.ActiveTexture(gl.TEXTURE0 + state.PointLights[i].DepthMap)
 		gl.BindTexture(gl.TEXTURE_CUBE_MAP, state.PointLights[i].DepthMap)
 		gl.Uniform1i(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str(strings.Join([]string{"pointLights[", strconv.Itoa(i)}, "")+"].depthMap\x00")), int32(state.PointLights[i].DepthMap))

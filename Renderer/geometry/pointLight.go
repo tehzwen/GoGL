@@ -22,7 +22,7 @@ type PointLight struct {
 	Constant          float32   `json:"constant"`
 	FarPlane          float32   `json:"farPlane"`
 	NearPlane         float32   `json:"nearPlane"`
-	Shadow            bool      `json:"shadow"`
+	Shadow            int32     `json:"shadow"`
 	DepthMap          uint32
 	LightViewMatrices []mgl32.Mat4
 	Move              bool
@@ -115,23 +115,35 @@ func (light *PointLight) ShadowRender(state *State, object Geometry, shadowProgr
 	currentBuffers := object.GetBuffers()
 	modelMatrix := mgl32.Ident4()
 
-	//move to centroid
-	centroidMat := mgl32.Translate3D(currentCentroid[0], currentCentroid[1], currentCentroid[2])
-	modelMatrix = modelMatrix.Mul4(centroidMat)
-
-	//rotation
-	modelMatrix = modelMatrix.Mul4(currentModel.Rotation)
-
-	//position
-	positionMat := mgl32.Translate3D(currentModel.Position[0], currentModel.Position[1], currentModel.Position[2])
-	modelMatrix = modelMatrix.Mul4(positionMat)
-
-	//negative centroid
-	negCent := mgl32.Translate3D(-currentCentroid[0], -currentCentroid[1], -currentCentroid[2])
-	modelMatrix = modelMatrix.Mul4(negCent)
-
-	//scale
-	modelMatrix = ScaleM4(modelMatrix, currentModel.Scale)
+	if object.GetType() == "mesh" {
+		//move to centroid
+		centroidMat := mgl32.Translate3D(currentCentroid[0], currentCentroid[1], currentCentroid[2])
+		modelMatrix = modelMatrix.Mul4(centroidMat)
+		//position
+		positionMat := mgl32.Translate3D(currentModel.Position[0], currentModel.Position[1], currentModel.Position[2])
+		modelMatrix = modelMatrix.Mul4(positionMat)
+		//negative centroid
+		negCent := mgl32.Translate3D(-currentCentroid[0], -currentCentroid[1], -currentCentroid[2])
+		modelMatrix = modelMatrix.Mul4(negCent)
+		//rotation
+		modelMatrix = modelMatrix.Mul4(currentModel.Rotation)
+		//scale
+		modelMatrix = ScaleM4(modelMatrix, currentModel.Scale)
+	} else {
+		//move to centroid
+		centroidMat := mgl32.Translate3D(currentCentroid[0], currentCentroid[1], currentCentroid[2])
+		modelMatrix = modelMatrix.Mul4(centroidMat)
+		//rotation
+		modelMatrix = modelMatrix.Mul4(currentModel.Rotation)
+		//position
+		positionMat := mgl32.Translate3D(currentModel.Position[0], currentModel.Position[1], currentModel.Position[2])
+		modelMatrix = modelMatrix.Mul4(positionMat)
+		//negative centroid
+		negCent := mgl32.Translate3D(-currentCentroid[0], -currentCentroid[1], -currentCentroid[2])
+		modelMatrix = modelMatrix.Mul4(negCent)
+		//scale
+		modelMatrix = ScaleM4(modelMatrix, currentModel.Scale)
+	}
 
 	if parent != "" {
 		parentObj := GetSceneObject(parent, (*state))

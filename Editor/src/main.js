@@ -155,7 +155,7 @@ function addObject(type, name, url = null) {
                 constant: 1,
                 nearPlane: 0.5,
                 farPlane: 50,
-                shadow: true
+                shadow: 1
             })
         );
         state.render = true;
@@ -233,6 +233,8 @@ function main() {
         state.directionalLights.push(tempDirLight);
         UI.createSceneGui(state);
     })
+
+    gl.enable(gl.FRAMEBUFFER_SRGB)
 
     //setup mouse click listener
     /*
@@ -485,9 +487,6 @@ function drawScene(gl, deltaTime, state) {
 
                     // check for diffuse texture and apply it
                     if (object.model.texture != null && object.material.shaderType > 1) {
-                        // if (object.name === "floorPlane") {
-                        //     console.log(object)
-                        // }
                         gl.activeTexture(gl.TEXTURE0);
                         gl.uniform1i(object.programInfo.uniformLocations.uTexture, 0);
                         gl.bindTexture(gl.TEXTURE_2D, object.model.texture);
@@ -502,7 +501,6 @@ function drawScene(gl, deltaTime, state) {
 
                     // Draw the object
                     const offset = 0; // Number of elements to skip before starting
-
                     //if its a mesh then we don't use an index buffer and use drawArrays instead of drawElements
                     if (object.type === "mesh") {
                         gl.drawArrays(gl.TRIANGLES, offset, object.buffers.numVertices / 3);

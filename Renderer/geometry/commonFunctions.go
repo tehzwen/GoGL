@@ -338,14 +338,15 @@ func ParseJSONFile(filePath string, state *State) {
 						Rotation: mgl32.Ident4(),
 					}
 
-					if j > 1 {
+					if j > 0 {
 						tempName = strings.Join([]string{tempName, strconv.Itoa(j)}, "")
 						tempModelObject.SetParent(scene[0].Objects[i].Name)
 						tempModel.Position = mgl32.Vec3{0, 0, 0}
 						tempModel.Scale = mgl32.Vec3{1, 1, 1}
+					} else {
+						tempModel.Rotation = rot
 					}
 
-					tempModel.Rotation = rot
 					tempMaterial := Material{
 						Diffuse:  parsedMaterial.Kd,
 						Ambient:  parsedMaterial.Ka,
@@ -371,12 +372,16 @@ func ParseJSONFile(filePath string, state *State) {
 						tempName,
 						scene[0].Objects[i].Collide,
 					)
+
+					if scene[0].Objects[i].Parent != "" {
+						tempModelObject.SetParent(scene[0].Objects[i].Parent)
+					}
+
 					state.Objects = append(state.Objects, &tempModelObject)
 					state.LoadedObjects++
 					fmt.Println(tempModelObject.name, " loaded successfully!")
 				}
 			}
-
 		}
 	}
 

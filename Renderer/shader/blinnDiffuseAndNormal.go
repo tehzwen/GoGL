@@ -68,6 +68,7 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 		float linear;
 		float quadratic; 
 		float farPlane;
+		int shadow;
 		vec3 color;
 		samplerCube depthMap;
 	};
@@ -129,7 +130,11 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 
 	vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 textureVal) 
 	{
-		float shadow = ShadowCalculation(oFragPosition, light);
+		float shadow;
+		if (light.shadow == 1) {
+			shadow = ShadowCalculation(oFragPosition, light);
+		}
+		
 		vec3 lightDir = normalize(light.position - fragPos);
 		// diffuse shading
 		float diff = max(dot(normal, lightDir), 1.0);
@@ -149,7 +154,8 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 		specular = light.color * specularVal * spec * textureVal;
 		
 		ambient  *= attenuation;
-		//diffuse  *= attenuation;
+		diffuse  *= attenuation;
+		specular *= attenuation;
 		return (ambient + (1.0 - shadow) * (diffuse + specular));
 	}
 

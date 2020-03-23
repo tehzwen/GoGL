@@ -38,6 +38,7 @@ window.onload = () => {
                     tempText.style.color = 'red';
                     compilationText.appendChild(tempText)
                     compilationText.scrollTop = compilationText.scrollHeight; //causes output to auto scroll down
+                    psCommand.kill();
                 }
             });
         })

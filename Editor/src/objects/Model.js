@@ -72,7 +72,9 @@ class Model {
 
         if (this.parent) {
             //transform the bounding box to the parents location/scale
-            this.boundingBox = translateBoundingBox(this.boundingBox, this.parentTransform);
+            if (this.parentTransform) {
+                this.boundingBox = translateBoundingBox(this.boundingBox, this.parentTransform);
+            }
         } else {
             this.scale(this.initialTransform.scale);
             this.translate(this.initialTransform.position);
@@ -85,7 +87,6 @@ class Model {
 
         this.loaded = true;
         console.log(this.name + " loaded successfully!");
-
         resp(this);
     }
 
@@ -158,7 +159,7 @@ class Model {
                     console.error(err);
                 })
         } else if (this.material.shaderType === 4) {
-            fetch('./shaders/blinnNormalAndDiffuseTexture.json')
+            fetch('./shaders/blinnDiffuseAndNormal.json')
                 .then((res) => {
                     return res.json();
                 })

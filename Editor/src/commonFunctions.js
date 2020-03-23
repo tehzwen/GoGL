@@ -505,6 +505,7 @@ function createSceneFile(state, filename) {
             strength: light.strength,
             quadratic: light.quadratic,
             linear: light.linear,
+            parent: light.parent,
             constant: light.constant,
             nearPlane: light.nearPlane,
             farPlane: light.farPlane,
