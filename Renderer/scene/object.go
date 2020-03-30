@@ -1,29 +1,27 @@
 package scene
 
 import (
-	"errors"
-
 	"../geometry"
 )
 
-func GetObjectFromScene(state *geometry.State, name string) (geometry.Geometry, error) {
+func GetObjectFromScene(state *geometry.State, name string) geometry.Geometry {
 	for i := 0; i < len(state.Objects); i++ {
 		oName, _, _ := state.Objects[i].GetDetails()
 		if oName == name {
-			return state.Objects[i], nil
+			return state.Objects[i]
 		}
 	}
 
-	return nil, errors.New("No object found of name: " + name)
+	panic("Cannot find object")
 }
 
-func GetLightFromScene(state *geometry.State, name string) (*geometry.PointLight, error) {
+func GetLightFromScene(state *geometry.State, name string) *geometry.PointLight {
 	for i := 0; i < len(state.PointLights); i++ {
 		lName := state.PointLights[i].Name
 		if lName == name {
-			return &state.PointLights[i], nil
+			return &state.PointLights[i]
 		}
 	}
 
-	return &geometry.PointLight{}, errors.New("No object found of name: " + name)
+	panic("No object found of name: " + name)
 }

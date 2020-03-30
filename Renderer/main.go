@@ -45,7 +45,7 @@ func main() {
 	keys = make(map[glfw.Key]bool)
 	buttons = make(map[glfw.MouseButton]bool)
 	mouseMovement = make(map[string]float64)
-	mouseMovement["sensitivity"] = 1.2
+	mouseMovement["sensitivity"] = 8
 
 	state := geometry.State{
 		Camera: geometry.Camera{
@@ -72,7 +72,7 @@ func main() {
 	window.SetCursorPosCallback(MouseMoveHandler)
 
 	if len(argsWithoutProgram) <= 0 {
-		geometry.ParseJSONFile("../Editor/statefiles/hangerScene.json", &state)
+		geometry.ParseJSONFile("../Editor/statefiles/testsave.json", &state)
 	} else {
 		geometry.ParseJSONFile(argsWithoutProgram[0], &state)
 	}
@@ -99,6 +99,10 @@ func main() {
 	for l := 0; l < len(state.DirectionalLights); l++ {
 		state.DirectionalLights[l].CreateLightSpaceTransforms(1.0, 7.5)
 		state.DirectionalLights[l].CreateDirectionalDepthMap(1024, 1024)
+	}
+
+	if state.Settings.Skybox.Path != "" {
+		geometry.InitSkyBox(".."+state.Settings.Skybox.Path, state.Settings.Skybox.Format, &state.Settings.Skybox)
 	}
 
 	//setup pointlightshadow shader program
@@ -140,8 +144,8 @@ func main() {
 
 			if mouseMovement["move"] == 1 && buttons[glfw.MouseButton2] {
 				front := mgl32.Vec3{0, 0, 0}
-				state.Camera.Yaw += float32(mouseMovement["Xmove"] * mouseMovement["sensitivity"])
-				state.Camera.Pitch += float32(mouseMovement["Ymove"] * mouseMovement["sensitivity"])
+				state.Camera.Yaw += float32(mouseMovement["Xmove"] * mouseMovement["sensitivity"] * deltaTime)
+				state.Camera.Pitch += float32(mouseMovement["Ymove"] * mouseMovement["sensitivity"] * deltaTime)
 
 				if state.Camera.Pitch > 89 {
 					state.Camera.Pitch = 89
@@ -173,7 +177,8 @@ func main() {
 //TODO make cleaner pass of shadow programinfos
 func draw(window *glfw.Window, state *geometry.State, pointLightShadowProgramInfo, dirLightShadowProgramInfo *geometry.ProgramInfo) {
 	gl.Enable(gl.DEPTH_TEST)
-	gl.Enable(gl.CULL_FACE)
+	gl.Enable(gl.MULTISAMPLE)
+	//gl.Enable(gl.CULL_FACE)
 	gl.Enable(gl.FRAMEBUFFER_SRGB)
 
 	if state.Settings.BackgroundColor != nil {
@@ -193,6 +198,7 @@ func draw(window *glfw.Window, state *geometry.State, pointLightShadowProgramInf
 	//going to have to render depth for each pointlight here
 	for l := 0; l < len(state.PointLights); l++ {
 		if state.PointLights[l].Shadow == 1 {
+			//fmt.Println("here")
 			state.PointLights[l].BindDepthMap(state)
 			gl.Viewport(0, 0, 1024, 1024)
 			gl.BindFramebuffer(gl.FRAMEBUFFER, state.DepthFBO)
@@ -274,6 +280,34 @@ func draw(window *glfw.Window, state *geometry.State, pointLightShadowProgramInf
 		}
 		ClassicRender(state, state.Objects[i])
 	}
+
+	if state.Settings.Skybox.Path != "" {
+		//get shader program using skymap
+
+		gl.UseProgram(state.Settings.Skybox.ProgramInfo.Program)
+
+		var fovy = float32(60 * math.Pi / 180)
+		var aspect = float32(globals.Width / globals.Height)
+		var near = float32(0.1)
+		var far = float32(1000.0)
+		gl.DepthFunc(gl.LEQUAL)
+		projection := mgl32.Perspective(fovy, aspect, near, far)
+		camFront := state.Camera.Position.Add(state.Camera.Front)
+		viewMatrix := mgl32.LookAtV(state.Camera.Position, camFront, state.Camera.Up)
+		viewMatrix = viewMatrix.Mat3().Mat4()
+		gl.UniformMatrix4fv(gl.GetUniformLocation(state.Settings.Skybox.ProgramInfo.Program, gl.Str("uProjectionMatrix\x00")), 1, false, &projection[0])
+		gl.UniformMatrix4fv(gl.GetUniformLocation(state.Settings.Skybox.ProgramInfo.Program, gl.Str("uViewMatrix\x00")), 1, false, &viewMatrix[0])
+		gl.ActiveTexture(gl.TEXTURE0 + state.Settings.Skybox.CubeMap)
+		gl.BindTexture(gl.TEXTURE_CUBE_MAP, state.Settings.Skybox.CubeMap)
+		gl.Uniform1i(gl.GetUniformLocation(state.Settings.Skybox.ProgramInfo.Program, gl.Str("skybox\x00")), int32(state.Settings.Skybox.CubeMap))
+		gl.BindVertexArray(state.Settings.Skybox.VAO)
+		gl.DrawElements(gl.TRIANGLES, int32(len(state.Settings.Skybox.Vertices)), gl.UNSIGNED_INT, gl.Ptr(nil))
+		gl.BindTexture(gl.TEXTURE_2D, 0)
+		gl.BindTexture(gl.TEXTURE_CUBE_MAP, 0)
+		gl.BindVertexArray(0)
+		gl.DepthFunc(gl.LESS)
+	}
+
 	window.SwapBuffers()
 }
 
@@ -379,7 +413,6 @@ func ClassicRender(state *geometry.State, object geometry.Geometry) {
 	gl.UniformMatrix4fv(currentProgramInfo.UniformLocations.Projection, 1, false, &projection[0])
 	gl.UniformMatrix4fv(currentProgramInfo.UniformLocations.View, 1, false, &viewMatrix[0])
 	gl.Uniform3fv(currentProgramInfo.UniformLocations.CameraPosition, 1, &camPosition[0])
-
 	gl.UniformMatrix4fv(currentProgramInfo.UniformLocations.Model, 1, false, &modelMatrix[0])
 
 	model, err := object.GetModel()
@@ -391,7 +424,9 @@ func ClassicRender(state *geometry.State, object geometry.Geometry) {
 	testLen := object.GetBoundingBox().Max.LenSqr() * object.GetBoundingBox().Max.LenSqr()
 	result := frustum.SphereIntersection(model.Position, testLen)
 
-	if !result {
+	name, _, _ := object.GetDetails()
+
+	if !result || name == "playerCube" {
 		return
 	}
 
@@ -459,6 +494,21 @@ func ClassicRender(state *geometry.State, object geometry.Geometry) {
 
 	}
 
+	//tell the shader if there is a cubemap
+	if state.Settings.Skybox.Path != "" {
+		gl.ActiveTexture(gl.TEXTURE0 + state.Settings.Skybox.CubeMap)
+		gl.BindTexture(gl.TEXTURE_CUBE_MAP, state.Settings.Skybox.CubeMap)
+		gl.Uniform1i(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("skyboxPresent\x00")), int32(1))
+		gl.Uniform1i(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("skybox\x00")), int32(state.Settings.Skybox.CubeMap))
+
+		reflect, refract := object.GetReflectionValues()
+		gl.Uniform1i(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("reflective\x00")), int32(reflect))
+		gl.Uniform1fv(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("refractiveIndex\x00")), 1, &refract)
+
+	} else {
+		gl.Uniform1i(gl.GetUniformLocation(currentProgramInfo.Program, gl.Str("skyboxPresent\x00")), int32(0))
+	}
+
 	gl.BindVertexArray(currentBuffers.Vao)
 	if object.GetType() != "mesh" {
 		gl.DrawElements(gl.TRIANGLES, int32(len(currentVertices.Vertices)), gl.UNSIGNED_INT, gl.Ptr(nil))
@@ -476,7 +526,7 @@ func initGlfw() *glfw.Window {
 	if err := glfw.Init(); err != nil {
 		panic(err)
 	}
-	glfw.WindowHint(glfw.Samples, 3)
+	glfw.WindowHint(glfw.Samples, 8)
 	glfw.WindowHint(glfw.Resizable, glfw.True)
 	glfw.WindowHint(glfw.ContextVersionMajor, 4)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
@@ -507,7 +557,6 @@ func collisionTest(state *geometry.State, object geometry.Geometry) {
 
 		box := state.Objects[x].GetBoundingBox()
 		if box.Collide {
-
 			collide := geometry.Intersect(box, currBox)
 			if collide && currBox.CollisionBody != name {
 				object.SetBoundingBox(geometry.BoundingBox{

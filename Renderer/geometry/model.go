@@ -17,6 +17,8 @@ type ModelObject struct {
 	shaderType        string
 	parent            string
 	MTLPresent        bool
+	reflective        int
+	refractionIndex   float32
 	boundingBox       BoundingBox
 	buffers           ObjectBuffers
 	programInfo       ProgramInfo
@@ -33,6 +35,10 @@ type ModelObject struct {
 	shadowProgramInfo ProgramInfo
 	shadowShaderVal   shader.Shader
 	shadowBuffers     ObjectBuffers
+}
+
+func (m *ModelObject) GetReflectionValues() (int, float32) {
+	return m.reflective, m.refractionIndex
 }
 
 func (m *ModelObject) SetBoundingBox(b BoundingBox) {
@@ -188,7 +194,7 @@ func (m *ModelObject) SetVertexValues(vertices []float32, normals []float32, uvs
 }
 
 // Setup : function for initializing ModelObject
-func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool) error {
+func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool, reflective int, refractionIndex float32) error {
 	m.name = name
 	m.material = mat
 	m.programInfo = ProgramInfo{}
@@ -388,6 +394,8 @@ func (m *ModelObject) Setup(mat Material, mod Model, name string, collide bool) 
 	m.boundingBox = TranslateBoundingBox(m.boundingBox, mod.Position)
 	m.Model.Rotation = mod.Rotation
 	m.onCollide = func(box BoundingBox) {}
+	m.reflective = reflective
+	m.refractionIndex = refractionIndex
 
 	return nil
 }

@@ -6,7 +6,7 @@ const Menu = electron.remote.Menu;
 
 var currentlyRendered = 0;
 var state = {
-    saveFile: "hangerScene.json",
+    saveFile: "testsave.json",
     modelMethod: createModalFromMesh
 };
 

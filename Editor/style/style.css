@@ -3,7 +3,7 @@
 }
 
 .column-transparent {
-    background-color: #282D3344 !important;
+    background-color: rgba(40, 45, 51, 0.671) !important;
 }
 
 .orange-text {
@@ -104,4 +104,8 @@ h6 {
     vertical-align: middle;
     text-align: center;
     border: rgb(0, 0, 0) 1px solid;
+}
+
+.my-nav-link:hover {
+    cursor: pointer !important;
 }

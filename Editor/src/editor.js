@@ -33,14 +33,27 @@ window.onload = () => {
         saveCurrentFile(state, editor);
     })
 
-    fs.readdir(gameFilesPath, (err, items) => {
+    document.getElementById('launchButton').addEventListener('click', () => {
+        if (document.location.search) {
+            document.location.href = "compiler.html" + document.location.search;
+        } else {
+            document.location.href = "compiler.html";
+        }
+    })
+
+    fs.readdir(gameFilesPath, {withFileTypes: true}, (err, items) => {
         if (!err) {
+            const files = items
+            .filter(file => file.isFile())
+            .map(file => file.name)
+            //check each item if its a directory or not
+
             let fileNav = document.getElementById("fileTabs");
 
-            setEditorTextFromFile(gameFilesPath + items[0], editor);
-            state.currentFile = gameFilesPath + items[0];
+            setEditorTextFromFile(gameFilesPath + files[0]);
+            state.currentFile = gameFilesPath + files[0];
 
-            items.map((item) => {
+            files.forEach((item) => {
                 let fileTab = document.createElement('li');
                 let fileButton = document.createElement('button');
                 fileButton.classList = "btn btn-outline-primary btn-block btn-lg"
@@ -49,7 +62,7 @@ window.onload = () => {
                 fileButton.style = `text-transform: initial`;
 
                 fileButton.addEventListener('click', (e) => {
-                    setEditorTextFromFile(gameFilesPath + e.target.id, editor);
+                    setEditorTextFromFile(gameFilesPath + e.target.id);
                     state.currentFile = gameFilesPath + e.target.id;
                 })
                 fileTab.appendChild(fileButton);

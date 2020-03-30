@@ -9,6 +9,8 @@ class Cube {
         this.type = object.type;
         this.loaded = false;
         this.initialTransform = { position: object.position, scale: object.scale, rotation: object.rotation };
+        this.reflective = object.reflective;
+        this.refractionIndex = object.refractionIndex;
         this.material = object.material;
         this.collide = object.collide;
         this.model = {

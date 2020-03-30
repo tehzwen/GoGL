@@ -14,7 +14,7 @@ type collisionFunction func(BoundingBox)
 
 // Geometry : interface for all objects that will be rendered
 type Geometry interface {
-	Setup(Material, Model, string, bool) error
+	Setup(Material, Model, string, bool, int, float32) error
 	SetShader(string, string) error
 	SetShaderVal(shader.Shader)
 	GetProgramInfo() (ProgramInfo, error)
@@ -30,6 +30,7 @@ type Geometry interface {
 	GetShadowBuffers() ObjectBuffers
 	GetVertices() VertexValues
 	GetModelMatrix() (mgl32.Mat4, error)
+	GetReflectionValues() (int, float32)
 	SetRotation(mgl32.Mat4)
 	SetModelMatrix(mgl32.Mat4)
 	SetParent(string)
@@ -65,6 +66,10 @@ func (a *Attributes) SetPosition(pos uint32) {
 
 func (a *Attributes) SetNormal(norm uint32) {
 	a.normal = norm
+}
+
+func (a *Attributes) GetPosition() uint32 {
+	return a.position
 }
 
 // ObjectBuffers : holds references to vertex buffers

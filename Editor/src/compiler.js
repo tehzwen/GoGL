@@ -7,7 +7,10 @@ window.onload = () => {
     let sceneFile = urlParams.get('scene');
     const compilationText = document.getElementById("compilationOutput")
     compilationText.style.height = screen.height - 200 + 'px';
-    console.log(sceneFile);
+    
+    document.getElementById('editorButton').addEventListener('click', () => {
+        document.location.href = "editor.html" + window.location.search;
+    })
 
     if (window.navigator.userAgent.indexOf("Windows") !== -1) {
         sceneFile = sceneFile.split("/").join("\\");

@@ -476,6 +476,8 @@ function createSceneFile(state, filename) {
                     normalTexture: object.model.normalTexture ? object.model.normalTexture : null,
                     rotation: object.model.rotation ? mat4ToArray(object.model.rotation) : null,
                     collide: object.collide,
+                    reflective: object.reflective,
+                    refractionIndex: object.refractionIndex,
                     parent: object.parent ? object.parent : null,
                     model: object.modelName ? object.modelName : null
                 });
@@ -491,6 +493,8 @@ function createSceneFile(state, filename) {
                 normalTexture: object.model.normalTexture ? object.model.normalTexture : null,
                 rotation: object.model.rotation ? mat4ToArray(object.model.rotation) : null,
                 collide: object.collide,
+                reflective: object.reflective,
+                refractionIndex: object.refractionIndex,
                 parent: object.parent ? object.parent : null,
                 model: object.modelName ? object.modelName : null
             });

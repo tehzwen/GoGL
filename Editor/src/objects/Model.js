@@ -8,6 +8,8 @@ class Model {
         this.type = "mesh";
         this.loaded = false;
         this.modelName = object.model;
+        this.reflective = object.reflective;
+        this.refractionIndex = object.refractionIndex;
         this.parentTransform = object.parentTransform ? object.parentTransform : null;
         this.initialTransform = { position: object.position, scale: object.scale, rotation: object.rotation };
         this.material = object.mtl ? object.mtl : object.material;

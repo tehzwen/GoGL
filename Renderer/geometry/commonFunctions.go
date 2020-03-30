@@ -36,23 +36,26 @@ type RenderObject struct {
 
 // SceneObject - Object used for reading in from JSON scene file
 type SceneObject struct {
-	Name           string    `json:"name"`
-	Material       Material  `json:"material"`
-	ObjectType     string    `json:"type"`
-	Position       []float32 `json:"position"`
-	Scale          []float32 `json:"scale"`
-	Rotation       []float32 `json:"rotation"`
-	DiffuseTexture string    `json:"diffuseTexture"`
-	NormalTexture  string    `json:"normalTexture"`
-	Parent         string    `json:"parent"`
-	Model          string    `json:"model"`
-	Collide        bool      `json:"collide"`
+	Name            string    `json:"name"`
+	Material        Material  `json:"material"`
+	ObjectType      string    `json:"type"`
+	Position        []float32 `json:"position"`
+	Scale           []float32 `json:"scale"`
+	Rotation        []float32 `json:"rotation"`
+	DiffuseTexture  string    `json:"diffuseTexture"`
+	NormalTexture   string    `json:"normalTexture"`
+	Parent          string    `json:"parent"`
+	Model           string    `json:"model"`
+	Collide         bool      `json:"collide"`
+	Reflective      int       `json:"reflective"`
+	RefractionIndex float32   `json:"refractionIndex"`
 }
 
 // Settings - WIP
 type Settings struct {
 	Cam             Camera    `json:"camera"`
 	BackgroundColor []float32 `json:"backgroundColor"`
+	Skybox          Skybox    `json:"skybox"`
 }
 
 // Scene - Struct for holding allthe info about the current scene
@@ -147,6 +150,8 @@ func addObjectToState(object Geometry, state *State, sceneObj SceneObject) {
 		tempModel,
 		sceneObj.Name,
 		sceneObj.Collide,
+		sceneObj.Reflective,
+		sceneObj.RefractionIndex,
 	)
 	object.Translate(mgl32.Vec3{sceneObj.Position[0], sceneObj.Position[1], sceneObj.Position[2]})
 	state.Objects = append(state.Objects, object)
@@ -317,7 +322,17 @@ func ParseJSONFile(filePath string, state *State) {
 						parsedMaterial.MapKD = scene[0].Objects[i].DiffuseTexture
 
 					} else {
-						parsedMaterial = parser.ParseMTLFile(objects[x].Materials[j].MTLLib, objects[x].Materials[j].Name)
+						tempMaterial, err := parser.ParseMTLFile(objects[x].Materials[j].MTLLib, objects[x].Materials[j].Name)
+						if err == nil {
+							parsedMaterial = tempMaterial
+						} else {
+							parsedMaterial.Kd = scene[0].Objects[i].Material.Diffuse
+							parsedMaterial.Ka = scene[0].Objects[i].Material.Ambient
+							parsedMaterial.Ks = scene[0].Objects[i].Material.Specular
+							parsedMaterial.Ns = scene[0].Objects[i].Material.N
+							parsedMaterial.D = scene[0].Objects[i].Material.Alpha
+							parsedMaterial.MapKD = scene[0].Objects[i].DiffuseTexture
+						}
 					}
 
 					if len(objects[x].Geometry.UVs) > 0 {
@@ -354,6 +369,7 @@ func ParseJSONFile(filePath string, state *State) {
 						Alpha:    parsedMaterial.D,
 						N:        parsedMaterial.Ns,
 					}
+
 					//create temp material, checking for values
 					if parsedMaterial.MapKD != "" && parsedMaterial.MapBump != "" {
 						tempMaterial.DiffuseTexture = parsedMaterial.MapKD
@@ -371,6 +387,8 @@ func ParseJSONFile(filePath string, state *State) {
 						tempModel,
 						tempName,
 						scene[0].Objects[i].Collide,
+						scene[0].Objects[i].Reflective,
+						scene[0].Objects[i].RefractionIndex,
 					)
 
 					if scene[0].Objects[i].Parent != "" {

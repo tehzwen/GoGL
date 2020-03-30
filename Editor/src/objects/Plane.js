@@ -8,6 +8,8 @@ class Plane {
         this.parent = object.parent;
         this.type = "plane";
         this.loaded = false;
+        this.reflective = object.reflective;
+        this.refractionIndex = object.refractionIndex;
         this.initialTransform = { position: object.position, scale: object.scale, rotation: object.rotation };
         this.material = object.material;
         this.collide = object.collide;

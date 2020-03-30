@@ -23,7 +23,7 @@
         "    oFragPosition = (uModelMatrix * vec4(vertexPosition, 1.0)).xyz;",
         "    oNormal = normalize((uModelMatrix * vec4(vertexNormal, 1.0)).xyz);",
         "    normalInterp = vec3(normalMatrix * vec4(vertexNormal, 0.0));",
-        "    oUV = vertexUV;",
+        "    oUV = -vertexUV;",
         "    gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(vertexPosition, 1.0);",
         "}"
     ],

@@ -18,7 +18,7 @@ type ParsedMaterial struct {
 	MapKs   string
 }
 
-func ParseMTLFile(filename string, materialName string) ParsedMaterial {
+func ParseMTLFile(filename string, materialName string) (ParsedMaterial, error) {
 	mtlFile, err := os.Open("../Editor/models/" + filename)
 	if err != nil {
 		mtlDetails := ParsedMaterial{}
@@ -28,7 +28,7 @@ func ParseMTLFile(filename string, materialName string) ParsedMaterial {
 		mtlDetails.Ka = []float32{1, 1, 1}
 		mtlDetails.Kd = []float32{0.5, 0.5, 0.5}
 		mtlDetails.Ks = []float32{1, 1, 1}
-		return mtlDetails
+		return mtlDetails, err
 	}
 
 	defer mtlFile.Close()
@@ -124,5 +124,5 @@ func ParseMTLFile(filename string, materialName string) ParsedMaterial {
 		}
 	}
 
-	return mtlDetails
+	return mtlDetails, nil
 }

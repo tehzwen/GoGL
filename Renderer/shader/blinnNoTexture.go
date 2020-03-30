@@ -85,6 +85,11 @@ func (s *BlinnNoTexture) Setup() {
 	uniform float Alpha;
 	uniform int numPointLights;
 	uniform int numDirLights;
+	uniform int skyboxPresent;
+	uniform int reflective; //0 = nonreflective, 1 = reflective, 2 = refractive
+	uniform float refractiveIndex; //index of refraction
+	uniform samplerCube skybox;
+	uniform vec3 cameraPosition;
 	uniform PointLight pointLights[MAX_LIGHTS];
 	uniform DirectionalLight dirLight;
 
@@ -99,30 +104,6 @@ func (s *BlinnNoTexture) Setup() {
 		vec3(1, 0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1, 0, -1),
 		vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
 	);
-
-	float PointShadowCalculation(vec3 fragPos, PointLight light)
-	{
-		vec3 fragToLight = fragPos - light.position;
-		float far_plane = light.farPlane;
-		float currentDepth = length(fragToLight);
-
-		float shadow = 0.0;
-		float bias = 0.15;
-		int samples = 20;
-		float viewDistance = length(oCamPosition - fragPos);
-		float diskRadius = (1.0 + (viewDistance / far_plane)) /25.0;
-
-		for(int i = 0; i < samples; ++i)
-		{
-			float closestDepth = texture(light.depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
-			closestDepth *= far_plane;   // undo mapping [0;1]
-			if(currentDepth - bias > closestDepth)
-				shadow += 1.0;
-		}
-		shadow /= float(samples);
-
-		return shadow;
-	}
 
 	float DirShadowCalculation(DirectionalLight light)
 	{
@@ -151,11 +132,35 @@ func (s *BlinnNoTexture) Setup() {
 		return (shadow * (diffuse + specular) + ambient);
 	}
 
-	vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir) 
+	float PointShadowCalculation(vec3 fragPos, PointLight light)
 	{
+		vec3 fragToLight = fragPos - light.position;
+		float far_plane = light.farPlane;
+		float currentDepth = length(fragToLight);
+
+		float shadow = 0.0;
+		float bias = 0.15;
+		int samples = 20;
+		float viewDistance = length(oCamPosition - fragPos);
+		float diskRadius = (1.0 + (viewDistance / far_plane)) /25.0;
+
+		for(int i = 0; i < samples; ++i)
+		{
+			float closestDepth = texture(light.depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
+			closestDepth *= far_plane;   // undo mapping [0;1]
+			if(currentDepth - bias > closestDepth)
+				shadow += 1.0;
+		}
+		shadow /= float(samples);
+
+		return shadow;
+	}
+
+	vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir) 
+	{	
 		float shadow;
 		if (light.shadow == 1) {
-			float shadow = PointShadowCalculation(oFragPosition, light);
+			shadow = PointShadowCalculation(oFragPosition, light);
 		}
 		vec3 lightDir = normalize(light.position - fragPos);
 		// diffuse shading
@@ -170,12 +175,9 @@ func (s *BlinnNoTexture) Setup() {
 		// combine results
 		vec3 ambient  = ambientVal * diffuseVal;
 		vec3 diffuse  = light.color  * diff * diffuseVal;
-		vec3 specular = vec3(0,0,0);
 
-		if (diff < 0.0) {
-			specular = light.color * specularVal * spec;
-		}
-
+		vec3 specular = light.color * specularVal * spec;
+		diffuse -= shadow;
 		ambient  *= attenuation;
 		diffuse  *= attenuation;
 		specular *= attenuation;
@@ -192,11 +194,22 @@ func (s *BlinnNoTexture) Setup() {
 		}
 		//result += CalcDirLight(dirLight, normal, viewDir);
 
-		if (Alpha < 1.0) {
-			frag_colour = vec4(result, Alpha);
-		} else {
-			frag_colour = vec4(result, Alpha);
+		vec3 skyRef;
+
+		if (skyboxPresent == 1 && reflective == 1) {
+			vec3 I = normalize(oFragPosition - cameraPosition);
+			vec3 R = reflect(I, normal);
+			skyRef = texture(skybox, R).rgb;
+			result *= skyRef;
+		} else if (skyboxPresent == 1 && reflective == 2 && refractiveIndex != 0) {
+			float ratio = 1.00 / refractiveIndex;
+    		vec3 I = normalize(oFragPosition - cameraPosition);
+			vec3 R = refract(I, normal, ratio);
+			skyRef = texture(skybox, R).rgb;
+			result *= skyRef;
 		}
+
+		frag_colour = vec4(result, Alpha);
 	}
 	` + "\x00"
 }

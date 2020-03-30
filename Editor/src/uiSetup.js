@@ -1,5 +1,5 @@
 const _ = require('lodash')
-import { Cube, PointLight, Plane, Model, DirectionalLight } from "./objects/index.js";
+import { Cube, Plane } from "./objects/index.js";
 
 function setup(newState) {
     //listeners for header button presses
@@ -12,6 +12,11 @@ function setup(newState) {
     document.getElementById('launchButton').addEventListener('click', () => {
         document.location.href = "compiler.html?scene=" + __dirname + "/statefiles/" + newState.saveFile
     })
+
+    document.getElementById('editorButton').addEventListener('click', () => {
+        document.location.href = "editor.html?scene=" + __dirname + "/statefiles/" + newState.saveFile
+    })
+
 }
 
 function createSceneGui(state) {
@@ -28,7 +33,7 @@ function createSceneGui(state) {
     sideNav.style.height = screen.height - 500 + 'px';
     //sideNav.style.width = screen.width/14 + 'px';
     sideNav.innerHTML = "";
-    
+
     state.objects.forEach((object) => {
         if (!object.parent) {
             let objectElement = document.createElement("div");
@@ -324,6 +329,14 @@ function displayObjectValues(object, state) {
     selectedObjectDiv.appendChild(displayRotationValues(object, state));
     selectedObjectDiv.appendChild(createHeader("Scale", "h4"));
     selectedObjectDiv.appendChild(displayScaleValues(object, state));
+    selectedObjectDiv.appendChild(createHeader("Collide", "h4"));
+    let collideInput = document.createElement("input");
+    collideInput.type = "checkbox";
+    selectedObjectDiv.appendChild(collideInput);
+    collideInput.checked = object.collide;
+    collideInput.addEventListener('change', (e) => {
+        object.collide = e.target.checked;
+    })
 
     //create material ui elements
     createMaterialUI(state, object, selectedObjectDiv);

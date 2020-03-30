@@ -23,7 +23,7 @@
         "\n",
         "    oFragPosition = (uModelMatrix * vec4(vertexPosition, 1.0)).xyz;",
         "    oNormal = normalize((uModelMatrix * vec4(vertexNormal, 1.0)).xyz);",
-        "    oUV = vertexUV;",
+        "    oUV = -vertexUV;",
         "    oVertBitang = vertexBitangent;",
         "    normalInterp = vec3(normalMatrix * vec4(vertexNormal, 0.0));",
         "    oCamPosition = (vec4(uCameraPosition, 1.0) * uViewMatrix).xyz;",

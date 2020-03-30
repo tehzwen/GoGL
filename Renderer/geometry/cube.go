@@ -16,6 +16,8 @@ type Cube struct {
 	vertShader        string
 	shaderType        string
 	parent            string
+	reflective        int
+	refractionIndex   float32
 	boundingBox       BoundingBox
 	buffers           ObjectBuffers
 	programInfo       ProgramInfo
@@ -32,6 +34,10 @@ type Cube struct {
 	shadowProgramInfo ProgramInfo
 	shadowShaderVal   shader.Shader
 	shadowBuffers     ObjectBuffers
+}
+
+func (c *Cube) GetReflectionValues() (int, float32) {
+	return c.reflective, c.refractionIndex
 }
 
 func (c *Cube) SetBoundingBox(b BoundingBox) {
@@ -180,7 +186,7 @@ func (c *Cube) Translate(translateVec mgl32.Vec3) {
 }
 
 // Setup : function for initializing cube
-func (c *Cube) Setup(mat Material, mod Model, name string, collide bool) error {
+func (c *Cube) Setup(mat Material, mod Model, name string, collide bool, reflective int, refractionIndex float32) error {
 	c.vertexValues.Vertices = []float32{
 		//front face
 		0.0, 0.0, 0.0,
@@ -457,6 +463,8 @@ func (c *Cube) Setup(mat Material, mod Model, name string, collide bool) error {
 	c.model.Rotation = mod.Rotation
 	c.centroid = CalculateCentroid(c.vertexValues.Vertices, c.model.Scale)
 	c.onCollide = func(box BoundingBox) {}
+	c.reflective = reflective
+	c.refractionIndex = refractionIndex
 
 	return nil
 }

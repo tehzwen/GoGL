@@ -16,6 +16,8 @@ type Plane struct {
 	vertShader        string
 	shaderType        string
 	parent            string
+	reflective        int
+	refractionIndex   float32
 	boundingBox       BoundingBox
 	buffers           ObjectBuffers
 	programInfo       ProgramInfo
@@ -32,6 +34,10 @@ type Plane struct {
 	shadowProgramInfo ProgramInfo
 	shadowShaderVal   shader.Shader
 	shadowBuffers     ObjectBuffers
+}
+
+func (p *Plane) GetReflectionValues() (int, float32) {
+	return p.reflective, p.refractionIndex
 }
 
 func (p *Plane) SetBoundingBox(b BoundingBox) {
@@ -177,7 +183,7 @@ func (p Plane) GetModel() (Model, error) {
 }
 
 // Setup : function for initializing plane
-func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error {
+func (p *Plane) Setup(mat Material, mod Model, name string, collide bool, reflective int, refractionIndex float32) error {
 
 	p.vertexValues.Vertices = []float32{
 		0.0, 0.5, 0.5,
@@ -360,6 +366,8 @@ func (p *Plane) Setup(mat Material, mod Model, name string, collide bool) error 
 	p.model.Rotation = mod.Rotation
 	p.centroid = CalculateCentroid(p.vertexValues.Vertices, p.model.Scale)
 	p.onCollide = func(box BoundingBox) {}
+	p.reflective = reflective
+	p.refractionIndex = refractionIndex
 
 	return nil
 }

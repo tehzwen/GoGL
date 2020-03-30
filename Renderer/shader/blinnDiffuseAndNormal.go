@@ -88,6 +88,11 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 	uniform int numPointLights;
 	uniform int numDirLights;
 	uniform float Alpha;
+	uniform int skyboxPresent;
+	uniform int reflective; //0 = nonreflective, 1 = reflective, 2 = refractive
+	uniform float refractiveIndex; //index of refraction
+	uniform samplerCube skybox;
+	uniform vec3 cameraPosition;
 	uniform sampler2D uDiffuseTexture;
 	uniform sampler2D uNormalTexture;
 	uniform PointLight pointLights[MAX_LIGHTS];
@@ -175,6 +180,21 @@ func (s *BlinnDiffuseAndNormal) Setup() {
 
 		for (int i = 0; i < numPointLights; i++) {
 			result += CalcPointLight(pointLights[i], normal, oFragPosition, viewDir, texColor.xyz);
+		}
+
+		vec3 skyRef;
+
+		if (skyboxPresent == 1 && reflective == 1) {
+			vec3 I = normalize(oFragPosition - cameraPosition);
+			vec3 R = reflect(I, normal);
+			skyRef = texture(skybox, R).rgb;
+			result *= skyRef;
+		} else if (skyboxPresent == 1 && reflective == 2 && refractiveIndex != 0) {
+			float ratio = 1.00 / refractiveIndex;
+    		vec3 I = normalize(oFragPosition - cameraPosition);
+			vec3 R = refract(I, normal, ratio);
+			skyRef = texture(skybox, R).rgb;
+			result *= skyRef;
 		}
 
 		if (texColor.w < 0.1) {
