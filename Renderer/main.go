@@ -178,8 +178,8 @@ func main() {
 func draw(window *glfw.Window, state *geometry.State, pointLightShadowProgramInfo, dirLightShadowProgramInfo *geometry.ProgramInfo) {
 	gl.Enable(gl.DEPTH_TEST)
 	gl.Enable(gl.MULTISAMPLE)
-	//gl.Enable(gl.CULL_FACE)
-	gl.Enable(gl.FRAMEBUFFER_SRGB)
+	gl.Enable(gl.CULL_FACE)
+	//gl.Enable(gl.FRAMEBUFFER_SRGB)
 
 	if state.Settings.BackgroundColor != nil {
 		gl.ClearColor(state.Settings.BackgroundColor[0], state.Settings.BackgroundColor[1], state.Settings.BackgroundColor[2], 1.0)
@@ -285,6 +285,7 @@ func draw(window *glfw.Window, state *geometry.State, pointLightShadowProgramInf
 		//get shader program using skymap
 
 		gl.UseProgram(state.Settings.Skybox.ProgramInfo.Program)
+		gl.Disable(gl.CULL_FACE)
 
 		var fovy = float32(60 * math.Pi / 180)
 		var aspect = float32(globals.Width / globals.Height)

@@ -1,0 +1,642 @@
+[
+    {
+        "objects": [
+            {
+                "name": "refractCube",
+                "material": {
+                    "diffuse": [
+                        0.5882,
+                        0.5882,
+                        0.5882
+                    ],
+                    "ambient": [
+                        1,
+                        1,
+                        1
+                    ],
+                    "specular": [
+                        0.8,
+                        0.8,
+                        0.8
+                    ],
+                    "n": 5,
+                    "shaderType": 1,
+                    "alpha": 1
+                },
+                "type": "cube",
+                "position": [
+                    -0.5,
+                    0,
+                    0
+                ],
+                "scale": [
+                    1,
+                    1,
+                    1
+                ],
+                "diffuseTexture": "default.png",
+                "normalTexture": "defaultNorm.png",
+                "rotation": [
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1
+                ],
+                "collide": false,
+                "reflective": 2,
+                "refractionIndex": 1.52,
+                "parent": null,
+                "model": null
+            },
+            {
+                "name": "reflectCube",
+                "material": {
+                    "diffuse": [
+                        0.5882,
+                        0.5882,
+                        0.5882
+                    ],
+                    "ambient": [
+                        0.3,
+                        0.3,
+                        0.3
+                    ],
+                    "specular": [
+                        0.5,
+                        0.5,
+                        0.5
+                    ],
+                    "n": 10.000002,
+                    "shaderType": 1,
+                    "alpha": 1
+                },
+                "type": "cube",
+                "position": [
+                    -2.5,
+                    0,
+                    0
+                ],
+                "scale": [
+                    1,
+                    1,
+                    1
+                ],
+                "diffuseTexture": "default.png",
+                "normalTexture": "defaultNorm.png",
+                "rotation": [
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1
+                ],
+                "collide": false,
+                "reflective": 1,
+                "parent": null,
+                "model": null
+            },
+            {
+                "name": "normalCube",
+                "material": {
+                    "diffuse": [
+                        0.12156862745098039,
+                        0.47058823529411764,
+                        0.1450980392156863
+                    ],
+                    "ambient": [
+                        0.3,
+                        0.3,
+                        0.3
+                    ],
+                    "specular": [
+                        0.5,
+                        0.5,
+                        0.5
+                    ],
+                    "n": 10.000002,
+                    "shaderType": 4,
+                    "alpha": 1
+                },
+                "type": "cube",
+                "position": [
+                    -4.5,
+                    0,
+                    0
+                ],
+                "scale": [
+                    1,
+                    1,
+                    1
+                ],
+                "diffuseTexture": "default.png",
+                "normalTexture": "defaultNorm.png",
+                "rotation": [
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1
+                ],
+                "collide": false,
+                "parent": null,
+                "model": null
+            },
+            {
+                "name": "diffuseCube",
+                "material": {
+                    "diffuse": [
+                        0.12156862745098039,
+                        0.47058823529411764,
+                        0.1450980392156863
+                    ],
+                    "ambient": [
+                        0.3,
+                        0.3,
+                        0.3
+                    ],
+                    "specular": [
+                        0.5,
+                        0.5,
+                        0.5
+                    ],
+                    "n": 10.000002,
+                    "shaderType": 3,
+                    "alpha": 1
+                },
+                "type": "cube",
+                "position": [
+                    -6.5,
+                    0,
+                    0
+                ],
+                "scale": [
+                    1,
+                    1,
+                    1
+                ],
+                "diffuseTexture": "default.png",
+                "normalTexture": "defaultNorm.png",
+                "rotation": [
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1
+                ],
+                "collide": false,
+                "parent": null,
+                "model": null
+            },
+            {
+                "name": "flatCube",
+                "material": {
+                    "diffuse": [
+                        0.7058823529411765,
+                        0.7058823529411765,
+                        0.7058823529411765
+                    ],
+                    "ambient": [
+                        0.3,
+                        0.3,
+                        0.3
+                    ],
+                    "specular": [
+                        0.5,
+                        0.5,
+                        0.5
+                    ],
+                    "n": 10.000002,
+                    "shaderType": 1,
+                    "alpha": 1
+                },
+                "type": "cube",
+                "position": [
+                    -8.5,
+                    0,
+                    0
+                ],
+                "scale": [
+                    1,
+                    1,
+                    1
+                ],
+                "diffuseTexture": "default.png",
+                "normalTexture": "defaultNorm.png",
+                "rotation": [
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1
+                ],
+                "collide": false,
+                "parent": null,
+                "model": null
+            },
+            {
+                "name": "doomguy",
+                "material": {
+                    "diffuse": [
+                        0.098039,
+                        0.098039,
+                        0.098039
+                    ],
+                    "ambient": [
+                        0.2,
+                        0.2,
+                        0.2
+                    ],
+                    "specular": [
+                        0.5,
+                        0.5,
+                        0.5
+                    ],
+                    "n": 0.5,
+                    "shaderType": 1,
+                    "alpha": 1,
+                    "diffuseMap": null
+                },
+                "type": "mesh",
+                "position": [
+                    -4,
+                    0,
+                    3
+                ],
+                "scale": [
+                    0.0078125,
+                    0.0078125,
+                    0.0078125
+                ],
+                "diffuseTexture": null,
+                "normalTexture": null,
+                "rotation": [
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1
+                ],
+                "collide": false,
+                "parent": null,
+                "model": "mydoomguy2.obj"
+            },
+            {
+                "name": "bunnyDiffuse",
+                "material": {
+                    "diffuse": [
+                        0.8,
+                        0.8,
+                        0.8
+                    ],
+                    "ambient": [
+                        1,
+                        1,
+                        1
+                    ],
+                    "specular": [
+                        0.5,
+                        0.5,
+                        0.5
+                    ],
+                    "n": 225,
+                    "shaderType": 3,
+                    "alpha": 1,
+                    "diffuseMap": null
+                },
+                "type": "mesh",
+                "position": [
+                    -6,
+                    0,
+                    3
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ],
+                "diffuseTexture": "default.png",
+                "normalTexture": null,
+                "rotation": [
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1
+                ],
+                "collide": false,
+                "parent": null,
+                "model": "bunny.obj"
+            },
+            {
+                "name": "bunnyFlat",
+                "material": {
+                    "diffuse": [
+                        0.8,
+                        0.8,
+                        0.8
+                    ],
+                    "ambient": [
+                        1,
+                        1,
+                        1
+                    ],
+                    "specular": [
+                        0.5,
+                        0.5,
+                        0.5
+                    ],
+                    "n": 225,
+                    "shaderType": 1,
+                    "alpha": 1,
+                    "diffuseMap": null
+                },
+                "type": "mesh",
+                "position": [
+                    -8,
+                    0,
+                    3
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ],
+                "diffuseTexture": null,
+                "normalTexture": null,
+                "rotation": [
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1
+                ],
+                "collide": false,
+                "parent": null,
+                "model": "bunny.obj"
+            },
+            {
+                "name": "dragonRefract",
+                "material": {
+                    "diffuse": [
+                        0.8,
+                        0.8,
+                        0.8
+                    ],
+                    "ambient": [
+                        1,
+                        1,
+                        1
+                    ],
+                    "specular": [
+                        0.5,
+                        0.5,
+                        0.5
+                    ],
+                    "n": 1000,
+                    "shaderType": 1,
+                    "alpha": 1,
+                    "diffuseMap": null
+                },
+                "type": "mesh",
+                "position": [
+                    0,
+                    0,
+                    3
+                ],
+                "scale": [
+                    1,
+                    1,
+                    1
+                ],
+                "diffuseTexture": null,
+                "normalTexture": null,
+                "rotation": [
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1
+                ],
+                "collide": false,
+                "reflective": 2,
+                "refractionIndex": 1.56,
+                "parent": null,
+                "model": "dragon.obj"
+            },
+            {
+                "name": "dragonReflect",
+                "material": {
+                    "diffuse": [
+                        0.8,
+                        0.8,
+                        0.8
+                    ],
+                    "ambient": [
+                        1,
+                        1,
+                        1
+                    ],
+                    "specular": [
+                        0.5,
+                        0.5,
+                        0.5
+                    ],
+                    "n": 1000,
+                    "shaderType": 1,
+                    "alpha": 1,
+                    "diffuseMap": null
+                },
+                "type": "mesh",
+                "position": [
+                    -2,
+                    0,
+                    3
+                ],
+                "scale": [
+                    1,
+                    1,
+                    1
+                ],
+                "diffuseTexture": null,
+                "normalTexture": null,
+                "rotation": [
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1
+                ],
+                "collide": false,
+                "reflective": 1,
+                "parent": null,
+                "model": "dragon.obj"
+            }
+        ],
+        "pointLights": [
+            {
+                "name": "pointLight1",
+                "colour": [
+                    0.7098039388656616,
+                    0.8823529481887817,
+                    1
+                ],
+                "position": [
+                    0,
+                    7,
+                    1.5
+                ],
+                "strength": 2,
+                "quadratic": 0.035,
+                "linear": 0.09,
+                "constant": 1,
+                "nearPlane": 0.5,
+                "farPlane": 50,
+                "shadow": 0
+            }
+        ],
+        "directionalLights": [],
+        "settings": {
+            "skybox": {
+                "path": "/Editor/materials/graycloud/",
+                "format": "jpg"
+            },
+            "backgroundColor": [
+                0.5,
+                0.5,
+                0.5
+            ],
+            "camera": {
+                "name": "camera",
+                "position": [
+                    0,
+                    0,
+                    3
+                ],
+                "front": [
+                    0,
+                    0,
+                    1
+                ],
+                "up": [
+                    0,
+                    1,
+                    0
+                ],
+                "pitch": 0,
+                "yaw": 90,
+                "roll": 0
+            }
+        }
+    }
+]

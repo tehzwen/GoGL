@@ -12,7 +12,7 @@ func GetObjectFromScene(state *geometry.State, name string) geometry.Geometry {
 		}
 	}
 
-	panic("Cannot find object")
+	panic("Cannot find object " + name)
 }
 
 func GetLightFromScene(state *geometry.State, name string) *geometry.PointLight {

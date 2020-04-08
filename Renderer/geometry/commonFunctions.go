@@ -353,6 +353,14 @@ func ParseJSONFile(filePath string, state *State) {
 						Rotation: mgl32.Ident4(),
 					}
 
+					if x > 1 {
+						tempName = strings.Join([]string{tempName, strconv.Itoa(j)}, "")
+						tempModelObject.SetParent(scene[0].Objects[j].Name)
+						// newObject.name = object.name + i;
+						//     newObject.parent = object.name;
+						//     newObject.parentTransform = object.position;
+					}
+
 					if j > 0 {
 						tempName = strings.Join([]string{tempName, strconv.Itoa(j)}, "")
 						tempModelObject.SetParent(scene[0].Objects[i].Name)
