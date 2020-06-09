@@ -403,10 +403,10 @@ Resources
 ---------
 
 
-https://www.assimp.org/ Assimp Mesh Importer,\ 
-https://learnopengl.com/ Joey de Vries, *Learn OpenGL*,\ 
-https://renderdoc.org/ RenderDoc,\ 
-https://www.blender.org/ Blender,\
+- https://www.assimp.org/ Assimp Mesh Importer,
+- https://learnopengl.com/ Joey de Vries, *Learn OpenGL*,
+- https://renderdoc.org/ RenderDoc,
+- https://www.blender.org/ Blender
 
 Acknowledgements
 ----------------
