@@ -57,7 +57,7 @@ Methodology
 ===========
 
 ![[\[fig:1\]]{#fig:1 label="fig:1"}System
-Architecture](diagram.png){#fig:1 width="\\textwidth"}
+Architecture](diagram.png)
 
 As seen in figure 1, the overall system works by sharing data between
 the editor and the engine. The editor passes scene related data which
@@ -97,7 +97,7 @@ oriented language this took a little bit of figuring where I used
 interfaces and structs to accomplish similar things.
 
 ![[\[fig:2\]]{#fig:2 label="fig:2"}OpenGL
-Pipeline](pipeline-v2.png){#fig:2 width="\\textwidth"}
+Pipeline](pipeline-v2.png)
 
 In order for OpenGL and WebGL to both work they require shader programs
 to be written for them in GLSL (OpenGL Shader Language). The language is
@@ -259,10 +259,10 @@ in question against the depth of the initial depth render from this
 light to determine if the pixel should be in shadow or not.
 
 ![[\[fig:1\]]{#fig:1 label="fig:1"}+X Direction
-Depth](depth1.jpg){#fig:1 width="\\textwidth"}
+Depth](depth1.jpg)
 
 ![[\[fig:2\]]{#fig:2 label="fig:2"}-X Direction
-Depth](depth2.jpg){#fig:2 width="\\textwidth"}
+Depth](depth2.jpg)
 
 It's important to note that the performance of multiple lights
 constantly rendering depth to each texture is quite costly and as such I
@@ -278,7 +278,7 @@ Reflection & Refraction
 -----------------------
 
 ![[\[fig:2\]]{#fig:2 label="fig:2"}Reflection &
-Refraction](reflections.png){#fig:2 width="\\textwidth"}
+Refraction](reflections.png)
 
 The technique I used for simple reflections and refraction uses a
 cube-map texture. A cube-map is a 3D texture created by six different 2D
@@ -310,7 +310,7 @@ engine. The basic idea of this is to not render anything that the camera
 (or viewing frustum) cannot see.
 
 ![[\[fig:1\]]{#fig:1 label="fig:1"}Example Viewing
-Frustum](frustum.png){#fig:1 width="50%"}
+Frustum](frustum.png)
 
 The planes of the frustum are then used in a dot product with the object
 in question to determine whether or not the object is inside the plane
@@ -371,14 +371,12 @@ Results
 Editor
 ------
 
-![[\[fig:1\]]{#fig:1 label="fig:1"}Scene Editor](editor1.png){#fig:1
-width="75%"}
+![[\[fig:1\]]{#fig:1 label="fig:1"}Scene Editor](editor1.png)
 
-![[\[fig:1\]]{#fig:1 label="fig:1"}Code Editor](editor2.png){#fig:1
-width="75%"}
+![[\[fig:1\]]{#fig:1 label="fig:1"}Code Editor](editor2.png)
 
 ![[\[fig:1\]]{#fig:1 label="fig:1"}Engine Compile &
-Execution](editor3.png){#fig:1 width="75%"}
+Execution](editor3.png)
 
 The end result of the editor included a desktop application where I
 could easily adjust the current scene and its objects, add code that
@@ -389,16 +387,16 @@ Engine
 ------
 
 ![[\[fig:1\]]{#fig:1 label="fig:1"}Multiple meshes with
-shadows](engine1.png){#fig:1 width="\\textwidth"}
+shadows](engine1.png)
 
 ![[\[fig:1\]]{#fig:1 label="fig:1"}Sky-box above
-mesh](engine2.png){#fig:1 width="\\textwidth"}
+mesh](engine2.png)
 
 ![[\[fig:1\]]{#fig:1 label="fig:1"}Looking down on mesh with single
-point-light](engine3.png){#fig:1 width="\\textwidth"}
+point-light](engine3.png)
 
 ![[\[fig:1\]]{#fig:1 label="fig:1"}Reflective mesh, textured primitives
-and shadows](engine4.png){#fig:1 width="\\textwidth"}
+and shadows](engine4.png)
 
 Resources & Acknowledgements
 ============================
