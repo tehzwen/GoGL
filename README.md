@@ -12,8 +12,6 @@ the rendering engine.
 Related Works and Motivation
 ============================
 
-Here a few examples of tables and graphs.
-
 Unity
 -----
 
@@ -404,15 +402,16 @@ Resources & Acknowledgements
 Resources
 ---------
 
-Assimp Mesh Importer,\
-https://www.assimp.org/ Joey de Vries, *Learn OpenGL*,\
-https://learnopengl.com/ RenderDoc,\
-https://renderdoc.org/ Blender,\
-https://www.blender.org/
+
+https://www.assimp.org/ Assimp Mesh Importer,\ 
+https://learnopengl.com/ Joey de Vries, *Learn OpenGL*,\ 
+https://renderdoc.org/ RenderDoc,\ 
+https://www.blender.org/ Blender,\
 
 Acknowledgements
 ----------------
 
-Dana Cobzas, *Supervisor* Jon Coulson, *Technical Support* Andrew
-Whittle, *Helpful graphics resource*\
+Dana Cobzas, *Supervisor*\
+Jon Coulson, *Technical Support*\
+Andrew Whittle, *Helpful graphics resource*\
 https://github.com/awhittle3
